@@ -408,6 +408,24 @@ For each screen: routes, layouts at mobile 375 and desktop 1440, and states. "Ad
   - No IMDb ID: the IMDb chip and the IMDb assist are hidden (D3-AC1).
 - **SEO/OG** (A5-AC3): `og:image` is the poster `w780`, or the v1 share ticket.
 
+### 7.4.1 "Worth it?" block and ticket time line (PRD §4.2, F1–F5; added 2026-09-26)
+The block is a **paper "programme slip"**: it uses the same language as the ticket, not a new card style.
+- **Placement**: detail page, directly under the action row and stubbed line, above the overview. On 375 it is full width; at 1440 it sits in the info column (cols 6–12), max 600px. It is `<section aria-labelledby="worth-it-h">` with an `h2`-styled heading "Worth it?".
+- **Frame**: `--paper` background, `--ink` text, `--r-md` radius, 9px notches and a 2px `--perf` dashed perforation on the **left**, like `ticket/row`. The left stub strip (56px) prints `WORTH IT?` vertically in `print` mono. The drop shadow is the ticket's (§2.5). There is no glass here, so contrast is always ink on paper (16:1).
+- **Lines, top to bottom** (each line is omitted when its data is missing; the block never renders empty lines):
+  1. **Hook**: Geist 500 17px/1.45, `--ink`, max 2 lines (`line-clamp:2`, 120 characters). A TMDB-sourced hook ends with a `print` label `FROM TMDB` in `--ink-2`.
+  2. **Vibe tags**: up to 3 of the 28px outline **Chip** component, re-coloured for paper (`--ink` text, `rgba(20,18,16,.24)` border).
+  3. **Time**: `print` mono, `--ink-2`: `2H 46M · LONG ONE` or `4 SEASONS · 36 EPS · ~55 MIN · ≈33 H · ENDED`.
+  4. **Certification**: a mono **Tag** with a 1px ink border, like a stamp (`PG-13`, `TV-MA`), on the same row as the time at ≥ 420px.
+  5. **Verdict**: the word in Bricolage 800 22px, `--ink` ("Widely loved", "Well liked", "Solid pick", "Split opinions", "Mixed reviews"), followed by a caption source line in `--ink-2` ("Based on TMDB, IMDb and 12 Stubbed ratings"). "Split opinions" adds a small `--stamp` outline tag `SPLIT`. The meaning is carried by the word, never by colour alone. No number is printed here (the numbers live in the score chips just above).
+  6. **If you liked… (P1)**: one compact `ticket/row` link (40px poster thumb, title, year) with the lead-in "If you liked" or "You stubbed".
+- **Height budget**: 6 lines or fewer at 375px (about 220px).
+- **Loading**: skeleton on `--paper-2` with 3 bars. Under reduced motion, no shimmer.
+- **Ticket card time line (F2)**: the grid and rail stubs replace the second mono meta line (`MOVIE` / `SHOW`, which is already on the poster pill) with the time: `2024 · 2H 46M`, or `2022 · 4 SEASONS · ≈33H`, truncated with an ellipsis and never wrapping. The stub height (118px grid, 126px rail) does not change. The `IMDb x.x` chip from ADR-008 sits on the score line next to `TMDB`.
+- **Link previews (F5)**: `og:description` = "{hook} {time} · {verdict}".
+- **Test ids**: `worth-it`, `worth-it-hook`, `worth-it-vibes`, `worth-it-time`, `worth-it-cert`, `worth-it-verdict`, `worth-it-like`, and `ticket-time` on the stub.
+- **Quick-peek sheet (v1)**: the same slip inside the standard bottom sheet, opened from the card's `⋯` menu, with [Stub it] [Watchlist] [Open].
+
 ### 7.5 Reviews (on the title page) + composer (D1–D3)
 - Header "Reviews". A segmented control switches "On Stubbed · N" / "From TMDB · N", and a sort select offers Newest / Highest rated.
 - **Composer** (logged-in; logged-out users see "Sign in to review" with the same frame):
