@@ -52,3 +52,5 @@ Frontend Dev ∥ Backend Dev → Reviewer → QA (browser E2E) → Product Manag
   Source: OMDb (`OMDB_API_KEY`), cached in our DB and refreshed by the nightly job; hidden when a title has no IMDb rating.
   Demo fixtures must carry real IMDb ids and IMDb ratings.
 - See `docs/04-architecture/ADR-008-scope-change-no-third-party-posting.md`.
+- **No AI at runtime or in batch jobs.** The app runs on its own server with no LLM/AI access. Every feature (including the
+  "should I watch?" summary) must be built deterministically from API data, rules and templates.
