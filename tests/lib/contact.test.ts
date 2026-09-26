@@ -9,7 +9,16 @@ import {
 describe('contact config (GAP-06)', () => {
   it('uses NEXT_PUBLIC_CONTACT_EMAIL when valid, else the harmless placeholder', () => {
     expect(resolveContactEmail(' hello@stubbed.app ')).toBe('hello@stubbed.app');
-    for (const bad of [undefined, '', '  ', 'not-an-email', 'a@b', 'x@y.z?cc=evil@x.test'])
+    for (const bad of [
+      undefined,
+      '',
+      '  ',
+      'not-an-email',
+      'a@b',
+      'x@y.z?cc=evil@x.test',
+      'x@y.z?bcc=evil',
+      'x@y.z#a',
+    ])
       expect(resolveContactEmail(bad), String(bad)).toBe(CONTACT_EMAIL_PLACEHOLDER);
     expect(CONTACT_EMAIL_PLACEHOLDER).toMatch(/@example\.com$/);
   });
@@ -20,7 +29,8 @@ describe('contact config (GAP-06)', () => {
     expect(u.protocol).toBe('mailto:');
     expect(u.pathname).toBe('hi@stubbed.app');
     expect(u.searchParams.get('subject')).toBe('Report review r-123');
-    expect(u.searchParams.get('body')).toContain('Review id: r-123\nTitle: movie:13\n');
+    expect(u.searchParams.get('body')).toContain('Review id: r-123\r\nTitle: movie:13\r\n');
     expect(href).not.toContain('+');
+    expect(href).toContain('%0D%0A'); // RFC 6068 line breaks
   });
 });

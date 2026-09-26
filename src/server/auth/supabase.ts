@@ -185,12 +185,24 @@ export class SupabaseAuthProvider implements AuthProvider {
     const { data, error } = await db.auth.getUser();
     if (error || !data.user || data.user.id !== userId)
       throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
-    const admin = await this.admin();
-    const { error: delError } = await admin.auth.admin.deleteUser(userId);
-    if (delError)
+    // Missing SUPABASE_SERVICE_ROLE_KEY or an admin API error: log it server-side, show generic copy
+    // (the config detail must not reach the browser); nothing was deleted, the session stays.
+    let delError: unknown;
+    try {
+      delError = (await (await this.admin()).auth.admin.deleteUser(userId)).error;
+    } catch (e) {
+      delError = e;
+    }
+    if (delError) {
+      console.error('[auth] deleteAccount failed', delError);
       throw new AppError('internal', 'Something went wrong. Try again.', { cause: delError });
-    // The server already dropped the sessions; this clears the sb-* cookies (401/404 are ignored).
-    await db.auth.signOut({ scope: 'local' });
+    }
+    // The account is gone at this point, so a cookie-clearing hiccup must not turn it into a 500.
+    try {
+      await db.auth.signOut({ scope: 'local' });
+    } catch (e) {
+      console.warn('[auth] signOut after deleteAccount failed', e);
+    }
   }
 
   async completeCallback(input: { code?: string | null; demoToken?: string | null }) {

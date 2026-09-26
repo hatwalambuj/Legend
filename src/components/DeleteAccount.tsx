@@ -54,6 +54,9 @@ export function DeleteAccount() {
       aria-labelledby={`${uid}-h`}
       aria-describedby={`${uid}-d`}
       noValidate
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && !busy) cancel();
+      }}
       onSubmit={async (e) => {
         e.preventDefault();
         if (!armed || busy) return;
@@ -90,7 +93,7 @@ export function DeleteAccount() {
           autoCapitalize="characters"
           spellCheck={false}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${uid}-err` : undefined}
+          aria-describedby={error ? `${uid}-d ${uid}-err` : `${uid}-d`}
           data-testid="delete-account-input"
         />
         {error && (

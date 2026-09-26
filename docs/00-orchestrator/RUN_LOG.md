@@ -14,4 +14,5 @@
 | 6 | E2E QA | qa-engineer | done | 151 E2E (desktop+mobile) green; 9 bugs, 8 fixed; BUG-03 (404 status/308 redirect) open |
 | 7 | Gap review | product-manager | done | 26/32 pass; MUST FIX NOW: mobile title fold, wallet score labels, sync per-type minimums, demo opt-in in prod, trust minimum, README going-live, TMDB logo (founder), staging smoke (founder) |
 | 8 | Fix loop 1 | frontend-dev ∥ backend-dev | done | MUST FIX 1-6 done; 271 unit + 151 E2E green (orchestrator re-ran full gate) |
-| 9 | Loop review | reviewer | running | diff since phase 7 |
+| 9 | Loop review | reviewer | done | 4 fixes (error leak on delete, cookie-clear 500, mailto header chars, a11y); 272 unit + 151 E2E green |
+| 10 | PM re-check | orchestrator | done | MUST FIX 1-6 verified from screenshots; 7 (TMDB logo) and 8 (staging smoke on real keys) are founder tasks |

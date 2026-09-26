@@ -90,3 +90,35 @@ migrations are untouched: the changes are in a new file.
 | R9 | The demo JSON store is O(n) per query, and its mtime-based reload can miss a write from another process within the same mtime tick | Accepted for demo sizes (ADR-006) |
 | R10 | Cosmetic: the "On Stubbed · N" count doesn't include a just-posted first review until reload, and the "Stub again today?" copy says "today" when a past date matches `lastWatchedOn` | Frontend polish |
 | R11 | Test gaps: no component test for the composer resending `stubId`, and no E2E yet (QA phase) | QA: cover review edit → "STUB #2" kept, the `/me/stubs?type=tv` count, the wallet badge, and the open-redirect payloads on `/auth/callback` |
+
+## Fix loop 1 review (GAP_REVIEW §6 items 1–6, diff `b0479a9..HEAD`)
+
+Scope: mobile title layout, wallet scores, `DELETE /api/me`, contact/report mailto, per-type sync guard,
+production demo opt-in, README "Going live", API_CONTRACT v1.3. Verdict: **approve with 4 small fixes**
+(applied below). Gates after the fixes: lint, typecheck, unit/DB tests (272), build, format:check and
+Playwright E2E (151 passed, 3 skipped) are green.
+
+### Fixed
+
+| # | Sev | Where | Finding | Fix |
+|---|---|---|---|---|
+| FL1 | Med | `src/server/auth/supabase.ts` `deleteAccount` | A missing `SUPABASE_SERVICE_ROLE_KEY` made `supabaseAdmin()` throw an `AppError('internal', 'SUPABASE_SERVICE_ROLE_KEY is not configured')`, which `errorResponse` sends as-is and the Settings panel displays: config detail leaked to the browser. Admin API failures were also never logged (AppErrors are not logged by `route()`), so a failed deletion left no server trace | Admin-client creation and `deleteUser` errors now log server-side and map to the generic `internal` copy; nothing is deleted and the session stays, so the user can retry. Unit test added |
+| FL2 | Low | same | After a **successful** `deleteUser`, a throw from the cookie-clearing `signOut({ scope: 'local' })` would turn an irreversible success into a 500 (the user retries and gets 401) | Wrapped in try/catch + warn; the route still returns 204 |
+| FL3 | Low | `src/lib/contact.ts` | The address validator rejected `@ < > " ' , ;` and whitespace but allowed `? & # %`, so `NEXT_PUBLIC_CONTACT_EMAIL=me@x.com?bcc=other` produced a mailto with an injected header (operator-controlled only, but cheap to close). Body line breaks were bare `%0A`; RFC 6068 §5 requires `%0D%0A` | Validator also rejects `? & # %`; body newlines are normalised to CRLF. Tests extended |
+| FL4 | Low (a11y) | `src/components/DeleteAccount.tsx` | The typed-confirm input was only described by the error (the "can't be undone" text was on the form, not the field), and Escape did nothing in the inline confirm | Input is `aria-describedby` the warning (+ the error when present); Escape cancels and returns focus to the trigger. Unit test added |
+
+### Checked and found correct (no change)
+- **Account deletion authz/CSRF:** `parseBody` enforces same-origin + JSON before anything else, the body must be the literal `{ confirm: "DELETE" }`, the user id comes only from the session, and the Supabase path re-validates the JWT with `getUser()` and refuses when the id differs, so a caller can never delete another user. Demo refuses the shared seeded accounts (403). Demo cascade covers every per-user collection in `DemoData`; the live cascade (`profiles → stubs/reviews/watchlist/rate_events`, `reviews.stub_id on delete set null`) and the `title_stats` decrements are proven on PGlite (`tests/db/account-delete.test.ts`). `deleteUser` is a single statement, so there is no partial-delete state; sessions on other devices die with the user (demo: `getSession` looks the user up; live: GoTrue drops the sessions).
+- **Session cleared:** demo cookie deleted server-side; client uses `signOut({ remote: false })` and leaves `/me`.
+- **Demo opt-in:** the production gate runs in `parseEnv` (every request path, the proxy included) and only `next build` (`NEXT_PHASE=phase-production-build`, set by Next itself) is exempt; half-configured live is still demo and still gated. `devLinks` defaults to `seeded` in production, so a public demo can't be used to sign in as a real sign-up. `DEMO_DEV_LINKS=any` in production is an explicit, documented E2E-only override (see follow-up FL-R2).
+- **Sync guard:** first run = no listed rows in `catalog_index` (a dry run writes no `sync_runs` row, so it can't mask this); below-floor only warns on the first run, `0` of a type and `> SYNC_GUARD_MAX` always abort; empty workflow `vars.*` resolve to the defaults via `optionalString`; invalid values fail fast with the variable name.
+- **README vs code:** every variable named in "Going live" exists in `.env.example`, `env.ts` and `nightly-sync.yml` with the same name; secrets vs variables, the `production` environment, the `dry_run` input, 03:17 UTC and the migration file names match.
+- **Report link:** only on other people's reviews (session handle check), accessible name "Report review by {handle}" starts with the visible text (WCAG 2.5.3); all user/TMDB text goes through `URLSearchParams`. Wallet stub accessible name includes both scores; IMDb hidden when unknown.
+- R3 (public demo devLinks) and R8 (notes are public hint) from §4 are resolved by this loop.
+
+### Follow-ups (not blocking)
+| # | Item |
+|---|---|
+| FL-R1 | Only the **first** run tolerates a low floor. If the first live sync warned (e.g. tv 900 < 1000), the next nightly run aborts until `SYNC_GUARD_MIN_TV` is set (the log prints the exact value to use). Loud, not bricking (index untouched, site keeps the first-run data), and the README says so. Separately, the delta guard is symmetric, so a first run that was abnormally small would block a later normal-sized one; consider ignoring increases |
+| FL-R2 | Consider logging a boot warning when `DEMO_DEV_LINKS=any` is combined with `NODE_ENV=production` |
+| FL-R3 | No E2E for the delete-account flow (covered by unit, route and PGlite tests); add one using a freshly signed-up user |

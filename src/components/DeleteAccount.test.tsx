@@ -55,4 +55,10 @@ describe('DeleteAccount (GAP-06)', () => {
     expect(screen.getByRole('button', { name: 'Delete account…' })).toBeTruthy();
     expect(del).not.toHaveBeenCalled();
   });
+
+  it('Escape cancels too', () => {
+    renderWithApp(<DeleteAccount />);
+    fireEvent.keyDown(open(), { key: 'Escape' });
+    expect(screen.getByRole('button', { name: 'Delete account…' })).toBeTruthy();
+  });
 });

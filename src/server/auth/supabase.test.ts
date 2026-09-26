@@ -180,5 +180,17 @@ describe('SupabaseAuthProvider', () => {
       ).deleteAccount('u1'),
     ).rejects.toMatchObject({ code: 'internal' });
     expect(fresh.auth.signOut).not.toHaveBeenCalled();
+
+    // No service role key: generic copy (the config detail never reaches the browser).
+    const noKey = fakeClient();
+    await expect(
+      new SupabaseAuthProvider(
+        () => noKey.client,
+        () => {
+          throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
+        },
+      ).deleteAccount('u1'),
+    ).rejects.toMatchObject({ code: 'internal', message: 'Something went wrong. Try again.' });
+    expect(noKey.auth.signOut).not.toHaveBeenCalled();
   });
 });
