@@ -12,4 +12,5 @@
 | 4 | Implementation | frontend-dev ∥ backend-dev | done | All routes + demo repos + live adapters + sync; all screens; 241 tests; lint/typecheck/test/build/format green |
 | 5 | Review | reviewer | done | 18 findings fixed (1 high open-redirect, 8 medium); contract v1.2; 247 tests green |
 | 6 | E2E QA | qa-engineer | done | 151 E2E (desktop+mobile) green; 9 bugs, 8 fixed; BUG-03 (404 status/308 redirect) open |
-| 7 | Gap review | product-manager | running | |
+| 7 | Gap review | product-manager | done | 26/32 pass; MUST FIX NOW: mobile title fold, wallet score labels, sync per-type minimums, demo opt-in in prod, trust minimum, README going-live, TMDB logo (founder), staging smoke (founder) |
+| 8 | Fix loop 1 | frontend-dev ∥ backend-dev | running | items 1-6 |
