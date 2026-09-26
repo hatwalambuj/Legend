@@ -92,3 +92,17 @@
   font: 800 10px/1 var(--font-ui);
   letter-spacing: 0.04em;
 }
+/* "Report" mailto on other people's reviews (GAP-06): quiet, but a 24px+ target. */
+.report {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--fg-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.report:hover {
+  color: var(--fg);
+}

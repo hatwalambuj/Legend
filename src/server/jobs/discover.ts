@@ -329,7 +329,8 @@ export async function recheckMissing(
 /* ---------------- guardrails ---------------- */
 
 export interface GuardrailConfig {
-  guardMin: number;
+  /** Per-type floor (SYNC_GUARD_MIN_MOVIE / SYNC_GUARD_MIN_TV): TV is a much smaller catalogue. */
+  guardMin: Record<MediaType, number>;
   guardMax: number;
   guardMaxDelta: number;
 }
@@ -342,20 +343,39 @@ export function countListed(rows: Iterable<StagingRow>): ListedCounts {
   return c;
 }
 
+export interface GuardrailResult {
+  ok: boolean;
+  /** Why the run aborts (index untouched). */
+  reasons: string[];
+  /** Printed, but not fatal (e.g. below the floor on the very first run). */
+  warnings: string[];
+}
+
 /**
- * Listed count per type within [guardMin, guardMax] and |Δ| vs the last OK run < guardMaxDelta.
+ * Listed count per type within [guardMin[type], guardMax] and |Δ| vs the last OK run < guardMaxDelta.
  * Failing guardrails abort the run with the index untouched (SYSTEM_DESIGN §14).
+ *
+ * `firstRun` (the catalogue has no listed rows yet, GAP-03): being below the floor is only a warning,
+ * so a smaller-than-expected TMDB result can't brick the first live sync and keep the site empty.
+ * Zero listed titles of a type still aborts (that is a broken fetch, not a small catalogue).
  */
 export function checkGuardrails(
   counts: ListedCounts,
   last: ListedCounts | null,
   cfg: GuardrailConfig,
-): { ok: boolean; reasons: string[] } {
+  opts: { firstRun?: boolean } = {},
+): GuardrailResult {
   const reasons: string[] = [];
+  const warnings: string[] = [];
   for (const type of ['movie', 'tv'] as const) {
     const n = counts[type];
-    if (n < cfg.guardMin || n > cfg.guardMax)
-      reasons.push(`${type}: ${n} listed is outside [${cfg.guardMin}, ${cfg.guardMax}]`);
+    const min = cfg.guardMin[type];
+    if (n > cfg.guardMax) reasons.push(`${type}: ${n} listed is above the maximum ${cfg.guardMax}`);
+    else if (n < min) {
+      const msg = `${type}: ${n} listed is below the minimum ${min}`;
+      if (opts.firstRun && n > 0) warnings.push(`${msg} (first run: continuing)`);
+      else reasons.push(msg);
+    }
     const prev = last?.[type];
     if (prev && prev > 0) {
       const delta = Math.abs(n - prev) / prev;
@@ -365,7 +385,40 @@ export function checkGuardrails(
         );
     }
   }
-  return { ok: reasons.length === 0, reasons };
+  return { ok: reasons.length === 0, reasons, warnings };
+}
+
+/** Human-readable per-type guardrail report, printed on every run (and the point of `--dry-run`). */
+export function guardrailReport(
+  counts: ListedCounts,
+  last: ListedCounts | null,
+  cfg: GuardrailConfig,
+  result: GuardrailResult,
+  opts: { firstRun?: boolean } = {},
+): string[] {
+  const lines = ['movie', 'tv'].map((t) => {
+    const type = t as MediaType;
+    const prev = last?.[type];
+    return (
+      `[sync] listed ${type.padEnd(5)} ${String(counts[type]).padStart(6)}  ` +
+      `(min ${cfg.guardMin[type]}, max ${cfg.guardMax}` +
+      `${prev ? `, last ok run ${prev}` : ''})`
+    );
+  });
+  if (opts.firstRun) lines.push('[sync] first run (empty catalogue): the minimums only warn');
+  for (const w of result.warnings) lines.push(`[sync] warning: ${w}`);
+  for (const r of result.reasons) lines.push(`[sync] guardrail failed: ${r}`);
+  if (result.reasons.some((r) => r.includes('below the minimum'))) {
+    const low = (['movie', 'tv'] as const).filter(
+      (t) => counts[t] > 0 && counts[t] < cfg.guardMin[t],
+    );
+    for (const t of low)
+      lines.push(
+        `[sync] hint: if ${counts[t]} ${t} titles is expected, set SYNC_GUARD_MIN_${t.toUpperCase()}=${Math.floor(counts[t] * 0.8)}`,
+      );
+  }
+  lines.push(`[sync] guardrails: ${result.ok ? 'OK' : 'ABORT (index untouched)'}`);
+  return lines;
 }
 
 /** Genre list response → id → name. */

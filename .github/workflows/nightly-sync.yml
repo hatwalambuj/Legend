@@ -47,7 +47,12 @@ jobs:
       # Hysteresis + TV genre exclusions must match the app's curation rule (ADR-003).
       CATALOG_KEEP_RATING: ${{ vars.CATALOG_KEEP_RATING }}
       CATALOG_EXCLUDE_TV_GENRES: ${{ vars.CATALOG_EXCLUDE_TV_GENRES || '10767,10763,10764' }}
-      SYNC_GUARD_MIN: ${{ vars.SYNC_GUARD_MIN || '5000' }}
+      # Per-type floors (GAP-03); empty = the app defaults (movie 3000, tv 1000). The first run on an
+      # empty catalogue only warns; run with dry_run first to see the real counts. The legacy
+      # SYNC_GUARD_MIN variable, if set, applies to any type without its own value.
+      SYNC_GUARD_MIN_MOVIE: ${{ vars.SYNC_GUARD_MIN_MOVIE }}
+      SYNC_GUARD_MIN_TV: ${{ vars.SYNC_GUARD_MIN_TV }}
+      SYNC_GUARD_MIN: ${{ vars.SYNC_GUARD_MIN }}
       SYNC_GUARD_MAX: ${{ vars.SYNC_GUARD_MAX || '25000' }}
       SYNC_GUARD_MAX_DELTA: ${{ vars.SYNC_GUARD_MAX_DELTA || '0.2' }}
       SYNC_ENRICH_MAX: ${{ vars.SYNC_ENRICH_MAX || '3000' }}

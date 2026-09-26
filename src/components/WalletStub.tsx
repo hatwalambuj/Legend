@@ -3,7 +3,7 @@
  * vertical ADMIT ONE; rewatches stack 1–2 paper layers behind plus a ×N tag. Slight rotation.
  */
 import Link from 'next/link';
-import { formatScore } from '@/lib/format';
+import { titleScores } from '@/lib/format';
 import { paletteOrDefault } from '@/lib/images';
 import { titleHref } from '@/lib/routes';
 import type { WalletItem } from '@/lib/types';
@@ -20,12 +20,17 @@ export function WalletStub({ item, index }: { item: WalletItem; index: number })
     t.genres.map((g) => g.id),
   );
   const n = item.count;
+  // GAP-02 / ADR-008: labelled TMDB score plus the IMDb chip (titleScores() hides an unknown IMDb).
+  const scores = titleScores(t);
+  const tmdb = scores.find((s) => s.source === 'tmdb');
+  const imdb = scores.find((s) => s.source === 'imdb');
+  const rated = `rated ${tmdb?.value} on TMDB${imdb ? ` and ${imdb.value} on IMDb` : ''}`;
   return (
     <Link
       href={titleHref(t)}
       className={styles.ws}
       style={{ ['--rot' as string]: `${ROT[index % ROT.length]}deg` }}
-      aria-label={`${t.title}, stubbed ${n} time${n === 1 ? '' : 's'}, last ${formatDate(item.lastWatchedOn)}`}
+      aria-label={`${t.title}, stubbed ${n} time${n === 1 ? '' : 's'}, last ${formatDate(item.lastWatchedOn)}, ${rated}`}
       data-testid="wallet-stub"
       {...tintAttrs(t)}
     >
@@ -41,7 +46,20 @@ export function WalletStub({ item, index }: { item: WalletItem; index: number })
           <span className={styles.d}>
             {formatDate(item.lastWatchedOn)}
             <br />
-            {kindLabel(t.mediaType)} · {formatScore(t.voteAverage)}
+            {kindLabel(t.mediaType)}
+          </span>
+          <span className={styles.sc}>
+            {tmdb && (
+              <span data-testid="tmdb-rating">
+                {tmdb.label} {tmdb.value}
+              </span>
+            )}
+            {imdb && (
+              <span className={styles.imdb} data-testid="imdb-rating">
+                <span className="imdb-mark imdb-mark--xs">IMDb</span>
+                {imdb.value}
+              </span>
+            )}
           </span>
         </span>
         <span className={styles.side}>

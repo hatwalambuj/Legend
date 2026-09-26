@@ -65,12 +65,25 @@ const rawSchema = z.object({
   DEMO_DATA_DIR: optionalString,
   DEMO_PERSIST: z.enum(['file', 'memory']).default('file'),
   DEMO_RESET_ON_BOOT: bool,
+  /** Production opt-in for demo/local data mode (GAP-04). Without it a production server refuses to boot. */
+  DEMO_MODE_PUBLIC: bool,
+  /**
+   * Which emails get a magic-link `devLink` in demo mode: `seeded` = only the @demo.stubbed.app accounts,
+   * `any` = every email. Default: `seeded` in production (a public demo), `any` in dev/test. E2E only.
+   */
+  DEMO_DEV_LINKS: z
+    .enum(['seeded', 'any'])
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   DEMO_TODAY: z.iso
     .date()
     .optional()
     .or(z.literal('').transform(() => undefined)),
 
-  SYNC_GUARD_MIN: num(5000),
+  /** Legacy single floor for both types; the per-type values below win when set. */
+  SYNC_GUARD_MIN: optionalString,
+  SYNC_GUARD_MIN_MOVIE: optionalString,
+  SYNC_GUARD_MIN_TV: optionalString,
   SYNC_GUARD_MAX: num(25000),
   SYNC_GUARD_MAX_DELTA: num(0.2),
   SYNC_ENRICH_MAX: num(3000),
@@ -81,7 +94,12 @@ const rawSchema = z.object({
     .default('US'),
 
   VERCEL: optionalString,
+  /** Set by `next build` ('phase-production-build'): the production demo opt-in is checked at runtime only. */
+  NEXT_PHASE: optionalString,
 });
+
+/** Default per-type listed-count floors for the nightly sync (GAP-03): TV is a much smaller catalogue. */
+export const SYNC_GUARD_MIN_DEFAULTS = { movie: 3000, tv: 1000 } as const;
 
 export interface ServerEnv {
   nodeEnv: 'development' | 'production' | 'test';
@@ -112,11 +130,18 @@ export interface ServerEnv {
     resetOnBoot: boolean;
     /** Fixed "today" for deterministic demos/E2E ('YYYY-MM-DD'), else null (use the clock). */
     today: string | null;
+    /** DEMO_MODE_PUBLIC=true: a production demo deploy was explicitly opted into. */
+    public: boolean;
+    /** Magic-link devLinks for `seeded` demo accounts only, or `any` email (dev/E2E). */
+    devLinks: 'seeded' | 'any';
   };
   /** Nightly job settings (ADR-002, ADR-008). */
   sync: {
-    /** Guardrails: listed count per type within [guardMin, guardMax], delta vs last ok run < guardMaxDelta. */
-    guardMin: number;
+    /**
+     * Guardrails: listed count per type within [guardMin[type], guardMax], delta vs last ok run <
+     * guardMaxDelta. The min floor only warns on the first run (empty catalogue), see checkGuardrails.
+     */
+    guardMin: { movie: number; tv: number };
     guardMax: number;
     guardMaxDelta: number;
     /** Max TMDB detail calls per night for the enrich step (new rows first, then older than enrichTtlDays). */
@@ -175,6 +200,24 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
   }
 
   const isDemo = catalog !== 'tmdb' || data !== 'supabase';
+  const production = e.NODE_ENV === 'production';
+  if (production && isDemo && !e.DEMO_MODE_PUBLIC && e.NEXT_PHASE !== 'phase-production-build') {
+    const missing = [
+      catalog !== 'tmdb' ? 'TMDB_READ_TOKEN' : null,
+      data !== 'supabase' ? 'NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY' : null,
+    ].filter(Boolean);
+    throw new EnvError(
+      `Refusing to start a production server in demo mode (catalog=${catalog}, data=${data}). ` +
+        `Demo data resets and demo sign-in is not safe for real users. Set ${missing.join(' and ')} ` +
+        'to go live, or set DEMO_MODE_PUBLIC=true to knowingly run a public demo (see README "Going live").',
+    );
+  }
+
+  // Vercel's filesystem is read-only except /tmp (demo data there is per-instance and ephemeral).
+  const dataDir =
+    e.DEMO_PERSIST === 'memory'
+      ? null
+      : (e.DEMO_DATA_DIR ?? (e.VERCEL ? '/tmp/stubbed-demo' : '.data/demo'));
 
   const mode: AppMode = {
     catalog,
@@ -182,6 +225,9 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     isDemo,
     images: e.IMAGE_MODE,
     demoAccounts: data === 'local' ? DEMO_ACCOUNTS : [],
+    // Local demo data is not durable on a production server (cold starts, instances, resets).
+    demoResets:
+      data === 'local' && (production || e.DEMO_RESET_ON_BOOT || dataDir === null || !!e.VERCEL),
   };
 
   const keep = e.CATALOG_KEEP_RATING ? Number(e.CATALOG_KEEP_RATING) : e.CATALOG_MIN_RATING;
@@ -195,11 +241,13 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       .filter((n) => Number.isInteger(n) && n > 0),
   };
 
-  // Vercel's filesystem is read-only except /tmp (demo data there is per-instance and ephemeral).
-  const dataDir =
-    e.DEMO_PERSIST === 'memory'
-      ? null
-      : (e.DEMO_DATA_DIR ?? (e.VERCEL ? '/tmp/stubbed-demo' : '.data/demo'));
+  const guardMin = (name: string, v: string | undefined, def: number) => {
+    const [key, raw] = v ? [name, v] : e.SYNC_GUARD_MIN ? ['SYNC_GUARD_MIN', e.SYNC_GUARD_MIN] : [];
+    const n = raw === undefined ? def : Number(raw);
+    if (!Number.isFinite(n) || n < 0)
+      throw new EnvError(`${key} must be a number >= 0, got "${raw}".`);
+    return Math.floor(n);
+  };
 
   return {
     nodeEnv: e.NODE_ENV,
@@ -230,9 +278,18 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       dataDir,
       resetOnBoot: e.DEMO_RESET_ON_BOOT,
       today: e.DEMO_TODAY ?? null,
+      public: e.DEMO_MODE_PUBLIC,
+      devLinks: e.DEMO_DEV_LINKS ?? (production ? 'seeded' : 'any'),
     },
     sync: {
-      guardMin: e.SYNC_GUARD_MIN,
+      guardMin: {
+        movie: guardMin(
+          'SYNC_GUARD_MIN_MOVIE',
+          e.SYNC_GUARD_MIN_MOVIE,
+          SYNC_GUARD_MIN_DEFAULTS.movie,
+        ),
+        tv: guardMin('SYNC_GUARD_MIN_TV', e.SYNC_GUARD_MIN_TV, SYNC_GUARD_MIN_DEFAULTS.tv),
+      },
       guardMax: e.SYNC_GUARD_MAX,
       guardMaxDelta: e.SYNC_GUARD_MAX_DELTA,
       enrichMax: Math.max(0, Math.floor(e.SYNC_ENRICH_MAX)),

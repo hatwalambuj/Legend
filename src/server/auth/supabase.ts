@@ -9,6 +9,9 @@
  * - signIn: any failure → generic invalid_credentials (B2-AC1); Supabase's own 429 → rate_limited.
  * - sendMagicLink: signInWithOtp (existing users only); never reveals whether the email exists.
  * - completeCallback: PKCE / magic-link code exchange (sets the session cookies).
+ * - deleteAccount: service-role `auth.admin.deleteUser` (hard delete); the FK chain auth.users →
+ *   profiles → stubs / reviews / watchlist / rate_events is `on delete cascade`, and the title_stats
+ *   triggers fire for every cascaded row. Then the session cookies are cleared.
  */
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { AppError, ERROR_COPY } from '@/lib/errors';
@@ -19,6 +22,8 @@ type ClientFn = () => SupabaseClient | Promise<SupabaseClient>;
 
 const defaultClient: ClientFn = async () =>
   (await import('@/server/supabase/server')).supabaseForRequest();
+const defaultAdmin: ClientFn = async () =>
+  (await import('@/server/supabase/server')).supabaseAdmin();
 
 interface AuthErrorLike {
   message?: string;
@@ -64,7 +69,10 @@ export function mapSignUpError(e: AuthErrorLike): AppError {
 export class SupabaseAuthProvider implements AuthProvider {
   readonly name = 'supabase' as const;
 
-  constructor(private readonly client: ClientFn = defaultClient) {}
+  constructor(
+    private readonly client: ClientFn = defaultClient,
+    private readonly admin: ClientFn = defaultAdmin,
+  ) {}
 
   private async sessionFor(db: SupabaseClient, user: User): Promise<Session | null> {
     const { data, error } = await db
@@ -169,6 +177,20 @@ export class SupabaseAuthProvider implements AuthProvider {
       });
     // Any other error (e.g. unknown email) is swallowed: the response never reveals existence.
     return {};
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    const db = await this.client();
+    // Re-validate the JWT with Supabase right before the irreversible step: only the owner may delete.
+    const { data, error } = await db.auth.getUser();
+    if (error || !data.user || data.user.id !== userId)
+      throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
+    const admin = await this.admin();
+    const { error: delError } = await admin.auth.admin.deleteUser(userId);
+    if (delError)
+      throw new AppError('internal', 'Something went wrong. Try again.', { cause: delError });
+    // The server already dropped the sessions; this clears the sb-* cookies (401/404 are ignored).
+    await db.auth.signOut({ scope: 'local' });
   }
 
   async completeCallback(input: { code?: string | null; demoToken?: string | null }) {

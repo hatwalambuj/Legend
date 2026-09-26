@@ -6,7 +6,7 @@ import { HeaderSearch } from './HeaderSearch';
 import { LogoMark } from './Icon';
 import styles from './Header.module.css';
 
-export function Header({ isDemo }: { isDemo: boolean }) {
+export function Header({ isDemo, demoResets = false }: { isDemo: boolean; demoResets?: boolean }) {
   return (
     <header className={styles.hdr}>
       <div className={`wrap ${styles.in}`}>
@@ -19,7 +19,7 @@ export function Header({ isDemo }: { isDemo: boolean }) {
           <HeaderSearch />
         </div>
         <div className={styles.right}>
-          {isDemo && <DemoPill />}
+          {isDemo && <DemoPill resets={demoResets} />}
           <HeaderUser />
         </div>
       </div>

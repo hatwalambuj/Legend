@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <AppProvider mode={mode} today={today()}>
-          <Header isDemo={mode.isDemo} />
+          <Header isDemo={mode.isDemo} demoResets={mode.demoResets ?? false} />
           <main id="main" tabIndex={-1}>
             {children}
           </main>

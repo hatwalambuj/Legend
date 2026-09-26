@@ -168,6 +168,9 @@ export const magicLinkSchema = z.object({
   next: z.string().max(500).optional(),
 });
 
+/** DELETE /api/me (GAP-06): the body must spell out the intent, so a stray request can't erase data. */
+export const deleteAccountSchema = z.object({ confirm: z.literal('DELETE') });
+
 export const handleAvailableQuerySchema = z.object({ handle: z.string().max(40) });
 
 export const revalidateSchema = z.object({
@@ -183,6 +186,7 @@ export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
 export type SignUpInput = z.input<typeof signUpSchema>;
 export type SignInInput = z.input<typeof signInSchema>;
 export type MagicLinkInput = z.input<typeof magicLinkSchema>;
+export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;
 
 /* ---------------- response types ---------------- */
 

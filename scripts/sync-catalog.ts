@@ -16,8 +16,10 @@
  *     throttle 10 req/s, honour 429 Retry-After, exponential backoff with jitter (max 5 retries)
  *  3. transform → staging rows (slug, sort_title, search_text via src/lib/text.ts; is_listed via isListed())
  *  4. re-check previously listed titles missing from discover (GET /{type}/{id}): dropped (unlist) vs gone (404)
- *  5. guardrails: listed count per type within [SYNC_GUARD_MIN, SYNC_GUARD_MAX] and delta vs last ok run
- *     < SYNC_GUARD_MAX_DELTA → otherwise sync_runs.status='aborted', exit 1, index untouched
+ *  5. guardrails: listed count per type within [SYNC_GUARD_MIN_MOVIE | _TV, SYNC_GUARD_MAX] and delta vs
+ *     last ok run < SYNC_GUARD_MAX_DELTA → otherwise sync_runs.status='aborted', exit 1, index untouched.
+ *     First run (no listed rows yet): the minimums only warn. Per-type counts are always printed
+ *     (run `--dry-run` first to see them).
  *  6. upsert staging in batches of 500, rpc('catalog_apply_staging', { p_run })
  *  7. ENRICH — rpc('catalog_enrich_due', { p_limit: SYNC_ENRICH_MAX, p_ttl_days: SYNC_ENRICH_TTL_DAYS }),
  *     GET /{type}/{id}?append_to_response=<enrichmentAppends()> (10 req/s), mapTmdbEnrichment(),
@@ -46,6 +48,7 @@ import {
 import {
   checkGuardrails,
   countListed,
+  guardrailReport,
   createThrottle,
   discoverAll,
   genreMap,
@@ -358,7 +361,11 @@ async function discoverStep(
     .order('finished_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  const guard = checkGuardrails(listed, lastListedCounts(lastRun?.counts), env.sync);
+  const last = lastListedCounts(lastRun?.counts);
+  const firstRun = previouslyListed.size === 0;
+  const guard = checkGuardrails(listed, last, env.sync, { firstRun });
+  for (const line of guardrailReport(listed, last, env.sync, guard, { firstRun }))
+    console.log(line);
   const summary = {
     pages: found.pages,
     discovered: found.rows.size,
@@ -368,6 +375,8 @@ async function discoverStep(
     recheck_errors: recheck.errors,
     gone: recheck.gone.length,
     listed,
+    first_run: firstRun,
+    ...(guard.warnings.length ? { warnings: guard.warnings } : {}),
   };
   if (!guard.ok) return { ...summary, aborted: guard.reasons };
   if (dryRun) return { ...summary, dry_run: true };
@@ -509,6 +518,7 @@ async function main() {
     }
     await finish('ok');
     console.log('[sync] done', JSON.stringify(counts));
+    if (args.dryRun) console.log('[sync] dry run: nothing was written');
   } catch (e) {
     await finish('failed', e instanceof Error ? e.message : String(e));
     throw e;

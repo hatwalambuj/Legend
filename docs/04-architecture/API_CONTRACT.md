@@ -1,6 +1,6 @@
 # Stubbed — API contract
 
-Status: **Frozen v1.2** (ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3) · Owner: Architect · Date: 2026-09-26
+Status: **Frozen v1.3** (ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
 Source of truth in code (keep in sync; a change needs both):
 - `src/lib/types.ts` (domain types)
 - `src/lib/contracts.ts` (zod request schemas + response types)
@@ -105,6 +105,12 @@ The client gets `ApiError { status, code, message, fields?, retryAfter? }` throw
 
 ### 5.2 `GET /api/me`
 → `200 MeResponse` `{ session: Session | null, mode: AppMode, stubCount: number }`. Private. This powers the header (avatar, wallet badge) and the demo pill. `stubCount` is the signed-in user's total stubs (0 when signed out), so the wallet badge needs no diary paging (v1.2).
+`mode.demoResets` (v1.3, optional) is `true` when demo data is not durable (a production/public demo opted in with `DEMO_MODE_PUBLIC=true`, `DEMO_RESET_ON_BOOT`, an in-memory store or Vercel's `/tmp`): the pill then reads **"Demo: data resets"**. Pages get the same object from `dal.getMode()`.
+
+### 5.2a `DELETE /api/me` 🔒 (v1.3, GAP-06)
+Body `deleteAccountSchema` `{ confirm: "DELETE" }` (JSON, same origin; `api.deleteAccount()` sends it). → `204` and the session cookies are cleared.
+Erases the account and everything it owns: profile, stubs, reviews (incl. stub-linked ones), watchlist and rate-limit events; community stats of the affected titles drop accordingly. Live: service-role `auth.admin.deleteUser` (hard delete) after re-validating the caller's JWT, then the `on delete cascade` chain from `auth.users`; needs `SUPABASE_SERVICE_ROLE_KEY` on the server. Demo: one store mutation. The email and handle can be reused afterwards.
+Errors: `401` signed out · `400 validation_failed` without the exact confirm body · `403` cross-origin, or for the shared seeded demo accounts ("Demo accounts can't be deleted. Create your own to try it.") · `415` non-JSON. Irreversible: the UI must confirm first.
 
 ### 5.3 `GET /api/catalog`
 Query `catalogQuerySchema`:
@@ -186,7 +192,7 @@ Body `updateProfileSchema` (`displayName` 1..50, `bio` ≤ 160, `avatarUrl` URL 
 | `POST /api/auth/signup` | `signUpSchema` `{ email, password (8..72), handle, displayName? }` | `201 AuthResponse { session }` and sets the session cookie | `400` fields, `409 email_taken`, `409 handle_taken` |
 | `POST /api/auth/signin` | `signInSchema` `{ email, password }` | `200 AuthResponse` and sets the cookie | `401 invalid_credentials` (generic) |
 | `POST /api/auth/signout` | `{}` | `204` and clears the cookie | — |
-| `POST /api/auth/magic-link` | `magicLinkSchema` `{ email, next? }` | `202 MagicLinkResponse { sent: true, devLink? }` (`devLink` in demo mode only; it points at the origin the request used) | `400`, `429`. Never reveals whether the email exists |
+| `POST /api/auth/magic-link` | `magicLinkSchema` `{ email, next? }` | `202 MagicLinkResponse { sent: true, devLink? }` (`devLink` in demo mode only; it points at the origin the request used. On a production demo (`DEMO_DEV_LINKS` defaults to `seeded`) only the seeded `@demo.stubbed.app` accounts get one, v1.3) | `400`, `429`. Never reveals whether the email exists |
 | `GET /api/auth/handle-available?handle=` | — | `200 { available, reason? }` | — |
 | `GET /auth/callback?code=&next=` (demo: `demo_token=`) | — | `302` to `safeNext(next)` after the code exchange, with a **relative** `Location` (the browser stays on the host it used; `safeNext` guarantees a same-origin path) | `302 /signin?error=callback&next=…` |
 
@@ -194,6 +200,9 @@ After a successful sign-up or sign-in the client navigates to `safeNext(next)` a
 
 ### 5.19 `POST /api/revalidate` (job only)
 Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → `200 { revalidated }`. Otherwise `403`.
+
+### 5.20 Contact and report (v1.3, GAP-06; no route)
+`src/lib/contact.ts` (client-safe): `CONTACT_EMAIL` from `NEXT_PUBLIC_CONTACT_EMAIL` (placeholder `contact@example.com` when unset or invalid), `contactHref()` for the footer "Contact" link and `reportReviewHref({ id, titleKey })` for "Report" on other people's reviews (a `mailto:` with the review id in subject and body).
 
 ## 6. `DataAccess` (server, for pages): `src/lib/data-access.ts`
 | Method | Returns | Notes |

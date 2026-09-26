@@ -29,9 +29,13 @@ test.describe('B3 public profile', () => {
 
     const wallet = page.getByTestId('wallet-stub');
     await expect(wallet).toHaveCount(6); // one per title
-    await expect(
-      page.getByRole('link', { name: /^The Office, stubbed 4 times, last Sep 25, 2026$/ }),
-    ).toBeVisible();
+    const office = page.getByRole('link', {
+      name: /^The Office, stubbed 4 times, last Sep 25, 2026, rated 8\.6 on TMDB and 9\.0 on IMDb$/,
+    });
+    await expect(office).toBeVisible();
+    // GAP-02 / A7-AC1: wallet stubs print a labelled TMDB score next to the IMDb chip.
+    await expect(office.getByTestId('tmdb-rating')).toHaveText('TMDB 8.6');
+    await expect(office.getByTestId('imdb-rating')).toHaveText(/IMDb\s*9\.0/);
     await expect(page.getByRole('link', { name: /^Interstellar, stubbed 3 times/ })).toBeVisible();
     await expectNoHorizontalScroll(page);
     await shot(page, info, 'profile-wallet');

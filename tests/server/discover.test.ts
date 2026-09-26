@@ -5,6 +5,7 @@ import { DEFAULT_CURATION_RULE } from '@/lib/curation';
 import { AppError } from '@/lib/errors';
 import {
   checkGuardrails,
+  guardrailReport,
   countListed,
   createThrottle,
   discoverAll,
@@ -297,21 +298,59 @@ describe('throttle + retry', () => {
 });
 
 describe('guardrails', () => {
-  const cfg = { guardMin: 5000, guardMax: 25000, guardMaxDelta: 0.2 };
+  const cfg = { guardMin: { movie: 3000, tv: 1000 }, guardMax: 25000, guardMaxDelta: 0.2 };
   it('pass within bounds and delta', () => {
     expect(checkGuardrails({ movie: 9000, tv: 5200 }, { movie: 8800, tv: 5100 }, cfg)).toEqual({
       ok: true,
       reasons: [],
+      warnings: [],
     });
     expect(checkGuardrails({ movie: 9000, tv: 5200 }, null, cfg).ok).toBe(true);
+    // GAP-03: a TV catalogue far below the movie one passes on its own floor.
+    expect(checkGuardrails({ movie: 9000, tv: 1800 }, null, cfg).ok).toBe(true);
   });
   it('abort on too few/many or a large swing', () => {
     const r = checkGuardrails({ movie: 100, tv: 30000 }, { movie: 9000, tv: 5000 }, cfg);
     expect(r.ok).toBe(false);
     expect(r.reasons).toHaveLength(4);
+    expect(r.reasons[0]).toBe('movie: 100 listed is below the minimum 3000');
     expect(
       checkGuardrails({ movie: 9000, tv: 6000 }, { movie: 9000, tv: 5000 }, cfg).reasons[0],
     ).toMatch(/tv: 6000 vs 5000/);
+    expect(
+      checkGuardrails({ movie: 9000, tv: 900 }, { movie: 9000, tv: 950 }, cfg).reasons,
+    ).toEqual(['tv: 900 listed is below the minimum 1000']);
+  });
+  it('first run (empty catalogue): below the floor only warns; zero or too many still abort', () => {
+    const first = checkGuardrails({ movie: 2500, tv: 400 }, null, cfg, { firstRun: true });
+    expect(first.ok).toBe(true);
+    expect(first.warnings).toEqual([
+      'movie: 2500 listed is below the minimum 3000 (first run: continuing)',
+      'tv: 400 listed is below the minimum 1000 (first run: continuing)',
+    ]);
+    expect(checkGuardrails({ movie: 2500, tv: 0 }, null, cfg, { firstRun: true }).reasons).toEqual([
+      'tv: 0 listed is below the minimum 1000',
+    ]);
+    expect(checkGuardrails({ movie: 30000, tv: 400 }, null, cfg, { firstRun: true }).ok).toBe(
+      false,
+    );
+    // Not the first run → the same numbers abort.
+    expect(checkGuardrails({ movie: 2500, tv: 400 }, null, cfg).ok).toBe(false);
+  });
+  it('prints clear per-type counts, limits and a fix hint', () => {
+    const counts = { movie: 8123, tv: 640 };
+    const last = { movie: 8000, tv: 700 };
+    const r = checkGuardrails(counts, last, cfg);
+    const lines = guardrailReport(counts, last, cfg, r);
+    expect(lines[0]).toBe('[sync] listed movie   8123  (min 3000, max 25000, last ok run 8000)');
+    expect(lines[1]).toBe('[sync] listed tv       640  (min 1000, max 25000, last ok run 700)');
+    expect(lines).toContain('[sync] guardrail failed: tv: 640 listed is below the minimum 1000');
+    expect(lines).toContain('[sync] hint: if 640 tv titles is expected, set SYNC_GUARD_MIN_TV=512');
+    expect(lines.at(-1)).toBe('[sync] guardrails: ABORT (index untouched)');
+    const first = checkGuardrails(counts, null, cfg, { firstRun: true });
+    const ok = guardrailReport(counts, null, cfg, first, { firstRun: true });
+    expect(ok).toContain('[sync] first run (empty catalogue): the minimums only warn');
+    expect(ok.at(-1)).toBe('[sync] guardrails: OK');
   });
   it('counts listed per type; parses last run counts; genre maps', () => {
     const rows = [

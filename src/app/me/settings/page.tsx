@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
+import { DeleteAccount } from '@/components/DeleteAccount';
 import { EditProfile } from '@/components/Owner';
 import { safe } from '@/components/lib/safe';
 import { SignOutButton } from '@/components/SignOutButton';
@@ -85,6 +86,14 @@ export default async function SettingsPage() {
             <h2 id="set-out">Sign out</h2>
             <p>You can sign back in any time. Your stubs stay put.</p>
             <SignOutButton />
+          </section>
+          <section className={styles.card} id="delete" aria-labelledby="set-delete">
+            <h2 id="set-delete">Delete account</h2>
+            <p>
+              Permanently erase your account and everything in it: stubs, ratings, reviews and
+              watchlist.
+            </p>
+            <DeleteAccount />
           </section>
         </div>
       </div>

@@ -130,6 +130,12 @@ export interface AuthProvider {
    * Sets the session cookie and returns true on success; false for any invalid/expired input.
    */
   completeCallback(input: { code?: string | null; demoToken?: string | null }): Promise<boolean>;
+  /**
+   * DELETE /api/me (GAP-06): erase the account and everything it owns — profile, stubs, reviews,
+   * watchlist, rate events (live: `auth.admin.deleteUser` + the `on delete cascade` chain; demo: one
+   * store mutation) — then clear the session cookies. The id always comes from the session.
+   */
+  deleteAccount(userId: string): Promise<void>;
 }
 
 /* ------------------------------------------------------------------ */

@@ -11,7 +11,7 @@ import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { Session } from '@/lib/types';
 import { DEMO_FALLBACK_SECRET, env, type ServerEnv } from '@/server/env';
 import type { AuthProvider } from '@/server/ports';
-import { demoStore, type DemoUser } from '@/server/repositories/memory/store';
+import { demoStore, isSeededDemoUser, type DemoUser } from '@/server/repositories/memory/store';
 import { requestCookieJar, type CookieJar } from './cookies';
 import {
   DEMO_SESSION_COOKIE,
@@ -152,16 +152,35 @@ export class LocalAuthProvider implements AuthProvider {
   }
 
   /**
-   * Always returns a devLink (for unknown emails too, so the response never reveals whether an account
-   * exists); an unknown email simply fails at the callback.
+   * `devLinks: 'any'` (dev/test/E2E): always returns a devLink (for unknown emails too, so the response
+   * never reveals whether an account exists); an unknown email simply fails at the callback.
+   * `devLinks: 'seeded'` (default in production, GAP-04): only the public seeded demo accounts get a
+   * link — otherwise a public demo would let anyone sign in as anyone. The seed list is public, so this
+   * still reveals nothing about real accounts.
    */
   async sendMagicLink(input: { email: string; redirectTo: string }): Promise<{ devLink?: string }> {
+    const email = input.email.trim().toLowerCase();
+    if (env().demo.devLinks === 'seeded' && !isSeededDemoUser({ email })) return {};
     const url = new URL(input.redirectTo);
-    url.searchParams.set(
-      'demo_token',
-      signMagicToken(input.email.trim().toLowerCase(), this.secret()),
-    );
+    url.searchParams.set('demo_token', signMagicToken(email, this.secret()));
     return { devLink: url.toString() };
+  }
+
+  /**
+   * GAP-06: erase the user and everything they own (stubs, reviews, watchlist, profile) in one store
+   * mutation — the demo mirror of the `on delete cascade` chain from auth.users — then sign out.
+   * The shared seeded demo accounts can't be deleted (everyone signs in with them).
+   */
+  async deleteAccount(userId: string): Promise<void> {
+    if (isSeededDemoUser({ id: userId }))
+      throw new AppError('forbidden', "Demo accounts can't be deleted. Create your own to try it.");
+    demoStore().mutate((d) => {
+      d.users = d.users.filter((u) => u.id !== userId);
+      d.stubs = d.stubs.filter((s) => s.userId !== userId);
+      d.reviews = d.reviews.filter((r) => r.userId !== userId);
+      d.watchlist = d.watchlist.filter((w) => w.userId !== userId);
+    });
+    await this.signOut();
   }
 
   async completeCallback(input: { code?: string | null; demoToken?: string | null }) {

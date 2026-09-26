@@ -412,17 +412,22 @@ export function AppProvider({
     [applySession, toast, replay],
   );
 
-  const signOut = useCallback(async () => {
-    try {
-      await api.signOut();
-    } catch {
-      /* clear locally regardless */
-    }
-    applySession(null);
-    toast({ message: 'Signed out' });
-    if (pathname.startsWith('/me')) router.push('/');
-    router.refresh();
-  }, [applySession, toast, pathname, router]);
+  const signOut = useCallback<AppContextValue['signOut']>(
+    async (opts) => {
+      if (opts?.remote !== false) {
+        try {
+          await api.signOut();
+        } catch {
+          /* clear locally regardless */
+        }
+      }
+      applySession(null);
+      toast({ message: opts?.message ?? 'Signed out' });
+      if (pathname.startsWith('/me')) router.push('/');
+      router.refresh();
+    },
+    [applySession, toast, pathname, router],
+  );
 
   const value = useMemo<AppContextValue>(
     () => ({

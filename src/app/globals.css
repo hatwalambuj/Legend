@@ -112,10 +112,26 @@ main {
 }
 .demo-pill::before {
   content: '';
+  flex: none;
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--warn);
+}
+/* "Demo: data resets" (GAP-04) wraps onto two lines on phones so the header never scrolls sideways. */
+@media (max-width: 479px) {
+  .demo-pill--resets {
+    height: auto;
+    min-height: 30px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 9.5px;
+    line-height: 1.15;
+    letter-spacing: 0.04em;
+  }
+  .demo-pill__rest {
+    display: block;
+  }
 }
 
 /* ---------- Buttons ---------- */

@@ -137,6 +137,8 @@ export const api = {
   signUp: (input: SignUpInput) => request<AuthResponse>('POST', '/api/auth/signup', input),
   signIn: (input: SignInInput) => request<AuthResponse>('POST', '/api/auth/signin', input),
   signOut: () => request<void>('POST', '/api/auth/signout', {}),
+  /** Irreversible: erases the account + all its data, then the session is gone (204). */
+  deleteAccount: () => request<void>('DELETE', '/api/me', { confirm: 'DELETE' }),
   magicLink: (input: MagicLinkInput) =>
     request<MagicLinkResponse>('POST', '/api/auth/magic-link', input),
   handleAvailable: (handle: string) =>

@@ -47,3 +47,17 @@
   color: var(--fg);
   background: rgba(255, 255, 255, 0.08);
 }
+/* GAP-01: tighter chips on phones so both scores and Stub it fit above the fold. */
+@media (max-width: 639px) {
+  .scores {
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .score {
+    gap: 10px;
+    padding: 8px 12px;
+  }
+  .score b {
+    font-size: 26px;
+  }
+}

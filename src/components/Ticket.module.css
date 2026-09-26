@@ -362,6 +362,41 @@
   }
 }
 
+/* GAP-01: on phones the hero ticket is a small, secondary keepsake beside the title; the score chips
+   next to it carry the numbers, so its stub keeps only the title, time and serial. */
+@media (max-width: 639px) {
+  .hero .ticket {
+    --stub-h: 72px;
+    --notch: 8px;
+  }
+  .hero .stub {
+    padding: 9px 10px 8px;
+    gap: 3px;
+  }
+  .hero .stubTitle {
+    font-size: 13px;
+  }
+  .hero .time {
+    font-size: 9px;
+  }
+  .hero .scores {
+    display: none;
+  }
+  .hero .serial {
+    font-size: 8px;
+  }
+  .hero .heroCount {
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+  }
+  .hero .stamp {
+    right: 6px;
+    top: 6px;
+    font-size: 9px;
+  }
+}
+
 /* ---------- skeleton ---------- */
 .sk {
   border-radius: var(--r-md);

@@ -38,6 +38,17 @@ export function fixtureTitles(): readonly FixtureTitle[] {
   return catalog.titles;
 }
 
+const seededEmails = new Set(seed.users.map((u) => u.email.toLowerCase()));
+const seededIds = new Set(seed.users.map((u) => u.id));
+
+/** The shared, well-known demo accounts from the seed (anyone may know their password). */
+export function isSeededDemoUser(u: { email?: string; id?: string }): boolean {
+  return (
+    (u.email !== undefined && seededEmails.has(u.email.trim().toLowerCase())) ||
+    (u.id !== undefined && seededIds.has(u.id))
+  );
+}
+
 function freshData(): DemoData {
   // structuredClone so mutations never touch the imported JSON module.
   return structuredClone({

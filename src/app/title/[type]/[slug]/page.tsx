@@ -111,21 +111,23 @@ export default async function TitlePage({ params }: { params: Params }) {
       <AdaptiveBackground palette={palette} />
       <div className="wrap">
         <div className={styles.detail}>
+          <nav className={styles.crumbs} aria-label="Breadcrumb">
+            <ol>
+              <li>
+                <Link href="/">Discover</Link>
+              </li>
+              <li>
+                <Link href={`/browse?type=${t.mediaType}`}>{isTv ? 'Shows' : 'Movies'}</Link>
+              </li>
+              <li aria-current="page">{t.title}</li>
+            </ol>
+          </nav>
           <div className={styles.ticket} data-hero="">
             <Ticket title={t} variant="hero" priority />
           </div>
-          <div className={styles.info}>
-            <nav className={styles.crumbs} aria-label="Breadcrumb">
-              <ol>
-                <li>
-                  <Link href="/">Discover</Link>
-                </li>
-                <li>
-                  <Link href={`/browse?type=${t.mediaType}`}>{isTv ? 'Shows' : 'Movies'}</Link>
-                </li>
-                <li aria-current="page">{t.title}</li>
-              </ol>
-            </nav>
+          {/* GAP-01: at < 640px the head sits beside a compact ticket so the scores and Stub it
+              land above the fold; from 900px it is the right column as before. */}
+          <div className={styles.head}>
             <div className="eyebrow">{eyebrow}</div>
             {!t.isListed && (
               <p className={styles.notice} role="note">
@@ -142,6 +144,8 @@ export default async function TitlePage({ params }: { params: Params }) {
                 ))}
               </ul>
             )}
+          </div>
+          <div className={styles.info}>
             <ScoreChips title={t} stats={stats} />
             <TitleActions target={target} />
             <WorthIt data={t.worthIt} />

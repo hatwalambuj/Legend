@@ -78,7 +78,11 @@ export interface AppContextValue {
   openAuth: (pending?: PendingAction, view?: 'signin' | 'signup') => void;
   /** After sign-in/up: store the session and replay the pending action (B2-AC3). */
   onAuthed: (session: Session, pending?: PendingAction | null) => void;
-  signOut: () => Promise<void>;
+  /**
+   * Clear the session (server + local), toast and leave private pages. After account deletion the
+   * server session is already gone: pass `{ remote: false, message }` to skip the sign-out call.
+   */
+  signOut: (opts?: { remote?: boolean; message?: string }) => Promise<void>;
 }
 
 export const EMPTY_STATE: TitleState = {

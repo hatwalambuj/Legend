@@ -97,10 +97,16 @@ describe('demoSessionSecret', () => {
   it('never uses the public fallback in production; persists a random secret per data dir', () => {
     expect(demoSessionSecret(parseEnv({ NODE_ENV: 'development' }))).toBe(DEMO_FALLBACK_SECRET);
     expect(
-      demoSessionSecret(parseEnv({ NODE_ENV: 'production', DEMO_SESSION_SECRET: 'x'.repeat(40) })),
+      demoSessionSecret(
+        parseEnv({
+          NODE_ENV: 'production',
+          DEMO_MODE_PUBLIC: 'true',
+          DEMO_SESSION_SECRET: 'x'.repeat(40),
+        }),
+      ),
     ).toBe('x'.repeat(40));
     const dir = mkdtempSync(join(tmpdir(), 'stubbed-secret-'));
-    const prod = parseEnv({ NODE_ENV: 'production', DEMO_DATA_DIR: dir });
+    const prod = parseEnv({ NODE_ENV: 'production', DEMO_MODE_PUBLIC: 'true', DEMO_DATA_DIR: dir });
     const s = demoSessionSecret(prod);
     expect(s).not.toBe(DEMO_FALLBACK_SECRET);
     expect(s.length).toBeGreaterThanOrEqual(32);

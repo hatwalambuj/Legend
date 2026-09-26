@@ -576,3 +576,144 @@ describe('public reads', () => {
     expect(h.data.catalogCount).toBeGreaterThanOrEqual(60);
   });
 });
+
+describe('DELETE /api/me (GAP-06: delete account)', () => {
+  const del = (body: unknown = { confirm: 'DELETE' }, headers: Record<string, string> = {}) =>
+    call(me.DELETE as Handler, req('DELETE', '/api/me', body, headers));
+
+  async function newUserWithData() {
+    const r = await call(
+      signup.POST as Handler,
+      req('POST', '/api/auth/signup', {
+        email: 'leaving@example.com',
+        password: 'longenough',
+        handle: 'leaving',
+      }),
+    );
+    expect(r.status).toBe(201);
+    const stub = await call(
+      stubsRoute.POST as Handler,
+      req('POST', '/api/stubs', { mediaType: 'tv', tmdbId: 1396 }),
+    );
+    expect(stub.status).toBe(201);
+    const review = await call(
+      reviewsRoute.PUT as Handler,
+      req('PUT', '/api/reviews', {
+        mediaType: 'tv',
+        tmdbId: 1396,
+        rating10: 8,
+        body: 'Bye',
+        stubId: stub.data.stub.id,
+      }),
+    );
+    expect(review.status).toBe(201);
+    const wl = await call(
+      watchlistRoute.PUT as Handler<unknown>,
+      req('PUT', '/api/watchlist/movie/238', {}),
+      ctx({ type: 'movie', tmdbId: '238' }),
+    );
+    expect(wl.status).toBe(200);
+    return { user: r.data.session.user as { id: string; handle: string } };
+  }
+
+  it('requires a session, same origin, JSON and the explicit confirm body', async () => {
+    expect((await del()).status).toBe(401);
+    await newUserWithData();
+    expect((await del({})).data.error.code).toBe('validation_failed');
+    expect((await del({ confirm: 'delete' })).status).toBe(400);
+    expect((await del({ confirm: 'DELETE' }, { origin: 'https://evil.test' })).status).toBe(403);
+    const noJson = new NextRequest(`${BASE}/api/me`, {
+      method: 'DELETE',
+      headers: { host: 'localhost:3000', origin: BASE, 'content-type': 'text/plain' },
+      body: JSON.stringify({ confirm: 'DELETE' }),
+    });
+    expect((await call(me.DELETE as Handler, noJson)).status).toBe(415);
+    // Nothing was deleted by the rejected attempts.
+    expect((await call(me.GET as Handler, req('GET', '/api/me'))).data.session.user.handle).toBe(
+      'leaving',
+    );
+  });
+
+  it('cascades profile, stubs, reviews, watchlist; signs out; frees the email and handle', async () => {
+    const { user } = await newUserWithData();
+    const { container } = await import('@/server/container');
+    const { demoStore } = await import('@/server/repositories/memory/store');
+    const before = await container().titleStates.stats('tv:1396');
+    const others = demoStore()
+      .get()
+      .stubs.filter((s) => s.userId !== user.id).length;
+
+    const r = await del();
+    expect(r.status).toBe(204);
+    expect(jar.size).toBe(0); // session cookie cleared
+    expect((await call(me.GET as Handler, req('GET', '/api/me'))).data.session).toBeNull();
+    expect(revalidateTag).toHaveBeenCalledWith('user:leaving', { expire: 0 });
+
+    const d = demoStore().get();
+    expect(d.users.some((u) => u.id === user.id)).toBe(false);
+    expect(d.stubs.some((s) => s.userId === user.id)).toBe(false);
+    expect(d.reviews.some((x) => x.userId === user.id)).toBe(false);
+    expect(d.watchlist.some((w) => w.userId === user.id)).toBe(false);
+    expect(d.stubs).toHaveLength(others); // other users untouched
+    expect(await container().profiles.getByHandle('leaving')).toBeNull();
+    const after = await container().titleStates.stats('tv:1396');
+    expect(after.stubCount).toBe(before.stubCount - 1);
+    expect(after.ratingCount).toBe(before.ratingCount - 1);
+
+    // A second call has no session any more.
+    expect((await del()).status).toBe(401);
+    // Email + handle can be reused.
+    const again = await call(
+      signup.POST as Handler,
+      req('POST', '/api/auth/signup', {
+        email: 'leaving@example.com',
+        password: 'longenough',
+        handle: 'leaving',
+      }),
+    );
+    expect(again.status).toBe(201);
+    expect(again.data.session.user.id).not.toBe(user.id);
+  });
+
+  it('refuses to delete the shared seeded demo accounts', async () => {
+    await signInAs('dev@demo.stubbed.app');
+    const r = await del();
+    expect(r.status).toBe(403);
+    expect(r.data.error.code).toBe('forbidden');
+    expect((await call(me.GET as Handler, req('GET', '/api/me'))).data.session.user.handle).toBe(
+      'dev',
+    );
+  });
+});
+
+describe('magic link in a public demo (GAP-04)', () => {
+  it('DEMO_DEV_LINKS=seeded: devLink only for the seeded demo accounts', async () => {
+    vi.stubEnv('DEMO_DEV_LINKS', 'seeded');
+    resetEnvCache();
+    try {
+      const send = (email: string) =>
+        call(magic.POST as Handler, req('POST', '/api/auth/magic-link', { email }));
+      const seeded = await send('Maya@demo.stubbed.app');
+      expect(seeded.status).toBe(202);
+      expect(new URL(seeded.data.devLink).searchParams.get('demo_token')).toBeTruthy();
+      await call(
+        signup.POST as Handler,
+        req('POST', '/api/auth/signup', {
+          email: 'victim@example.com',
+          password: 'longenough',
+          handle: 'victim',
+        }),
+      );
+      jar.clear();
+      // Same response shape for a real account and an unknown email: nothing to sign in with.
+      for (const email of ['victim@example.com', 'ghost@example.com']) {
+        const r = await send(email);
+        expect(r.status).toBe(202);
+        expect(r.data).toEqual({ sent: true });
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      resetEnvCache();
+    }
+  });
+});

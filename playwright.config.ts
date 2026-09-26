@@ -49,6 +49,10 @@ export default defineConfig({
           // Force demo mode even if a developer has keys in .env.local.
           CATALOG_MODE: 'fixtures',
           DATA_MODE: 'local',
+          // `next start` is a production server: demo mode needs the explicit opt-in (GAP-04), and the
+          // auth specs need magic-link dev links for freshly created accounts (never set this publicly).
+          DEMO_MODE_PUBLIC: 'true',
+          DEMO_DEV_LINKS: 'any',
           // Container cannot reach image.tmdb.org; render generated posters so the console stays clean.
           IMAGE_MODE: 'off',
           DEMO_DATA_DIR: '.data/e2e',

@@ -1,6 +1,7 @@
 /** Global footer with the required attribution (DESIGN §8): TMDB logo + notice, "IMDb ratings via OMDb". */
 import Image from 'next/image';
 import Link from 'next/link';
+import { CONTACT_EMAIL, contactHref } from '@/lib/contact';
 import styles from './Footer.module.css';
 
 export function Footer() {
@@ -21,6 +22,11 @@ export function Footer() {
           <Link href="/about#credits">Credits</Link>
           <Link href="/me/settings#export">Export my data</Link>
           <Link href="/about#privacy">Privacy</Link>
+          <Link href="/about#terms">Terms</Link>
+          {/* GAP-06: the address is visible too, for people without a mail app. */}
+          <a href={contactHref()} data-testid="footer-contact">
+            Contact <span className={styles.email}>{CONTACT_EMAIL}</span>
+          </a>
         </nav>
         <div className={`mono ${styles.print}`}>STUBBED · PROOF YOU WATCHED · ONLY 6.5+</div>
       </div>

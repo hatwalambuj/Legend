@@ -1,0 +1,28 @@
+.trigger:global(.btn) {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.panel {
+  margin-top: 4px;
+  padding: 16px;
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  background: rgba(0, 0, 0, 0.22);
+}
+.panel h3 {
+  margin: 0 0 6px;
+  font: 700 17px/1.2 var(--font-ui);
+}
+.panel p {
+  margin: 0 0 14px;
+  color: var(--fg-2);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.row button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

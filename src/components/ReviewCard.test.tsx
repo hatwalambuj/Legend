@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { CONTACT_EMAIL } from '@/lib/contact';
 import type { Review } from '@/lib/types';
 import { ReviewCard } from './ReviewCard';
+import { renderWithApp } from './test-utils';
 
 afterEach(cleanup);
 
@@ -40,5 +42,25 @@ describe('ReviewCard (A6-AC2 spoilers)', () => {
     expect(body.getAttribute('aria-hidden')).toBeNull();
     expect(screen.queryByTestId('spoiler-toggle')).toBeNull();
     expect(body.textContent).toContain('<b>vote</b>');
+  });
+});
+
+describe('ReviewCard "Report" (GAP-06)', () => {
+  it("offers a mailto with the review id and title on other people's reviews", () => {
+    renderWithApp(<ReviewCard review={review} reportTitle="Ted Lasso (2020)" />);
+    const link = screen.getByRole('link', { name: 'Report review by @priya' });
+    const href = decodeURIComponent(link.getAttribute('href') ?? '');
+    expect(href.startsWith(`mailto:${CONTACT_EMAIL}?`)).toBe(true);
+    expect(href).toContain('Report review r1');
+    expect(href).toContain('Ted Lasso (2020)');
+  });
+
+  it('is hidden on your own review and when no title is given', () => {
+    const session = { user: { handle: 'priya' } } as never;
+    renderWithApp(<ReviewCard review={review} reportTitle="Ted Lasso (2020)" />, { session });
+    expect(screen.queryByTestId('report-review')).toBeNull();
+    cleanup();
+    renderWithApp(<ReviewCard review={review} />);
+    expect(screen.queryByTestId('report-review')).toBeNull();
   });
 });

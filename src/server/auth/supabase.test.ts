@@ -141,4 +141,44 @@ describe('SupabaseAuthProvider', () => {
     });
     expect(await failing.provider.completeCallback({ code: 'c' })).toBe(false);
   });
+
+  it('deleteAccount: owner only, hard-deletes the auth user via the service role, clears cookies', async () => {
+    const deleteUser = vi.fn(async (_id: string) => ({ data: {}, error: null as unknown }));
+    const adminClient = { auth: { admin: { deleteUser } } } as unknown as SupabaseClient;
+    const { client, auth } = fakeClient();
+    const provider = new SupabaseAuthProvider(
+      () => client,
+      () => adminClient,
+    );
+    await provider.deleteAccount('u1');
+    expect(deleteUser).toHaveBeenCalledWith('u1');
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+
+    // The JWT must belong to the account being deleted (re-validated with getUser()).
+    deleteUser.mockClear();
+    await expect(provider.deleteAccount('someone-else')).rejects.toMatchObject({
+      code: 'unauthenticated',
+    });
+    const anon = fakeClient({
+      getUser: async () => ({ data: { user: null }, error: { message: 'no session' } }),
+    });
+    await expect(
+      new SupabaseAuthProvider(
+        () => anon.client,
+        () => adminClient,
+      ).deleteAccount('u1'),
+    ).rejects.toMatchObject({ code: 'unauthenticated' });
+    expect(deleteUser).not.toHaveBeenCalled();
+
+    // An admin API failure is surfaced (the session stays, so the user can retry).
+    deleteUser.mockImplementationOnce(async () => ({ data: {}, error: { message: 'boom' } }));
+    const fresh = fakeClient();
+    await expect(
+      new SupabaseAuthProvider(
+        () => fresh.client,
+        () => adminClient,
+      ).deleteAccount('u1'),
+    ).rejects.toMatchObject({ code: 'internal' });
+    expect(fresh.auth.signOut).not.toHaveBeenCalled();
+  });
 });

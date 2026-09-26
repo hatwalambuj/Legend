@@ -197,6 +197,7 @@ export default async function ProfilePage({
                   <ReviewCard
                     key={r.id}
                     review={r}
+                    reportTitle={`${r.title.title} (${r.title.year})`}
                     eyebrow={
                       <Link href={titleHref(r.title)} className={`eyebrow ${styles.rvTitle}`}>
                         {r.title.title} · {r.title.year}

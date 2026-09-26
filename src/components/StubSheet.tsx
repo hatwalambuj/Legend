@@ -112,8 +112,12 @@ export function StubDetailsForm({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Who you watched with, how it hit…"
-          aria-describedby={`${uid}-count`}
+          aria-describedby={`${uid}-note-hint ${uid}-count`}
         />
+        {/* GAP-09 / REVIEW R8: notes are public on the diary. */}
+        <span id={`${uid}-note-hint`} className="field-hint">
+          Notes show on your public diary.
+        </span>
         <span id={`${uid}-count`} className="counter" aria-live="polite">
           {note.length} / 280
         </span>

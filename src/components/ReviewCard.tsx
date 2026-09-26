@@ -8,6 +8,7 @@ import { profileHref } from '@/lib/routes';
 import type { Review, TmdbReview } from '@/lib/types';
 import { Avatar } from './Avatar';
 import { formatDate, starsLabel, starsText } from './lib/display';
+import { ReportReview } from './ReportReview';
 import { SpoilerBody } from './SpoilerBody';
 import styles from './ReviewCard.module.css';
 
@@ -16,11 +17,14 @@ export function ReviewCard({
   eyebrow,
   menu,
   mine = false,
+  reportTitle,
 }: {
   review: Review;
   eyebrow?: ReactNode;
   menu?: ReactNode;
   mine?: boolean;
+  /** "Anora (2024)": shows a "Report" mailto on other people's reviews (GAP-06). */
+  reportTitle?: string;
 }) {
   return (
     <article className={`${styles.rv} ${mine ? styles.mine : ''}`} data-testid="review-card">
@@ -39,6 +43,16 @@ export function ReviewCard({
           {r.stubNumber && <span className="tag">STUB #{r.stubNumber}</span>}
           {r.editedAt && <span className="tag">EDITED</span>}
           {menu && <span className={styles.menu}>{menu}</span>}
+          {!mine && !menu && reportTitle && (
+            <span className={styles.menu}>
+              <ReportReview
+                reviewId={r.id}
+                titleKey={r.titleKey}
+                authorHandle={r.author.handle}
+                title={reportTitle}
+              />
+            </span>
+          )}
         </div>
         {r.body &&
           (r.isSpoiler ? (

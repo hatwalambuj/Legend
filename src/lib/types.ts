@@ -353,6 +353,11 @@ export interface AppMode {
   images: 'tmdb' | 'off';
   /** Demo credentials shown in the demo pill tooltip / auth sheet (demo mode only). */
   demoAccounts: { handle: string; email: string; password: string }[];
+  /**
+   * True when demo data is not durable (a production/public demo, DEMO_RESET_ON_BOOT, in-memory or
+   * Vercel /tmp store) → the pill reads "Demo: data resets" (GAP-04). Absent/false otherwise.
+   */
+  demoResets?: boolean;
 }
 
 /** Keyset-paginated list. `nextCursor` is opaque; pass it back unchanged. */

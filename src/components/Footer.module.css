@@ -34,3 +34,8 @@
   letter-spacing: 0.08em;
   color: var(--fg-3);
 }
+.email {
+  margin-left: 2px;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}

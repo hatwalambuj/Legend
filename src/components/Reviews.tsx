@@ -183,7 +183,7 @@ export function Reviews({
             />
           )}
           {others.map((r) => (
-            <ReviewCard key={r.id} review={r} />
+            <ReviewCard key={r.id} review={r} reportTitle={`${target.title} (${target.year})`} />
           ))}
           {!mine && others.length === 0 && (
             <EmptyState

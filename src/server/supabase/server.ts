@@ -1,7 +1,8 @@
 /**
  * Supabase clients (live mode only). OWNER: Backend.
  * - `supabaseForRequest()` : user-scoped client bound to request cookies → RLS applies. Use for ALL
- *   user reads/writes. Never use the service role in request handling except /api/revalidate + export.
+ *   user reads/writes. Never use the service role in request handling except /api/revalidate, export
+ *   and DELETE /api/me (auth.admin.deleteUser, after re-validating the caller's JWT).
  * - `supabasePublic()`     : anon client that never touches cookies — for public reads (profiles,
  *   diaries, reviews) so public pages never depend on the session (API_CONTRACT §1 rule 1).
  * - `supabaseCatalog()`    : like `supabasePublic()`, but GET requests go through the Next data cache

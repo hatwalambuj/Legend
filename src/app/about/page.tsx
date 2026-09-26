@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
+import { CONTACT_EMAIL, contactHref } from '@/lib/contact';
 import { NEUTRAL_PALETTE } from '@/lib/images';
 import styles from './about.module.css';
 
@@ -100,8 +101,32 @@ export default function AboutPage() {
                 Posters load straight from TMDB&apos;s image servers, which means TMDB can see your
                 IP address when an image loads.
               </li>
-              <li>No ads, no trackers, no selling data. Delete a stub or review any time.</li>
+              <li>
+                No ads, no trackers, no selling data. Delete a stub or review any time, or{' '}
+                <Link className="link" href="/me/settings#delete">
+                  delete your whole account
+                </Link>{' '}
+                in Settings.
+              </li>
             </ul>
+          </section>
+          <section id="terms" aria-labelledby="terms-h" className={styles.card}>
+            <h2 id="terms-h">Terms, in plain words</h2>
+            <p>
+              <strong>13+ only:</strong> you must be 13 or older to use Stubbed.
+            </p>
+            <p>
+              Stubbed is a free, non-commercial project, and TMDB and OMDb data is used under their
+              non-commercial terms. Be kind: tag spoilers, no harassment, no spam. We may remove
+              reviews or accounts that break this.
+            </p>
+            <p>
+              Questions, data requests or a review to report:{' '}
+              <a className="link" href={contactHref()}>
+                {CONTACT_EMAIL}
+              </a>
+              .
+            </p>
           </section>
         </div>
       </div>
