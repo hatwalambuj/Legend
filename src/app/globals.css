@@ -303,9 +303,10 @@ main {
 .seg > a:hover {
   color: var(--fg);
 }
-.seg > [aria-pressed='true'],
-.seg > [aria-current='page'],
-.seg > [aria-checked='true'] {
+/* Element-qualified so the selected state also wins over :hover (sticky after a tap on touch). */
+.seg > button[aria-pressed='true'],
+.seg > a[aria-current='page'],
+.seg > button[aria-checked='true'] {
   background: var(--fg);
   color: var(--bg);
 }

@@ -45,6 +45,7 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
     try {
       const res = await api.deleteStub(entry.id);
       app.setTitleState(entry.titleKey, () => res.state);
+      app.refreshWallet();
       app.toast({ message: 'Stub deleted' });
       router.refresh();
     } catch (e) {

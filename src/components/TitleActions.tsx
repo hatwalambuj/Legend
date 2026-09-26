@@ -6,7 +6,7 @@
 import { useEffect, useRef } from 'react';
 import { useApp, useTitleState, type StubTarget } from '@/hooks/useApp';
 import { Icon } from './Icon';
-import { formatDate } from './lib/display';
+import { formatDate, starsLabel, starsText } from './lib/display';
 import styles from './TitleActions.module.css';
 
 export function TitleActions({ target }: { target: StubTarget }) {
@@ -69,6 +69,14 @@ export function TitleActions({ target }: { target: StubTarget }) {
           <span>Not stubbed yet. One tap when you&apos;ve watched it.</span>
         )}
       </p>
+      {state?.myReview && (
+        <p className={styles.line} data-testid="my-rating">
+          You rated{' '}
+          <span role="img" aria-label={starsLabel(state.myReview.rating10)}>
+            {starsText(state.myReview.rating10)}
+          </span>
+        </p>
+      )}
     </>
   );
 }

@@ -22,7 +22,9 @@ describe('ScoreChips (ADR-008)', () => {
     expect(screen.getByRole('link', { name: /Open on IMDb/ }).getAttribute('href')).toBe(
       'https://www.imdb.com/title/tt15239678/',
     );
-    expect(screen.getByTestId('stubbed-rating').textContent).toContain('avg unlocks at 5');
+    expect(screen.getByTestId('stubbed-rating').textContent).toContain(
+      'ratings · average unlocks at 5',
+    );
   });
 
   it('hides the IMDb chip when unknown and shows the Stubbed average once unlocked', () => {
@@ -35,5 +37,15 @@ describe('ScoreChips (ADR-008)', () => {
     expect(screen.queryByTestId('imdb-rating')).toBeNull();
     expect(screen.getByTestId('stubbed-rating').textContent).toContain('8.4');
     expect(screen.getByTestId('stubbed-rating').textContent).toContain('5 ratings');
+  });
+
+  it('hides the Stubbed chip when nobody has rated yet (PRD A8-AC1)', () => {
+    render(
+      <ScoreChips
+        title={makeTitle()}
+        stats={{ stubCount: 2, reviewCount: 0, ratingAvg10: null, ratingCount: 0 }}
+      />,
+    );
+    expect(screen.queryByTestId('stubbed-rating')).toBeNull();
   });
 });

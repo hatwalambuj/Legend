@@ -89,7 +89,7 @@ export function BrowseToolbar({
     start(() => router.push(listHref(base, o), { scroll: false }));
 
   return (
-    <div className={styles.toolbar} aria-labelledby={headingId} role="region" aria-busy={pending}>
+    <div className={styles.toolbar} aria-label="Sort and filter" role="region" aria-busy={pending}>
       {showSearch && (
         <form action="/search" method="get" role="search" className={styles.mSearch}>
           <label htmlFor={`${headingId}-q`} className="sr-only">

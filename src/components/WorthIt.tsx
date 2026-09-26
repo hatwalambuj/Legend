@@ -45,6 +45,7 @@ export function WorthIt({ data }: { data: WorthItData }) {
               <span
                 className={styles.cert}
                 data-testid="worth-it-cert"
+                role="img"
                 aria-label={`Rated ${certification}`}
               >
                 {certification}

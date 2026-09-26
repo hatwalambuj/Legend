@@ -64,6 +64,7 @@ export function HeaderSearch() {
     <form
       className={styles.search}
       role="search"
+      aria-label="Quick search"
       action="/search"
       method="get"
       onSubmit={(e) => {

@@ -56,7 +56,8 @@ export function ScoreChips({
           </li>
         ),
       )}
-      {stats && (
+      {/* PRD A8-AC1: hidden with no ratings; "N ratings · average unlocks at 5" below 5. */}
+      {stats && stats.ratingCount > 0 && (
         <li className={styles.score} data-testid="stubbed-rating">
           {stats.ratingAvg10 !== null ? (
             <>
@@ -70,11 +71,12 @@ export function ScoreChips({
             </>
           ) : (
             <>
-              <b>{stats.reviewCount}</b>
+              <b>{stats.ratingCount}</b>
               <span className={styles.lbl}>
                 <span className={styles.src}>STUBBED</span>
                 <span>
-                  review{stats.reviewCount === 1 ? '' : 's'} · avg unlocks at {STUBBED_MIN_RATINGS}
+                  rating{stats.ratingCount === 1 ? '' : 's'} · average unlocks at{' '}
+                  {STUBBED_MIN_RATINGS}
                 </span>
               </span>
             </>

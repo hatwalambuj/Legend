@@ -26,12 +26,22 @@ export default defineConfig({
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
-    { name: 'mobile', use: { ...devices['Pixel 7'], browserName: 'chromium' } },
+    {
+      // 375 px touch phone (PRD A1-AC3): Pixel 7 emulation (isMobile, hasTouch) at a 375 px viewport.
+      name: 'mobile',
+      use: {
+        ...devices['Pixel 7'],
+        browserName: 'chromium',
+        viewport: { width: 375, height: 812 },
+      },
+    },
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `npm run build && npx next start -p ${PORT}`,
+        // The net guard (QA) records every outbound socket/DNS lookup of the *running* server, so
+        // e2e/platform.spec.ts can prove demo mode makes zero outbound requests. Build runs without it.
+        command: `npm run build && NODE_OPTIONS="--require ./e2e/support/net-guard.cjs" npx next start -p ${PORT}`,
         url: `${baseURL}/api/health`,
         timeout: 240_000,
         reuseExistingServer: !process.env.CI,
@@ -44,6 +54,7 @@ export default defineConfig({
           DEMO_DATA_DIR: '.data/e2e',
           DEMO_RESET_ON_BOOT: 'true',
           DEMO_TODAY: '2026-09-26',
+          E2E_NET_LOG: '.data/e2e-net.jsonl',
         },
       },
 });

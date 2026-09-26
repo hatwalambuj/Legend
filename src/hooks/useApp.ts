@@ -60,6 +60,8 @@ export interface AppContextValue {
   sessionReady: boolean;
   /** Stub total for the wallet badge, or null when unknown. */
   walletCount: number | null;
+  /** Re-read the wallet badge count (after a stub is edited or deleted outside the stub flow). */
+  refreshWallet: () => void;
   states: Record<string, TitleState>;
   /** Ask the provider to load personal state for these titles (batched: one request per tick). */
   registerKeys: (keys: TitleKey[]) => void;
@@ -104,6 +106,7 @@ export const AppContext = createContext<AppContextValue>({
   session: null,
   sessionReady: false,
   walletCount: null,
+  refreshWallet: noop,
   states: {},
   registerKeys: noop,
   setTitleState: noop,

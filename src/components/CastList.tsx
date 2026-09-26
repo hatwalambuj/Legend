@@ -37,7 +37,8 @@ export function CastList({ cast }: { cast: CastMember[] }) {
       <h2 id="cast-h" className={`eyebrow ${styles.h}`}>
         Top cast
       </h2>
-      <ul className={styles.cast}>
+      {/* Scrolls sideways on phones: focusable so keyboard users can scroll it (WCAG 2.1.1). */}
+      <ul className={styles.cast} tabIndex={0} aria-labelledby="cast-h">
         {cast.slice(0, 6).map((c) => (
           <li key={`${c.name}-${c.character}`}>
             <Face person={c} />

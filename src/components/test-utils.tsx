@@ -78,6 +78,7 @@ export function appValue(over: Partial<AppContextValue> = {}): AppContextValue {
     session: null,
     sessionReady: true,
     walletCount: null,
+    refreshWallet: vi.fn(),
     states: {},
     registerKeys: vi.fn(),
     setTitleState: vi.fn(),

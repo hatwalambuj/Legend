@@ -3,6 +3,7 @@ export function DemoPill() {
   return (
     <span
       className="demo-pill"
+      role="note"
       data-testid="demo-pill"
       title="No API keys found — running on bundled demo data"
       tabIndex={0}
