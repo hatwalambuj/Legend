@@ -1,6 +1,6 @@
 # Stubbed — API contract
 
-Status: **Frozen v1.1** (ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?") · Owner: Architect · Date: 2026-09-26
+Status: **Frozen v1.2** (ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3) · Owner: Architect · Date: 2026-09-26
 Source of truth in code (keep in sync; a change needs both):
 - `src/lib/types.ts` (domain types)
 - `src/lib/contracts.ts` (zod request schemas + response types)
@@ -85,7 +85,7 @@ The client gets `ApiError { status, code, message, fields?, retryAfter? }` throw
 - **Auth:** a cookie session (Supabase cookies in live mode, `stubbed_demo_session` in demo mode). There are no bearer tokens in the browser. Endpoints marked 🔒 return `401 unauthenticated` when signed out.
 - **CSRF:** every mutation (POST/PUT/PATCH/DELETE) must be same-origin (`Origin` host = `Host`), and every mutation with a body must send `Content-Type: application/json`. `api-client` does both.
 - **Ownership:** the user id always comes from the session, **never** from the body.
-- **Pagination:** keyset. `?cursor=<opaque>&limit=<1..50, default 20>` → `{ items, nextCursor: string|null, total? }`. Pass `nextCursor` back unchanged. An unknown or stale cursor restarts from the first page (ADR-003).
+- **Pagination:** keyset. `?cursor=<opaque>&limit=<1..50, default 20>` → `{ items, nextCursor: string|null, total? }`. Pass `nextCursor` back unchanged. An unknown, stale or tampered cursor restarts from the first page (ADR-003), never an error. `total` is present on the catalogue (§5.3) and the diary (§5.10).
 - **Idempotency:** `PUT /api/reviews` (upsert) and `PUT/DELETE /api/watchlist/...` are idempotent. `POST /api/stubs` is **not** (each call is one more watch).
 
 ## 4. Caching headers
@@ -104,7 +104,7 @@ The client gets `ApiError { status, code, message, fields?, retryAfter? }` throw
 → `200 HealthResponse` `{ ok, mode: {catalog, data, isDemo}, catalogCount, lastSyncAt }`. Used by Playwright `webServer` and uptime checks.
 
 ### 5.2 `GET /api/me`
-→ `200 MeResponse` `{ session: Session | null, mode: AppMode }`. Private. This powers the header (avatar, wallet badge) and the demo pill.
+→ `200 MeResponse` `{ session: Session | null, mode: AppMode, stubCount: number }`. Private. This powers the header (avatar, wallet badge) and the demo pill. `stubCount` is the signed-in user's total stubs (0 when signed out), so the wallet badge needs no diary paging (v1.2).
 
 ### 5.3 `GET /api/catalog`
 Query `catalogQuerySchema`:
@@ -136,27 +136,27 @@ Body `createStubSchema`:
 ```
 → `201 StubMutationResponse { stub: Stub, state: TitleState }`.
 Errors:
-- `400` with `fields.watchedOn` for a future date or a date before Jan 1 of (release year − 1)
+- `400` with `fields.watchedOn` for a future date or a date before Jan 1 of (release year − 1). "Future" means after **server today (UTC) + 1 day**: users ahead of UTC can log their local today (v1.2; the DB trigger uses the same slack)
 - `404` for an unknown title
 - `429` when over the rate limit
 
 A same-day duplicate **is allowed** (a double feature). The UI confirms first using `state.hasStubToday` (C3-AC3).
 
 ### 5.8 `PATCH /api/stubs/{id}` 🔒
-Body `updateStubSchema` (any of `watchedOn`, `watchedWhere`, `note`; at least one). → `200 StubMutationResponse`. Someone else's stub or an unknown id gives `404`.
+Body `updateStubSchema` (any of `watchedOn`, `watchedWhere`, `note`; at least one). → `200 StubMutationResponse`. `watchedOn` follows the §5.7 rules. Someone else's stub or an unknown id gives `404`.
 
 ### 5.9 `DELETE /api/stubs/{id}` 🔒
 → `200 StubDeleteResponse { state }`. This is also the **Undo** of a just-created stub.
 
 ### 5.10 `GET /api/me/stubs?type=&cursor=&limit=` 🔒
-The diary. → `200 Page<DiaryEntry>`, ordered newest first (`watchedOn DESC, createdAt DESC`). The UI groups by month.
+The diary. → `200 DiaryResponse` = `Page<DiaryEntry> & { total }`, ordered newest first (`watchedOn DESC, createdAt DESC, id ASC`). `total` counts every stub matching `type` (not just the page; v1.2). The UI groups by month.
 
 ### 5.11 `PUT /api/reviews` 🔒
 Body `upsertReviewSchema`:
 ```ts
 { mediaType, tmdbId, rating10: 1..10, body?: string /* ≤5000, default '' */, isSpoiler?: boolean, stubId?: uuid|null }
 ```
-→ `201` (created) or `200` (updated) with `ReviewUpsertResponse { review, created, suggestStub }`. `suggestStub` is true when the user has no stub for the title (D1-AC4). `429` applies when over the review rate limit. A `stubId` that is not the user's stub of that title gives `400`.
+→ `201` (created) or `200` (updated) with `ReviewUpsertResponse { review, created, suggestStub }`. `suggestStub` is true when the user has no stub for the title (D1-AC4). `429` applies when over the review rate limit (inserts and content edits count; a re-save or stub re-link does not). A `stubId` that is not the user's stub of that title gives `400`. The upsert replaces `stubId`: an omitted `stubId` unlinks the stub, so editors resend the current one.
 
 ### 5.12 `DELETE /api/reviews/{id}` 🔒
 → `204`. Someone else's review gives `404`.
@@ -173,9 +173,9 @@ PUT takes body `{}`. → `200 WatchlistResponse { watchlisted }`. Both are idemp
 
 ### 5.16 `GET /api/me/export?format=letterboxd|json` 🔒
 → `200` attachment, `private, no-store`.
-- `letterboxd`: `text/csv; charset=utf-8`, `Content-Disposition: attachment; filename="stubbed-letterboxd-YYYY-MM-DD.csv"`, columns `tmdbID,imdbID,Title,Year,Rating10,WatchedDate,Rewatch,Review`. There is one row per stub. The rating and review go on the most recent stub of each title, `Rewatch=true` for every stub after the first, and dates are `YYYY-MM-DD`. RFC 4180 quoting applies.
-- `json`: `application/json` `{ exportedAt, profile, stubs, reviews, watchlist }`.
-- Rate limit: 1 per 10 min per user, otherwise `429`.
+- `letterboxd`: `text/csv; charset=utf-8`, `Content-Disposition: attachment; filename="stubbed-letterboxd-YYYY-MM-DD.csv"`, columns `tmdbID,imdbID,Title,Year,Rating10,WatchedDate,Rewatch,Review`. **Movies only** (Letterboxd is a film service and matches `tmdbID` as a TMDB *movie* id; TV ids collide with movie ids, and TV stubs are in the JSON export). There is one row per stub, oldest first. The rating and review go on the most recent stub of each title, `Rewatch=true` for every stub after the first, and dates are `YYYY-MM-DD`. A reviewed movie that was never stubbed gets **one row with an empty `WatchedDate`** (Letterboxd imports it as a rating/review), so no data is dropped. RFC 4180 quoting, CRLF line ends.
+- `json`: `application/json` `{ exportedAt, profile, stubs, reviews, watchlist }` (movies and TV).
+- Rate limit: 1 per 10 min per user **per format** (so "CSV" and "JSON" can both be downloaded once), otherwise `429` with `Retry-After`.
 
 ### 5.17 `PATCH /api/me/profile` 🔒
 Body `updateProfileSchema` (`displayName` 1..50, `bio` ≤ 160, `avatarUrl` URL | null). → `200 ProfileResponse`. The handle is immutable.
@@ -186,9 +186,9 @@ Body `updateProfileSchema` (`displayName` 1..50, `bio` ≤ 160, `avatarUrl` URL 
 | `POST /api/auth/signup` | `signUpSchema` `{ email, password (8..72), handle, displayName? }` | `201 AuthResponse { session }` and sets the session cookie | `400` fields, `409 email_taken`, `409 handle_taken` |
 | `POST /api/auth/signin` | `signInSchema` `{ email, password }` | `200 AuthResponse` and sets the cookie | `401 invalid_credentials` (generic) |
 | `POST /api/auth/signout` | `{}` | `204` and clears the cookie | — |
-| `POST /api/auth/magic-link` | `magicLinkSchema` `{ email, next? }` | `202 MagicLinkResponse { sent: true, devLink? }` (`devLink` in demo mode only) | `400`, `429`. Never reveals whether the email exists |
+| `POST /api/auth/magic-link` | `magicLinkSchema` `{ email, next? }` | `202 MagicLinkResponse { sent: true, devLink? }` (`devLink` in demo mode only; it points at the origin the request used) | `400`, `429`. Never reveals whether the email exists |
 | `GET /api/auth/handle-available?handle=` | — | `200 { available, reason? }` | — |
-| `GET /auth/callback?code=&next=` | — | `302` to `safeNext(next)` after the code exchange | `302 /signin?error=callback` |
+| `GET /auth/callback?code=&next=` (demo: `demo_token=`) | — | `302` to `safeNext(next)` after the code exchange, with a **relative** `Location` (the browser stays on the host it used; `safeNext` guarantees a same-origin path) | `302 /signin?error=callback&next=…` |
 
 After a successful sign-up or sign-in the client navigates to `safeNext(next)` and replays the pending action (B2-AC3).
 

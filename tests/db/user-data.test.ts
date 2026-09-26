@@ -287,3 +287,61 @@ describe('consume_rate_limit', () => {
     );
   });
 });
+
+describe('reviewer hardening (migrations/20260926180000_review_hardening.sql)', () => {
+  const C = '0c000000-0000-4000-8000-00000000000c';
+  beforeAll(async () => {
+    await createUser(db, C, 'carol');
+  });
+
+  it('API roles cannot choose created_at / edited_at (rate-limit bypass, "Newest" pinning)', async () => {
+    const dune = await titleId(db, DUNE);
+    const stub = await asUser(db, C, () =>
+      db.query<{ created_at: Date }>(
+        `insert into public.stubs (user_id, title_id, watched_on, created_at, updated_at)
+         values ($1, $2, '2026-09-01', '2000-01-01', '2000-01-01') returning created_at`,
+        [C, dune],
+      ),
+    );
+    expect(Date.now() - new Date(stub.rows[0]!.created_at).getTime()).toBeLessThan(60_000);
+    const review = await asUser(db, C, () =>
+      db.query<{ id: string; created_at: Date; edited_at: Date | null }>(
+        `insert into public.reviews (user_id, title_id, rating_10, created_at, edited_at)
+         values ($1, $2, 8, '2099-01-01', '2099-01-01') returning id, created_at, edited_at`,
+        [C, dune],
+      ),
+    );
+    const r = review.rows[0]!;
+    expect(new Date(r.created_at).getFullYear()).toBeLessThan(2099);
+    expect(r.edited_at).toBeNull();
+    const upd = await asUser(db, C, () =>
+      db.query<{ created_at: Date; edited_at: Date | null }>(
+        `update public.reviews set created_at = '2099-01-01', edited_at = '2099-01-01'
+          where id = $1 returning created_at, edited_at`,
+        [r.id],
+      ),
+    );
+    expect(new Date(upd.rows[0]!.created_at).getTime()).toBe(new Date(r.created_at).getTime());
+    expect(upd.rows[0]!.edited_at).toBeNull(); // no content change → not "EDITED"
+  });
+
+  it('counts diary rows per type', async () => {
+    const all = await asUser(db, null, () =>
+      db.query<{ n: number }>(`select public.user_diary_count($1) as n`, [B]),
+    );
+    const tv = await db.query<{ n: number }>(`select public.user_diary_count($1, 'tv') as n`, [B]);
+    expect(all.rows[0]!.n).toBe(5);
+    expect(tv.rows[0]!.n).toBeGreaterThan(0);
+    expect(tv.rows[0]!.n).toBeLessThan(5);
+  });
+
+  it('rejects non-https avatar URLs', async () => {
+    await expect(
+      asUser(db, C, () =>
+        db.query(`update public.profiles set avatar_url = 'javascript:alert(1)' where id = $1`, [
+          C,
+        ]),
+      ),
+    ).rejects.toThrow(/profiles_avatar_https/);
+  });
+});

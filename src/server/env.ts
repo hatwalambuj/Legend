@@ -136,7 +136,8 @@ export const DEMO_ACCOUNTS = [
 ];
 
 /** Public, non-secret fallback so demo mode works with zero env vars. Never used in live data mode. */
-const DEMO_FALLBACK_SECRET = 'stubbed-demo-mode-not-a-secret-change-me-if-you-deploy-demo-publicly';
+export const DEMO_FALLBACK_SECRET =
+  'stubbed-demo-mode-not-a-secret-change-me-if-you-deploy-demo-publicly';
 
 export class EnvError extends Error {
   override name = 'EnvError';

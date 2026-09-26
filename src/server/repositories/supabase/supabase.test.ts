@@ -18,6 +18,7 @@ import {
   SupabaseStubs,
   SupabaseTitleStates,
   SupabaseWatchlist,
+  typedTuple,
 } from './index';
 import { mapPgError, rowToSummary, type CatalogRow } from './rows';
 
@@ -281,15 +282,20 @@ describe('SupabaseStubs', () => {
       id: `5e000000-0000-4000-8000-00000000000${i}`,
       title: row('movie:693134'),
     }));
-    const { calls, clients } = fake(() => ({ body: diaryRows }));
-    const cursor = encodeKeyset('diary', ['2026-10-01', '2026-10-01T00:00:00+00:00', 'x']);
-    const p = await new SupabaseStubs(clients).diary(B, { type: 'movie', cursor, limit: 2 });
-    expect(calls[0]!.body).toEqual({
+    const { calls, clients } = fake((c) =>
+      path(c) === '/rpc/user_diary_count' ? { body: 7 } : { body: diaryRows },
+    );
+    const after = ['2026-10-01', '2026-10-01T00:00:00+00:00', diaryRows[0]!.id];
+    const cursor = encodeKeyset('diary', after);
+    const repo = new SupabaseStubs(clients);
+    const p = await repo.diary(B, { type: 'movie', cursor, limit: 2 });
+    const diaryCall = calls.find((c) => path(c) === '/rpc/user_diary')!;
+    expect(diaryCall.body).toEqual({ p_user: B, p_type: 'movie', p_after: after, p_limit: 3 });
+    expect(calls.find((c) => path(c) === '/rpc/user_diary_count')!.body).toEqual({
       p_user: B,
       p_type: 'movie',
-      p_after: ['2026-10-01', '2026-10-01T00:00:00+00:00', 'x'],
-      p_limit: 3,
     });
+    expect(p.total).toBe(7);
     expect(p.items).toHaveLength(2);
     expect(p.items[0]!.title.key).toBe('movie:693134');
     expect(decodeKeyset(p.nextCursor, 'diary', 3)).toEqual([
@@ -297,6 +303,24 @@ describe('SupabaseStubs', () => {
       stubRow.created_at,
       diaryRows[1]!.id,
     ]);
+    // A tampered cursor (values that would fail a SQL cast) restarts at page 1 instead of a 500.
+    calls.length = 0;
+    const bad = encodeKeyset('diary', ['not-a-date', "x'::uuid", 'x']);
+    await repo.diary(B, { type: 'all', cursor: bad, limit: 2 });
+    expect(calls.find((c) => path(c) === '/rpc/user_diary')!.body).toMatchObject({ p_after: null });
+  });
+});
+
+describe('typedTuple', () => {
+  it('accepts only values with the SQL type of each keyset position', () => {
+    const ts = '2026-09-26T21:00:00.123456+00:00';
+    const id = '5e000000-0000-4000-8000-000000000001';
+    expect(typedTuple(['2026-09-26', ts, id], ['date', 'ts', 'uuid'])).not.toBeNull();
+    expect(typedTuple(['2026-02-30', ts, id], ['date', 'ts', 'uuid'])).toBeNull();
+    expect(typedTuple(['2026-09-26', '1', id], ['date', 'ts', 'uuid'])).toBeNull();
+    expect(typedTuple([8.1, 1e12, 'a', 'b'], ['num', 'int', 'str', 'str'])).toBeNull();
+    expect(typedTuple([8.1, 1200, 'a', 'b'], ['num', 'int', 'str', 'str'])).not.toBeNull();
+    expect(typedTuple(null, ['str'])).toBeNull();
   });
 });
 

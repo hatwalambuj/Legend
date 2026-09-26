@@ -32,16 +32,13 @@ export default async function MyStubsPage({
   const type: TypeFilter = t === 'movie' || t === 'tv' ? t : 'all';
   const cursor = first(sp.cursor) ?? null;
   const handle = session.user.handle;
-  const [diary, profile] = await Promise.all([
-    safe(
-      dal.listDiary(handle, { type, cursor, limit: 50 }),
-      { items: [], nextCursor: null },
-      'listDiary',
-    ),
-    safe(dal.getProfile(handle), null, 'getProfile'),
-  ]);
-  const count =
-    type === 'all' && !cursor && profile ? profile.stats.totalStubs : diary.items.length;
+  const diary = await safe(
+    dal.listDiary(handle, { type, cursor, limit: 50 }),
+    { items: [], nextCursor: null },
+    'listDiary',
+  );
+  // DiaryResponse.total counts every stub for this filter, not just this page (contract v1.2).
+  const count = diary.total ?? diary.items.length;
   const latest = diary.items[0]?.title;
   const palette = latest
     ? paletteOrDefault(

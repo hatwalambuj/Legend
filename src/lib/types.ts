@@ -359,7 +359,7 @@ export interface AppMode {
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;
-  /** Total matching rows (catalog lists only; omitted elsewhere). */
+  /** Total matching rows (catalogue lists and the diary; omitted elsewhere). */
   total?: number;
 }
 

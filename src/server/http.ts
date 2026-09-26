@@ -26,6 +26,7 @@ export function json<T>(data: T, init: { status?: number; cache?: string } = {})
 export function noContent(): NextResponse {
   const res = new NextResponse(null, { status: 204 });
   res.headers.set('Cache-Control', CACHE.private);
+  res.headers.set('Vary', 'Cookie');
   return res;
 }
 
@@ -35,7 +36,9 @@ export function errorResponse(e: unknown): NextResponse {
     : new AppError('internal', 'Something went wrong. Try again.', { cause: e });
   if (!isAppError(e)) console.error('[api] unhandled error', e);
   const res = NextResponse.json(err.toBody(), { status: err.status });
+  // API_CONTRACT §4: every error is `private, no-store` + `Vary: Cookie`.
   res.headers.set('Cache-Control', CACHE.private);
+  res.headers.set('Vary', 'Cookie');
   if (err.retryAfter !== undefined) res.headers.set('Retry-After', String(err.retryAfter));
   return res;
 }
@@ -94,7 +97,9 @@ export async function parseBody<S extends z.ZodType>(
 export function assertSameOrigin(req: NextRequest): void {
   const origin = req.headers.get('origin');
   if (!origin) return; // same-origin fetches from older browsers / server-to-server; cookies are SameSite=Lax
-  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host');
+  // Same host resolution as requestOrigin(): the first hop of a (possibly chained) proxy list.
+  const host =
+    req.headers.get('x-forwarded-host')?.split(',')[0]?.trim() || req.headers.get('host');
   try {
     if (new URL(origin).host !== host)
       throw new AppError('forbidden', 'Cross-origin request blocked.');
@@ -123,6 +128,7 @@ export function requestOrigin(req: NextRequest): string {
 export function redirectRelative(path: string, status: 302 | 303 = 302): NextResponse {
   const res = new NextResponse(null, { status, headers: { Location: path } });
   res.headers.set('Cache-Control', CACHE.private);
+  res.headers.set('Vary', 'Cookie');
   return res;
 }
 

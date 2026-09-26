@@ -148,24 +148,18 @@ export function AppProvider({
   );
 
   /* ---------------- session ---------------- */
+  /** Wallet badge = MeResponse.stubCount (one indexed count on the server; contract v1.2). */
   const loadWalletCount = useCallback(async () => {
     try {
-      let count = 0;
-      let cursor: string | null = null;
-      for (let page = 0; page < 5; page++) {
-        const res = await api.diary('all', cursor);
-        count += res.items.length;
-        cursor = res.nextCursor;
-        if (!cursor) break;
-      }
-      setWalletCount(cursor ? 100 : count);
+      const me = await api.me();
+      setWalletCount(me.session ? me.stubCount : null);
     } catch {
       setWalletCount(null);
     }
   }, []);
 
   const applySession = useCallback(
-    (s: Session | null) => {
+    (s: Session | null, stubCount?: number) => {
       sessionRef.current = s;
       readyRef.current = true;
       setSessionState(s);
@@ -174,7 +168,8 @@ export function AppProvider({
       if (s) {
         known.current.forEach((k) => queue.current.add(k));
         schedule();
-        void loadWalletCount();
+        if (typeof stubCount === 'number') setWalletCount(stubCount);
+        else void loadWalletCount();
       } else {
         queue.current.clear();
         setStates({});
@@ -189,7 +184,7 @@ export function AppProvider({
     let alive = true;
     api
       .me()
-      .then((r) => alive && applySession(r.session))
+      .then((r) => alive && applySession(r.session, r.stubCount))
       .catch(() => alive && applySession(null));
     return () => {
       alive = false;

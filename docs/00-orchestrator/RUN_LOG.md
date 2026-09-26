@@ -10,4 +10,5 @@
 | 1b | Ratings + 'Worth it?' scope | product-manager | done | TMDB drives curation/sort; IMDb chip everywhere, never blended; deterministic 'Worth it?' (no AI) |
 | 3b | Apply ADR-008 to code + finish scaffold | architect | done | ADR-009 Worth it?; tiered OMDb refresh; 90 unit tests; lint/typecheck/test/build green |
 | 4 | Implementation | frontend-dev ∥ backend-dev | done | All routes + demo repos + live adapters + sync; all screens; 241 tests; lint/typecheck/test/build/format green |
-| 5 | Review | reviewer | running | |
+| 5 | Review | reviewer | done | 18 findings fixed (1 high open-redirect, 8 medium); contract v1.2; 247 tests green |
+| 6 | E2E QA | qa-engineer | running | |

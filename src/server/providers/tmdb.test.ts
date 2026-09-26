@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { DetailCacheStore } from '@/server/ports';
 import { CircuitBreaker } from './circuit-breaker';
-import { TmdbDetailProvider, UpstreamError, mapTmdbDetail } from './tmdb';
+import { TmdbDetailProvider, UpstreamError, mapTmdbDetail, safeReviewUrl } from './tmdb';
 
 const movieBody = {
   overview: 'Paul unites with the Fremen.',
@@ -212,5 +212,17 @@ describe('TmdbDetailProvider', () => {
     await q.getDetail('movie', 9);
     await q.getDetail('movie', 9);
     expect(put).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('safeReviewUrl (review links are rendered as <a href>)', () => {
+  it('keeps https links and replaces anything else with the TMDB review page', () => {
+    expect(safeReviewUrl('https://www.themoviedb.org/review/abc', 'abc')).toBe(
+      'https://www.themoviedb.org/review/abc',
+    );
+    expect(safeReviewUrl('javascript:alert(1)', 'abc')).toBe(
+      'https://www.themoviedb.org/review/abc',
+    );
+    expect(safeReviewUrl('', 'a b')).toBe('https://www.themoviedb.org/review/a%20b');
   });
 });

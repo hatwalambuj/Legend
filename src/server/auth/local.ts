@@ -4,10 +4,12 @@
  * Magic links are not emailed: the link is returned as `devLink` and completed at /auth/callback.
  * OWNER: Backend.
  */
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { Session } from '@/lib/types';
-import { env } from '@/server/env';
+import { DEMO_FALLBACK_SECRET, env, type ServerEnv } from '@/server/env';
 import type { AuthProvider } from '@/server/ports';
 import { demoStore, type DemoUser } from '@/server/repositories/memory/store';
 import { requestCookieJar, type CookieJar } from './cookies';
@@ -33,6 +35,38 @@ function toSession(u: DemoUser): Session {
   };
 }
 
+const generatedSecrets = new Map<string, string>();
+
+/**
+ * HMAC key for demo sessions. The public fallback constant is fine for local dev/tests, but a production
+ * build without DEMO_SESSION_SECRET (a publicly deployed demo) would let anyone forge a session for any
+ * user id (ids are public, e.g. `Review.author.id`). There we use a random secret persisted next to the
+ * demo store (shared by every worker of the server; in memory when DEMO_PERSIST=memory).
+ */
+export function demoSessionSecret(e: ServerEnv = env()): string {
+  if (e.demo.sessionSecret !== DEMO_FALLBACK_SECRET || e.nodeEnv !== 'production')
+    return e.demo.sessionSecret;
+  const file = e.demo.dataDir ? join(e.demo.dataDir, 'session-secret') : null;
+  const cached = generatedSecrets.get(file ?? '');
+  if (cached) return cached;
+  const read = () => {
+    const v = file && existsSync(file) ? readFileSync(file, 'utf8').trim() : '';
+    return v.length >= 32 ? v : null;
+  };
+  let secret: string;
+  try {
+    secret = read() ?? randomBytes(32).toString('base64url');
+    if (file && !existsSync(file)) {
+      mkdirSync(e.demo.dataDir!, { recursive: true });
+      writeFileSync(file, secret, { flag: 'wx', mode: 0o600 }); // wx: a racing worker's file wins
+    }
+  } catch {
+    secret = read() ?? randomBytes(32).toString('base64url');
+  }
+  generatedSecrets.set(file ?? '', secret);
+  return secret;
+}
+
 /** Verified against when the email is unknown, so timing doesn't reveal which emails exist. */
 let dummyHash: string | null = null;
 const getDummyHash = () => (dummyHash ??= hashPassword('not-a-real-password'));
@@ -43,7 +77,7 @@ export class LocalAuthProvider implements AuthProvider {
   constructor(private readonly jar: () => Promise<CookieJar> = requestCookieJar) {}
 
   private secret(): string {
-    return env().demo.sessionSecret;
+    return demoSessionSecret();
   }
 
   private async startSession(u: DemoUser): Promise<Session> {

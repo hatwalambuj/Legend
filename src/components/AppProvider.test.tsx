@@ -81,7 +81,7 @@ describe('AppProvider stub flow (DESIGN §5.1)', () => {
   it('signed out: tapping Stub it opens the auth sheet instead of posting', async () => {
     mockFetch((url) =>
       url === '/api/me'
-        ? { status: 200, body: { session: null, mode: DEFAULT_MODE } }
+        ? { status: 200, body: { session: null, mode: DEFAULT_MODE, stubCount: 0 } }
         : { status: 500 },
     );
     renderApp();
@@ -97,7 +97,8 @@ describe('AppProvider stub flow (DESIGN §5.1)', () => {
   it('signed in: one batched title-states call, optimistic count, toast with Undo', async () => {
     let resolvePost: (v: { status: number; body: unknown }) => void = () => {};
     mockFetch((url, init) => {
-      if (url === '/api/me') return { status: 200, body: { session: SESSION, mode: DEFAULT_MODE } };
+      if (url === '/api/me')
+        return { status: 200, body: { session: SESSION, mode: DEFAULT_MODE, stubCount: 7 } };
       if (url.startsWith('/api/me/title-states'))
         return {
           status: 200,
@@ -120,6 +121,8 @@ describe('AppProvider stub flow (DESIGN §5.1)', () => {
     const stateCalls = calls.filter((c) => c.url.startsWith('/api/me/title-states'));
     expect(stateCalls).toHaveLength(1);
     expect(decodeURIComponent(stateCalls[0]!.url)).toContain('movie:693134,tv:136315');
+    // Wallet badge comes from MeResponse.stubCount: no diary paging (contract v1.2).
+    expect(calls.some((c) => c.url.startsWith('/api/me/stubs'))).toBe(false);
 
     const btn = screen.getAllByTestId('stub-button')[0]!;
     fireEvent.click(btn);
@@ -142,7 +145,8 @@ describe('AppProvider stub flow (DESIGN §5.1)', () => {
 
   it('rolls back and offers Retry when the write fails', async () => {
     mockFetch((url) => {
-      if (url === '/api/me') return { status: 200, body: { session: SESSION, mode: DEFAULT_MODE } };
+      if (url === '/api/me')
+        return { status: 200, body: { session: SESSION, mode: DEFAULT_MODE, stubCount: 7 } };
       if (url.startsWith('/api/me/title-states')) return { status: 200, body: { states: {} } };
       if (url.startsWith('/api/me/stubs'))
         return { status: 200, body: { items: [], nextCursor: null } };
@@ -163,7 +167,8 @@ describe('AppProvider stub flow (DESIGN §5.1)', () => {
 
   it('asks "Stub again today?" before a same-day duplicate', async () => {
     mockFetch((url) => {
-      if (url === '/api/me') return { status: 200, body: { session: SESSION, mode: DEFAULT_MODE } };
+      if (url === '/api/me')
+        return { status: 200, body: { session: SESSION, mode: DEFAULT_MODE, stubCount: 7 } };
       if (url.startsWith('/api/me/title-states'))
         return {
           status: 200,

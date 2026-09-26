@@ -18,6 +18,9 @@ on:
         options: [all, discover, enrich, imdb]
         default: all
 
+permissions:
+  contents: read
+
 concurrency:
   group: nightly-sync
   cancel-in-progress: false
@@ -41,6 +44,9 @@ jobs:
       CATALOG_MIN_RATING: ${{ vars.CATALOG_MIN_RATING || '6.5' }}
       CATALOG_MIN_VOTES_MOVIE: ${{ vars.CATALOG_MIN_VOTES_MOVIE || '200' }}
       CATALOG_MIN_VOTES_TV: ${{ vars.CATALOG_MIN_VOTES_TV || '100' }}
+      # Hysteresis + TV genre exclusions must match the app's curation rule (ADR-003).
+      CATALOG_KEEP_RATING: ${{ vars.CATALOG_KEEP_RATING }}
+      CATALOG_EXCLUDE_TV_GENRES: ${{ vars.CATALOG_EXCLUDE_TV_GENRES || '10767,10763,10764' }}
       SYNC_GUARD_MIN: ${{ vars.SYNC_GUARD_MIN || '5000' }}
       SYNC_GUARD_MAX: ${{ vars.SYNC_GUARD_MAX || '25000' }}
       SYNC_GUARD_MAX_DELTA: ${{ vars.SYNC_GUARD_MAX_DELTA || '0.2' }}

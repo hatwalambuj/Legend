@@ -7,6 +7,7 @@
  */
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isSecureRequest } from '@/server/auth/cookies';
 import { env } from '@/server/env';
 
 export function hasSupabaseAuthCookie(req: Pick<NextRequest, 'cookies'>): boolean {
@@ -22,6 +23,13 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(e.supabase.url, e.supabase.anonKey, {
+    // Same flags as supabaseForRequest(): httpOnly + SameSite=Lax (+ Secure over https), ADR-005.
+    cookieOptions: {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: true,
+      secure: isSecureRequest(request.headers, e.siteUrl),
+    },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list) => {

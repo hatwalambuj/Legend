@@ -153,6 +153,12 @@ describe('MemoryStubs', () => {
     expect(office).toEqual([4, 3, 2, 1]);
     const tv = await stubs.diary(DEV, { type: 'tv', limit: 50 });
     expect(tv.items.every((x) => x.title.mediaType === 'tv')).toBe(true);
+    // DiaryResponse.total / MeResponse.stubCount count the whole filter, not one page (contract v1.2).
+    expect(all.total).toBe(12);
+    expect(tv.total).toBe(tv.items.length);
+    expect((await stubs.diary(DEV, { type: 'all', limit: 5 })).total).toBe(12);
+    expect(await stubs.count(DEV)).toBe(12);
+    expect(await stubs.count(DEV, 'tv')).toBe(tv.items.length);
     const ids: string[] = [];
     let cursor: string | null = null;
     do {

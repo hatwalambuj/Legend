@@ -35,10 +35,21 @@ export function browseHref(
   return qs ? `/browse?${qs}` : '/browse';
 }
 
-/** Only same-origin relative paths are allowed as post-login redirects (open-redirect guard). */
+/**
+ * Only same-origin relative paths are allowed as post-login redirects (open-redirect guard).
+ * Browsers strip ASCII tab/CR/LF from URLs and treat `\\` like `/`, so "/\t/evil.com" or "/\\evil.com"
+ * would become the protocol-relative "//evil.com": reject control characters and backslashes outright,
+ * then confirm that the path resolves to our own origin.
+ */
 export function safeNext(next: string | null | undefined, fallback = '/'): string {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\'))
+  if (!next || !next.startsWith('/') || /[\u0000-\u001f\u007f\\]/.test(next)) return fallback;
+  if (next.startsWith('//')) return fallback;
+  try {
+    const base = 'http://stubbed.invalid';
+    if (new URL(next, base).origin !== base) return fallback;
+  } catch {
     return fallback;
+  }
   return next;
 }
 

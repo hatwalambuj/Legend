@@ -189,6 +189,8 @@ export type MagicLinkInput = z.input<typeof magicLinkSchema>;
 export interface MeResponse {
   session: Session | null;
   mode: AppMode;
+  /** The signed-in user's total stubs (header wallet badge); 0 when signed out. */
+  stubCount: number;
 }
 export type CatalogResponse = Page<TitleSummary>;
 export type SearchResponse = SearchResult;
@@ -201,7 +203,8 @@ export interface StubMutationResponse {
 export interface StubDeleteResponse {
   state: TitleState;
 }
-export type DiaryResponse = Page<DiaryEntry>;
+/** Diary page; `total` = all stubs matching the `type` filter (not just this page). */
+export type DiaryResponse = Page<DiaryEntry> & { total: number };
 export interface ReviewUpsertResponse {
   review: Review;
   created: boolean;

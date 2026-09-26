@@ -1,9 +1,13 @@
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { DEMO_FALLBACK_SECRET, parseEnv } from '@/server/env';
 import { resetDemoStoreSingleton } from '@/server/repositories/memory/store';
 import { memoryCookieJar } from './cookies';
 import { isSecureRequest } from './cookies';
 import { DEMO_SESSION_COOKIE } from './demo-session';
-import { LocalAuthProvider } from './local';
+import { LocalAuthProvider, demoSessionSecret } from './local';
 
 let jar: ReturnType<typeof memoryCookieJar>;
 let auth: LocalAuthProvider;
@@ -86,5 +90,21 @@ describe('cookie security flag', () => {
     ).toBe(false);
     expect(isSecureRequest(new Headers(), 'https://stubbed.app')).toBe(true);
     expect(isSecureRequest(new Headers(), 'http://127.0.0.1:3100')).toBe(false);
+  });
+});
+
+describe('demoSessionSecret', () => {
+  it('never uses the public fallback in production; persists a random secret per data dir', () => {
+    expect(demoSessionSecret(parseEnv({ NODE_ENV: 'development' }))).toBe(DEMO_FALLBACK_SECRET);
+    expect(
+      demoSessionSecret(parseEnv({ NODE_ENV: 'production', DEMO_SESSION_SECRET: 'x'.repeat(40) })),
+    ).toBe('x'.repeat(40));
+    const dir = mkdtempSync(join(tmpdir(), 'stubbed-secret-'));
+    const prod = parseEnv({ NODE_ENV: 'production', DEMO_DATA_DIR: dir });
+    const s = demoSessionSecret(prod);
+    expect(s).not.toBe(DEMO_FALLBACK_SECRET);
+    expect(s.length).toBeGreaterThanOrEqual(32);
+    expect(readFileSync(join(dir, 'session-secret'), 'utf8')).toBe(s);
+    expect(demoSessionSecret(prod)).toBe(s);
   });
 });

@@ -112,7 +112,7 @@ export const dal: DataAccess = {
   async listDiary(handle, opts = {}) {
     const c = container();
     const p = await c.profiles.getByHandle(handle);
-    if (!p) return { items: [], nextCursor: null };
+    if (!p) return { items: [], nextCursor: null, total: 0 };
     return c.stubs.diary(p.id, {
       type: opts.type ?? 'all',
       cursor: opts.cursor,

@@ -11,8 +11,9 @@
 import 'server-only';
 import { createServerClient } from '@supabase/ssr';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { AppError } from '@/lib/errors';
+import { isSecureRequest } from '@/server/auth/cookies';
 import { env } from '@/server/env';
 
 function config() {
@@ -23,10 +24,20 @@ function config() {
 
 const NO_SESSION = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
 
+/**
+ * ADR-005: session cookies are httpOnly + SameSite=Lax (+ Secure over https). @supabase/ssr defaults to
+ * `httpOnly: false` (for browser clients); we never read auth cookies in the browser, so lock them down.
+ */
+function authCookieOptions(secure: boolean) {
+  return { path: '/', sameSite: 'lax' as const, httpOnly: true, secure };
+}
+
 export async function supabaseForRequest(): Promise<SupabaseClient> {
   const cfg = config();
   const jar = await cookies();
+  const secure = isSecureRequest(await headers(), env().siteUrl);
   return createServerClient(cfg.url, cfg.anonKey, {
+    cookieOptions: authCookieOptions(secure),
     cookies: {
       getAll: () => jar.getAll(),
       setAll: (list) => {

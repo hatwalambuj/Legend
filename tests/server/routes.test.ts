@@ -116,6 +116,7 @@ describe('auth (local provider)', () => {
     const m = await call(me.GET as Handler, req('GET', '/api/me'));
     expect(m.data.session.user.handle).toBe('newuser');
     expect(m.data.mode.isDemo).toBe(true);
+    expect(m.data.stubCount).toBe(0);
 
     const dupEmail = await call(
       signup.POST as Handler,
@@ -242,6 +243,9 @@ describe('stubs', () => {
       { origin: 'https://evil.test' },
     );
     expect([cross.status, cross.data.error.code]).toEqual([403, 'forbidden']);
+    // Errors are never cacheable and vary on the cookie (API_CONTRACT §4).
+    expect(cross.headers.get('cache-control')).toBe('private, no-store');
+    expect(cross.headers.get('vary')).toBe('Cookie');
     const r = new NextRequest(`${BASE}/api/stubs`, {
       method: 'POST',
       headers: { host: 'localhost:3000', origin: BASE, 'content-type': 'text/plain' },
@@ -361,6 +365,13 @@ describe('stubs', () => {
     const d = await call(diary.GET as Handler, req('GET', '/api/me/stubs?type=movie&limit=3'));
     expect(d.status).toBe(200);
     expect(d.data.items).toHaveLength(3);
+    const all = await call(diary.GET as Handler, req('GET', '/api/me/stubs?limit=3'));
+    // `total` counts the whole filter; /api/me carries the same number for the wallet badge.
+    expect(d.data.total).toBeGreaterThan(3);
+    expect(all.data.total).toBeGreaterThan(d.data.total);
+    expect((await call(me.GET as Handler, req('GET', '/api/me'))).data.stubCount).toBe(
+      all.data.total,
+    );
     expect(
       d.data.items.every((x: { title: { mediaType: string } }) => x.title.mediaType === 'movie'),
     ).toBe(true);

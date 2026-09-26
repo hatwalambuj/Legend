@@ -308,12 +308,13 @@ export class MemoryStubs implements StubRepository {
   async diary(
     userId: string,
     opts: { type: TypeFilter; cursor?: string | null; limit: number },
-  ): Promise<Page<DiaryEntry>> {
+  ): Promise<Page<DiaryEntry> & { total: number }> {
     const d = demoStore().get();
     const numbers = stubNumbers(d, userId);
     const rows = d.stubs.filter((s) => s.userId === userId && matchesType(s.titleKey, opts.type));
     // Resolve titles first so the page never contains holes; order = SQL index stubs_diary.
-    const page = keysetPage(withTitle(rows), {
+    const resolved = withTitle(rows);
+    const page = keysetPage(resolved, {
       kind: 'diary',
       dirs: [-1, -1, 1],
       tupleOf: (s) => [s.watchedOn, s.createdAt, s.id],
@@ -323,7 +324,15 @@ export class MemoryStubs implements StubRepository {
     return {
       items: page.items.map((s) => ({ ...toStub(s, numbers.get(s.id) ?? 1), title: s.title })),
       nextCursor: page.nextCursor,
+      total: resolved.length,
     };
+  }
+
+  async count(userId: string, type: TypeFilter = 'all'): Promise<number> {
+    let n = 0;
+    for (const s of demoStore().get().stubs)
+      if (s.userId === userId && matchesType(s.titleKey, type)) n++;
+    return n;
   }
 
   async wallet(
@@ -403,22 +412,25 @@ export class MemoryReviews implements ReviewRepository {
       const existing = d.reviews.find(
         (r) => r.userId === input.userId && r.titleKey === input.titleKey,
       );
-      // Inserts + edits count (trigger: updated_at within 1 minute, excluding the row being edited).
-      assertUnderLimit(
-        d.reviews
-          .filter((r) => r.userId === input.userId && r !== existing)
-          .map((r) => r.updatedAt),
-        env().rateLimits.reviewsPerMin,
-        ERROR_COPY.rate_limited_review,
-      );
+      const changed =
+        !existing ||
+        existing.rating10 !== input.rating10 ||
+        existing.body !== input.body ||
+        existing.isSpoiler !== input.isSpoiler;
+      // Inserts + content edits count (trigger: updated_at within 1 minute, excluding the row being
+      // edited); a re-save or stub re-link does not.
+      if (changed)
+        assertUnderLimit(
+          d.reviews
+            .filter((r) => r.userId === input.userId && r !== existing)
+            .map((r) => r.updatedAt),
+          env().rateLimits.reviewsPerMin,
+          ERROR_COPY.rate_limited_review,
+        );
       const now = nowIso();
       let row: FixtureReview;
       let created: boolean;
       if (existing) {
-        const changed =
-          existing.rating10 !== input.rating10 ||
-          existing.body !== input.body ||
-          existing.isSpoiler !== input.isSpoiler;
         existing.rating10 = input.rating10;
         existing.body = input.body;
         existing.isSpoiler = input.isSpoiler;

@@ -162,10 +162,13 @@ export interface StubRepository {
   ): Promise<Stub>;
   delete(userId: string, id: string): Promise<Stub>;
   get(userId: string, id: string): Promise<Stub | null>;
+  /** Newest first; `total` counts every stub matching `type` (API_CONTRACT §5.10). */
   diary(
     userId: string,
     opts: { type: TypeFilter; cursor?: string | null; limit: number },
-  ): Promise<Page<DiaryEntry>>;
+  ): Promise<Page<DiaryEntry> & { total: number }>;
+  /** Number of the user's stubs (optionally one media type). Header wallet badge (`MeResponse.stubCount`). */
+  count(userId: string, type?: TypeFilter): Promise<number>;
   wallet(
     userId: string,
     opts: { cursor?: string | null; limit: number },

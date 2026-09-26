@@ -123,6 +123,16 @@ function pickTrailer(videos: z.output<typeof videoSchema>[]): Trailer | null {
   return { site: best.site as Trailer['site'], key: best.key, name: best.name || 'Trailer' };
 }
 
+/** An https URL from TMDB, else the canonical TMDB review page for the id. */
+export function safeReviewUrl(url: string, id: string): string {
+  try {
+    if (new URL(url).protocol === 'https:') return url;
+  } catch {
+    /* fall through */
+  }
+  return `https://www.themoviedb.org/review/${encodeURIComponent(id)}`;
+}
+
 /** Pure mapping of a TMDB detail body to the DetailResult. Exported for tests. */
 export function mapTmdbDetail(mediaType: MediaType, body: unknown): Omit<DetailResult, 'stale'> {
   const d = tmdbDetailSchema.parse(body ?? {});
@@ -153,7 +163,8 @@ export function mapTmdbDetail(mediaType: MediaType, body: unknown): Omit<DetailR
           ? `${r.content.slice(0, TMDB_REVIEW_MAX_CHARS - 1)}…`
           : r.content,
       createdAt: r.created_at,
-      url: r.url,
+      // Rendered as an <a href>: only ever an https link (never javascript:/data: from upstream data).
+      url: safeReviewUrl(r.url, r.id),
     }));
   const fields: DetailFields = {
     overview: d.overview,

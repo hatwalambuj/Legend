@@ -78,6 +78,42 @@ const resolveClients = (c?: Partial<Clients>): Clients => ({ ...defaults, ...c }
 /** Quote a value for a PostgREST logic-tree filter (`or=(…)`). */
 const q = (v: string | number) => `"${String(v).replace(/(["\\])/g, '\\$1')}"`;
 
+/* Keyset tuples arrive in client-supplied cursors. A tampered value must restart at page 1 (ADR-003),
+   never reach a SQL cast (`::date`, `::uuid`, `::int`…) and surface as a 500. */
+type Col = 'date' | 'ts' | 'uuid' | 'int' | 'num' | 'str';
+const TS_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}(:?\d{2})?)?$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const validDate = (v: string) => {
+  const d = new Date(`${v.slice(0, 10)}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v.slice(0, 10);
+};
+const COL_OK: Record<Col, (v: unknown) => boolean> = {
+  date: (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && validDate(v),
+  ts: (v) => typeof v === 'string' && TS_RE.test(v) && validDate(v) && !Number.isNaN(Date.parse(v)),
+  uuid: (v) => typeof v === 'string' && UUID_RE.test(v),
+  int: (v) => typeof v === 'number' && Number.isInteger(v) && Math.abs(v) <= 2_147_483_647,
+  num: (v) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e9,
+  str: (v) => typeof v === 'string' && v.length <= 300,
+};
+
+/** The tuple when every position has the SQL type the keyset expects, else null (→ page 1). */
+export function typedTuple<T extends readonly unknown[]>(
+  tuple: T | null | undefined,
+  cols: readonly Col[],
+): T | null {
+  return tuple && tuple.length === cols.length && cols.every((c, i) => COL_OK[c](tuple[i]))
+    ? tuple
+    : null;
+}
+
+const CATALOG_COLS: Record<CatalogQuery['sort'], readonly Col[]> = {
+  release_desc: ['date', 'str', 'str'],
+  release_asc: ['date', 'str', 'str'],
+  rating_desc: ['num', 'int', 'str', 'str'],
+  rating_asc: ['num', 'int', 'str', 'str'],
+  popularity_desc: ['num', 'str'],
+};
+
 function nextPage<T, R>(
   rows: R[],
   limit: number,
@@ -116,7 +152,7 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
   async list(query: CatalogQuery): Promise<Page<TitleSummary>> {
     const db = await this.db();
     const limit = query.limit ?? 20;
-    const after = decodeCursor(query.cursor, query.sort);
+    const after = typedTuple(decodeCursor(query.cursor, query.sort), CATALOG_COLS[query.sort]);
     const genres = query.genreIds?.length ? query.genreIds : undefined;
     // GET (+ data cache): jsonb/array args must be pre-encoded; absent args fall back to SQL defaults.
     const [page, count] = await Promise.all([
@@ -376,22 +412,32 @@ export class SupabaseStubs implements StubRepository {
   async diary(
     userId: string,
     opts: { type: TypeFilter; cursor?: string | null; limit: number },
-  ): Promise<Page<DiaryEntry>> {
+  ): Promise<Page<DiaryEntry> & { total: number }> {
     const db = await this.clients.public();
-    const after = decodeKeyset(opts.cursor, 'diary', 3);
-    const res = await db.rpc('user_diary', {
-      p_user: userId,
-      p_type: opts.type,
-      p_after: after,
-      p_limit: opts.limit + 1,
-    });
+    const after = typedTuple(decodeKeyset(opts.cursor, 'diary', 3), ['date', 'ts', 'uuid']);
+    const [res, total] = await Promise.all([
+      db.rpc('user_diary', {
+        p_user: userId,
+        p_type: opts.type,
+        p_after: after,
+        p_limit: opts.limit + 1,
+      }),
+      this.count(userId, opts.type),
+    ]);
     const rows = (unwrap(res) as DiaryRow[] | null) ?? [];
-    return nextPage(
+    const page = nextPage(
       rows,
       opts.limit,
       (r) => ({ ...rowToStub(r, userId), title: rowToSummary(r.title) }),
       (r) => encodeKeyset('diary', [String(r.watched_on).slice(0, 10), r.created_at, r.id]),
     );
+    return { ...page, total };
+  }
+
+  async count(userId: string, type: TypeFilter = 'all'): Promise<number> {
+    const db = await this.clients.public();
+    const res = await db.rpc('user_diary_count', { p_user: userId, p_type: type });
+    return Number(unwrap(res) ?? 0);
   }
 
   async wallet(
@@ -399,7 +445,7 @@ export class SupabaseStubs implements StubRepository {
     opts: { cursor?: string | null; limit: number },
   ): Promise<Page<WalletItem>> {
     const db = await this.clients.public();
-    const after = decodeKeyset(opts.cursor, 'wallet', 3);
+    const after = typedTuple(decodeKeyset(opts.cursor, 'wallet', 3), ['date', 'ts', 'str']);
     const res = await db.rpc('user_wallet', {
       p_user: userId,
       p_after: after,
@@ -514,7 +560,10 @@ export class SupabaseReviews implements ReviewRepository {
     const db = await this.clients.public();
     const highest = opts.sort === 'highest';
     const kind = highest ? 'reviews:highest' : 'reviews:newest';
-    const after = decodeKeyset(opts.cursor, kind, highest ? 3 : 2);
+    const after = typedTuple(
+      decodeKeyset(opts.cursor, kind, highest ? 3 : 2),
+      highest ? ['int', 'ts', 'uuid'] : ['ts', 'uuid'],
+    );
     const res = await db.rpc('title_reviews', {
       p_title_key: titleKey,
       p_sort: opts.sort,
@@ -535,7 +584,7 @@ export class SupabaseReviews implements ReviewRepository {
     opts: { cursor?: string | null; limit: number },
   ): Promise<Page<ReviewWithTitle>> {
     const db = await this.clients.public();
-    const after = decodeKeyset(opts.cursor, 'user-reviews', 2);
+    const after = typedTuple(decodeKeyset(opts.cursor, 'user-reviews', 2), ['ts', 'uuid']);
     const res = await db.rpc('user_reviews', {
       p_user: userId,
       p_after: after,
@@ -602,7 +651,7 @@ export class SupabaseWatchlist implements WatchlistRepository {
     opts: { cursor?: string | null; limit: number },
   ): Promise<Page<TitleSummary>> {
     const db = await this.clients.user();
-    const after = decodeKeyset(opts.cursor, 'watchlist', 2);
+    const after = typedTuple(decodeKeyset(opts.cursor, 'watchlist', 2), ['ts', 'int']);
     let query = db
       .from('watchlist')
       .select('added_at, title_id, title:catalog_index(*)')

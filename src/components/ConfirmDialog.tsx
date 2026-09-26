@@ -23,14 +23,20 @@ export function ConfirmDialog({
           <SheetTitle id="confirm-h">{state.title}</SheetTitle>
           {state.body && <SheetSub id="confirm-sub">{state.body}</SheetSub>}
           <SheetButtons>
-            <button type="button" className="btn btn--ghost" onClick={() => onDone(false)}>
+            {/* Destructive confirms focus Cancel, so a stray Enter never deletes anything. */}
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => onDone(false)}
+              autoFocus={Boolean(state.danger)}
+            >
               {state.cancelLabel ?? 'Cancel'}
             </button>
             <button
               type="button"
               className={`btn ${state.danger ? 'btn--danger' : 'btn--primary'}`}
               onClick={() => onDone(true)}
-              autoFocus
+              autoFocus={!state.danger}
             >
               {state.confirmLabel}
             </button>

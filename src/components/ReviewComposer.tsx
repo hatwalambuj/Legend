@@ -50,6 +50,8 @@ export function ReviewComposer({
         rating10: rating,
         body: body.trim(),
         isSpoiler: spoiler,
+        // Keep the "STUB #N" link on edits: the upsert replaces stubId, and omitting it would unlink it.
+        stubId: existing?.stubId ?? null,
       });
       onSaved(res.review);
       if (res.suggestStub) {

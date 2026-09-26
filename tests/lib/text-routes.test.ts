@@ -29,6 +29,12 @@ describe('text + routes', () => {
     );
     expect(safeNext('//evil.com')).toBe('/');
     expect(safeNext('https://evil.com')).toBe('/');
+    // Browsers drop tab/CR/LF and read "\\" as "/": each of these would become "//evil.com".
+    expect(safeNext('/\t/evil.com')).toBe('/');
+    expect(safeNext('/\n/evil.com')).toBe('/');
+    expect(safeNext('/\\evil.com')).toBe('/');
+    expect(safeNext('/\t\\evil.com')).toBe('/');
+    expect(safeNext('/me/stubs?type=tv#top')).toBe('/me/stubs?type=tv#top');
     expect(safeNext('/title/movie/1-x?action=stub')).toBe('/title/movie/1-x?action=stub');
   });
 });
