@@ -48,7 +48,7 @@ describe('ReviewCard (A6-AC2 spoilers)', () => {
 describe('ReviewCard "Report" (GAP-06)', () => {
   it("offers a mailto with the review id and title on other people's reviews", () => {
     renderWithApp(<ReviewCard review={review} reportTitle="Ted Lasso (2020)" />);
-    const link = screen.getByRole('link', { name: 'Report review by @priya' });
+    const link = screen.getByRole('link', { name: 'Report review by priya' });
     const href = decodeURIComponent(link.getAttribute('href') ?? '');
     expect(href.startsWith(`mailto:${CONTACT_EMAIL}?`)).toBe(true);
     expect(href).toContain('Report review r1');

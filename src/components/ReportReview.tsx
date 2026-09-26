@@ -28,7 +28,7 @@ export function ReportReview({
         { id: reviewId, titleKey: `${title}, ${titleKey}, by @${authorHandle}` },
         CONTACT_EMAIL,
       )}
-      aria-label={`Report review by @${authorHandle}`}
+      aria-label={`Report review by ${authorHandle}`}
       data-testid="report-review"
     >
       Report

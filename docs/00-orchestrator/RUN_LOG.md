@@ -13,4 +13,5 @@
 | 5 | Review | reviewer | done | 18 findings fixed (1 high open-redirect, 8 medium); contract v1.2; 247 tests green |
 | 6 | E2E QA | qa-engineer | done | 151 E2E (desktop+mobile) green; 9 bugs, 8 fixed; BUG-03 (404 status/308 redirect) open |
 | 7 | Gap review | product-manager | done | 26/32 pass; MUST FIX NOW: mobile title fold, wallet score labels, sync per-type minimums, demo opt-in in prod, trust minimum, README going-live, TMDB logo (founder), staging smoke (founder) |
-| 8 | Fix loop 1 | frontend-dev ∥ backend-dev | running | items 1-6 |
+| 8 | Fix loop 1 | frontend-dev ∥ backend-dev | done | MUST FIX 1-6 done; 271 unit + 151 E2E green (orchestrator re-ran full gate) |
+| 9 | Loop review | reviewer | running | diff since phase 7 |
