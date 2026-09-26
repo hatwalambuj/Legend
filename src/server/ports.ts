@@ -1,0 +1,192 @@
+/**
+ * Provider / repository interfaces ("ports") behind which every external dependency lives (ADR-001, ADR-006).
+ * Authored by Architect; OWNED BY BACKEND after hand-off (Frontend never imports src/server/**).
+ * Backend may ADD methods; removing/renaming requires updating the ADRs.
+ *
+ * Two implementations of each data port:
+ *   live  : Supabase (Postgres + RLS + Auth), TMDB, OMDb, Trakt
+ *   demo  : in-memory store persisted to a JSON file (src/server/repositories/memory), fixtures, local auth
+ * Selection happens once in src/server/container.ts from env().mode.
+ */
+import type {
+  CatalogQuery,
+  DiaryEntry,
+  MediaType,
+  Page,
+  ProfileStats,
+  PublicProfile,
+  Review,
+  ReviewSort,
+  ReviewWithTitle,
+  Session,
+  Stub,
+  TitleDetail,
+  TitleKey,
+  TitleState,
+  TitleStats,
+  TitleSummary,
+  TypeFilter,
+  WalletItem,
+  WatchedWhere,
+} from '@/lib/types';
+
+/* ------------------------------------------------------------------ */
+/* Catalogue                                                           */
+/* ------------------------------------------------------------------ */
+
+/** The curated index (catalog_index table in live mode, fixtures in demo mode). */
+export interface CatalogIndexRepository {
+  list(query: CatalogQuery): Promise<Page<TitleSummary>>;
+  trending(type: TypeFilter, limit: number): Promise<TitleSummary[]>;
+  /** `normalizedQuery` = normalizeSearch(q). Listed titles only. */
+  search(normalizedQuery: string, type: TypeFilter, limit: number): Promise<TitleSummary[]>;
+  /** Listed OR unlisted row (hysteresis). */
+  get(mediaType: MediaType, tmdbId: number): Promise<TitleSummary | null>;
+  getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>>;
+  count(): Promise<number>;
+  lastSyncAt(): Promise<string | null>;
+}
+
+/** Heavy per-title detail (live: TMDB with L1/L2 cache; demo: fixtures). */
+export type DetailFields = Omit<TitleDetail, keyof TitleSummary | 'detailStatus' | 'fetchedAt'>;
+
+export interface CatalogDetailProvider {
+  readonly name: 'tmdb' | 'fixtures';
+  /** null = TMDB says the title doesn't exist. Throws UpstreamError on network/5xx/timeout. */
+  getDetail(
+    mediaType: MediaType,
+    tmdbId: number,
+  ): Promise<{ fields: DetailFields; summaryPatch?: Partial<TitleSummary> } | null>;
+}
+
+/** Optional IMDb rating badge (P1). */
+export interface RatingEnricher {
+  readonly name: 'omdb' | 'none';
+  getImdbRating(imdbId: string): Promise<{ rating: number; votes: number } | null>;
+}
+
+/* ------------------------------------------------------------------ */
+/* Auth                                                                */
+/* ------------------------------------------------------------------ */
+
+export interface AuthProvider {
+  readonly name: 'supabase' | 'local';
+  /** Reads (and, for Supabase, refreshes) the session from request cookies. */
+  getSession(): Promise<Session | null>;
+  /** Creates user + profile atomically and signs in (sets cookies). Throws AppError email_taken/handle_taken. */
+  signUp(input: {
+    email: string;
+    password: string;
+    handle: string;
+    displayName: string;
+  }): Promise<Session>;
+  /** Throws AppError('invalid_credentials') with the generic message (B2-AC1). */
+  signIn(input: { email: string; password: string }): Promise<Session>;
+  signOut(): Promise<void>;
+  /** Live: emails a magic link. Demo: returns the link instead of sending it. */
+  sendMagicLink(input: { email: string; redirectTo: string }): Promise<{ devLink?: string }>;
+  isHandleAvailable(handle: string): Promise<boolean>;
+}
+
+/* ------------------------------------------------------------------ */
+/* User data (always scoped to the acting user; live mode enforces RLS)  */
+/* ------------------------------------------------------------------ */
+
+export interface ProfileRepository {
+  getByHandle(handle: string): Promise<PublicProfile | null>;
+  getById(id: string): Promise<PublicProfile | null>;
+  stats(userId: string, year: number): Promise<ProfileStats>;
+  update(
+    userId: string,
+    patch: { displayName?: string; bio?: string; avatarUrl?: string | null },
+  ): Promise<PublicProfile>;
+}
+
+export interface StubRepository {
+  create(input: {
+    userId: string;
+    titleKey: TitleKey;
+    watchedOn: string;
+    watchedWhere: WatchedWhere | null;
+    note: string;
+  }): Promise<Stub>;
+  /** Throws AppError not_found if the stub isn't the user's. */
+  update(
+    userId: string,
+    id: string,
+    patch: { watchedOn?: string; watchedWhere?: WatchedWhere | null; note?: string },
+  ): Promise<Stub>;
+  delete(userId: string, id: string): Promise<Stub>;
+  get(userId: string, id: string): Promise<Stub | null>;
+  diary(
+    userId: string,
+    opts: { type: TypeFilter; cursor?: string | null; limit: number },
+  ): Promise<Page<DiaryEntry>>;
+  wallet(
+    userId: string,
+    opts: { cursor?: string | null; limit: number },
+  ): Promise<Page<WalletItem>>;
+  /** Created in the last 60s — for rate limiting in demo mode (live mode: DB trigger). */
+  countRecent(userId: string, sinceIso: string): Promise<number>;
+}
+
+export interface ReviewRepository {
+  /** One per (user, title): insert or update. Sets editedAt when rating/body change on update. */
+  upsert(input: {
+    userId: string;
+    titleKey: TitleKey;
+    rating10: number;
+    body: string;
+    isSpoiler: boolean;
+    stubId: string | null;
+  }): Promise<{ review: Review; created: boolean }>;
+  delete(userId: string, id: string): Promise<void>;
+  setImdbShared(userId: string, id: string, shared: boolean): Promise<Review>;
+  listForTitle(
+    titleKey: TitleKey,
+    opts: { sort: ReviewSort; cursor?: string | null; limit: number },
+  ): Promise<Page<Review>>;
+  listForUser(
+    userId: string,
+    opts: { cursor?: string | null; limit: number },
+  ): Promise<Page<ReviewWithTitle>>;
+  countRecent(userId: string, sinceIso: string): Promise<number>;
+}
+
+export interface WatchlistRepository {
+  add(userId: string, titleKey: TitleKey): Promise<void>;
+  remove(userId: string, titleKey: TitleKey): Promise<void>;
+  list(
+    userId: string,
+    opts: { cursor?: string | null; limit: number },
+  ): Promise<Page<TitleSummary>>;
+}
+
+export interface TitleStateRepository {
+  states(userId: string, keys: TitleKey[], today: string): Promise<Record<TitleKey, TitleState>>;
+  stats(titleKey: TitleKey): Promise<TitleStats>;
+}
+
+/* ------------------------------------------------------------------ */
+/* v1: outbound sync (feature-flagged, ADR-004)                        */
+/* ------------------------------------------------------------------ */
+
+export interface SyncAdapter {
+  readonly name: 'trakt' | 'tmdb';
+  pushStub(userId: string, stub: Stub): Promise<void>;
+  pushReview(userId: string, review: Review): Promise<void>;
+}
+
+/** Everything the data-access layer and route handlers need, resolved per request. */
+export interface Container {
+  catalog: CatalogIndexRepository;
+  detail: CatalogDetailProvider;
+  ratings: RatingEnricher;
+  auth: AuthProvider;
+  profiles: ProfileRepository;
+  stubs: StubRepository;
+  reviews: ReviewRepository;
+  watchlist: WatchlistRepository;
+  titleStates: TitleStateRepository;
+  sync: SyncAdapter[];
+}

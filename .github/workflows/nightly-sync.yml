@@ -1,0 +1,56 @@
+name: Nightly catalogue sync
+
+# ADR-002: refresh the curated catalog_index from TMDB once a night (also keeps Supabase Free from pausing).
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Fetch + guardrails only, write nothing'
+        type: boolean
+        default: false
+
+concurrency:
+  group: nightly-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}
+      TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      CATALOG_MIN_RATING: ${{ vars.CATALOG_MIN_RATING || '6.5' }}
+      CATALOG_MIN_VOTES_MOVIE: ${{ vars.CATALOG_MIN_VOTES_MOVIE || '200' }}
+      CATALOG_MIN_VOTES_TV: ${{ vars.CATALOG_MIN_VOTES_TV || '100' }}
+      SYNC_GUARD_MIN: ${{ vars.SYNC_GUARD_MIN || '5000' }}
+      SYNC_GUARD_MAX: ${{ vars.SYNC_GUARD_MAX || '25000' }}
+      SYNC_GUARD_MAX_DELTA: ${{ vars.SYNC_GUARD_MAX_DELTA || '0.2' }}
+    steps:
+      - name: Skip when not configured
+        id: guard
+        run: |
+          if [ -z "$TMDB_READ_TOKEN$TMDB_API_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "Secrets not configured; skipping sync." && echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        if: steps.guard.outputs.skip != 'true'
+      - name: Sync
+        if: steps.guard.outputs.skip != 'true'
+        run: npm run sync:catalog -- ${{ inputs.dry_run && '--dry-run' || '' }}

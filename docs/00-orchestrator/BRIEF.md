@@ -44,3 +44,11 @@ Frontend Dev ∥ Backend Dev → Reviewer → QA (browser E2E) → Product Manag
 | Reviewer | `docs/05-review/REVIEW.md` + fixes |
 | QA | `e2e/*.spec.ts`, `docs/06-qa/QA_REPORT.md` |
 | PM gap review | `docs/07-gap-review/GAP_REVIEW.md` |
+
+## Founder scope change — 2026-09-26 (overrides all earlier docs)
+- **No posting to third parties.** Remove every outbound write of reviews or ratings: no "Also post on IMDb" copy-and-open,
+  no Trakt sync, no TMDB rating push, no sync tables, outbox, flags or env vars for it. Reviews and ratings live only in our DB.
+- **Show the IMDb rating on screen**: on every ticket stub (next to the TMDB score) and on the title detail page.
+  Source: OMDb (`OMDB_API_KEY`), cached in our DB and refreshed by the nightly job; hidden when a title has no IMDb rating.
+  Demo fixtures must carry real IMDb ids and IMDb ratings.
+- See `docs/04-architecture/ADR-008-scope-change-no-third-party-posting.md`.

@@ -1,0 +1,4660 @@
+{
+ "generatedAt": "2026-09-26T00:00:00Z",
+ "titles": [
+  {
+   "key": "movie:278",
+   "mediaType": "movie",
+   "tmdbId": 278,
+   "imdbId": "tt0111161",
+   "title": "The Shawshank Redemption",
+   "originalTitle": "The Shawshank Redemption",
+   "slug": "the-shawshank-redemption",
+   "releaseDate": "1994-09-23",
+   "year": 1994,
+   "voteAverage": 8.7,
+   "voteCount": 28412,
+   "popularity": 118.4,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    }
+   ],
+   "posterPath": "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
+   "backdropPath": "/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg",
+   "palette": {
+    "vibrant": "#6e8a9a",
+    "base": "#2c3136",
+    "tint1": "#35434b",
+    "tint2": "#202428",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAADQAQCdASoIAAwAA4BaJYwCdAEOuwXvAAD6LX5HzfCSA+TB23AAAA==",
+    "v": 1
+   },
+   "overviewShort": "A banker sentenced to life for a crime he swears he did not commit spends two decades inside Shawshank prison, where an unlikely friendship and a quiet plan keep hope alive.",
+   "runtimeMinutes": 142,
+   "seasonCount": null,
+   "overview": "A banker sentenced to life for a crime he swears he did not commit spends two decades inside Shawshank prison, where an unlikely friendship and a quiet plan keep hope alive.",
+   "tagline": "Fear can hold you prisoner. Hope can set you free.",
+   "directors": [
+    "Frank Darabont"
+   ],
+   "cast": [
+    {
+     "name": "Tim Robbins",
+     "character": "Andy Dufresne",
+     "profilePath": null
+    },
+    {
+     "name": "Morgan Freeman",
+     "character": "Ellis Boyd 'Red' Redding",
+     "profilePath": null
+    },
+    {
+     "name": "Bob Gunton",
+     "character": "Warden Norton",
+     "profilePath": null
+    },
+    {
+     "name": "William Sadler",
+     "character": "Heywood",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:238",
+   "mediaType": "movie",
+   "tmdbId": 238,
+   "imdbId": "tt0068646",
+   "title": "The Godfather",
+   "originalTitle": "The Godfather",
+   "slug": "the-godfather",
+   "releaseDate": "1972-03-14",
+   "year": 1972,
+   "voteAverage": 8.7,
+   "voteCount": 21530,
+   "popularity": 96.2,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    }
+   ],
+   "posterPath": "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+   "backdropPath": "/tmU7GeKVybMWFButWEGl2M4GeiP.jpg",
+   "palette": {
+    "vibrant": "#8a5a2b",
+    "base": "#1d1611",
+    "tint1": "#5b3b1d",
+    "tint2": "#1d1611",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADwAQCdASoIAAwAA4BaJZACdAEO/ne9iAAA/rrzDxCcEwk12C5XLZV6WkAAAA==",
+    "v": 1
+   },
+   "overviewShort": "The ageing head of a New York crime family hands control to his reluctant youngest son, who discovers exactly how far he will go to protect the people he loves.",
+   "runtimeMinutes": 175,
+   "seasonCount": null,
+   "overview": "The ageing head of a New York crime family hands control to his reluctant youngest son, who discovers exactly how far he will go to protect the people he loves.",
+   "tagline": "An offer you can't refuse.",
+   "directors": [
+    "Francis Ford Coppola"
+   ],
+   "cast": [
+    {
+     "name": "Marlon Brando",
+     "character": "Don Vito Corleone",
+     "profilePath": null
+    },
+    {
+     "name": "Al Pacino",
+     "character": "Michael Corleone",
+     "profilePath": null
+    },
+    {
+     "name": "James Caan",
+     "character": "Sonny Corleone",
+     "profilePath": null
+    },
+    {
+     "name": "Diane Keaton",
+     "character": "Kay Adams",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:155",
+   "mediaType": "movie",
+   "tmdbId": 155,
+   "imdbId": "tt0468569",
+   "title": "The Dark Knight",
+   "originalTitle": "The Dark Knight",
+   "slug": "the-dark-knight",
+   "releaseDate": "2008-07-16",
+   "year": 2008,
+   "voteAverage": 8.5,
+   "voteCount": 33950,
+   "popularity": 132.9,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    },
+    {
+     "id": 53,
+     "name": "Thriller"
+    }
+   ],
+   "posterPath": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+   "backdropPath": "/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg",
+   "palette": {
+    "vibrant": "#3d5f8a",
+    "base": "#101318",
+    "tint1": "#2d4565",
+    "tint2": "#101318",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAABQAQCdASoIAAwAA4BaJQBOgCgAAP7wjaT9SqFv+G7xearwqibko4YKoXZufAAA",
+    "v": 1
+   },
+   "overviewShort": "Batman, Commissioner Gordon and a new district attorney close in on Gotham’s mobs — until a chaos-loving criminal called the Joker forces each of them to choose what they are willing to lose.",
+   "runtimeMinutes": 152,
+   "seasonCount": null,
+   "overview": "Batman, Commissioner Gordon and a new district attorney close in on Gotham’s mobs — until a chaos-loving criminal called the Joker forces each of them to choose what they are willing to lose.",
+   "tagline": "Why so serious?",
+   "directors": [
+    "Christopher Nolan"
+   ],
+   "cast": [
+    {
+     "name": "Christian Bale",
+     "character": "Bruce Wayne",
+     "profilePath": null
+    },
+    {
+     "name": "Heath Ledger",
+     "character": "Joker",
+     "profilePath": null
+    },
+    {
+     "name": "Aaron Eckhart",
+     "character": "Harvey Dent",
+     "profilePath": null
+    },
+    {
+     "name": "Gary Oldman",
+     "character": "James Gordon",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "EXeTwQWrcwY",
+    "name": "Official Trailer"
+   },
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:680",
+   "mediaType": "movie",
+   "tmdbId": 680,
+   "imdbId": "tt0110912",
+   "title": "Pulp Fiction",
+   "originalTitle": "Pulp Fiction",
+   "slug": "pulp-fiction",
+   "releaseDate": "1994-09-10",
+   "year": 1994,
+   "voteAverage": 8.5,
+   "voteCount": 28790,
+   "popularity": 87.5,
+   "genres": [
+    {
+     "id": 53,
+     "name": "Thriller"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    }
+   ],
+   "posterPath": "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
+   "backdropPath": "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
+   "palette": {
+    "vibrant": "#c8a02a",
+    "base": "#2a1a12",
+    "tint1": "#4d3e11",
+    "tint2": "#2a1a12",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADwAQCdASoIAAwAA4BaJbACdADdliTGAEAA362VulYHdWIuNX+Rv9pRbyNWWlDAAAA=",
+    "v": 1
+   },
+   "overviewShort": "Two philosophical hitmen, a boxer who won’t take a dive and a gangster’s restless wife collide across one sweaty Los Angeles weekend, told out of order.",
+   "runtimeMinutes": 154,
+   "seasonCount": null,
+   "overview": "Two philosophical hitmen, a boxer who won’t take a dive and a gangster’s restless wife collide across one sweaty Los Angeles weekend, told out of order.",
+   "tagline": "Just because you are a character doesn’t mean you have character.",
+   "directors": [
+    "Quentin Tarantino"
+   ],
+   "cast": [
+    {
+     "name": "John Travolta",
+     "character": "Vincent Vega",
+     "profilePath": null
+    },
+    {
+     "name": "Samuel L. Jackson",
+     "character": "Jules Winnfield",
+     "profilePath": null
+    },
+    {
+     "name": "Uma Thurman",
+     "character": "Mia Wallace",
+     "profilePath": null
+    },
+    {
+     "name": "Bruce Willis",
+     "character": "Butch Coolidge",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:129",
+   "mediaType": "movie",
+   "tmdbId": 129,
+   "imdbId": "tt0245429",
+   "title": "Spirited Away",
+   "originalTitle": "千と千尋の神隠し",
+   "slug": "spirited-away",
+   "releaseDate": "2001-07-20",
+   "year": 2001,
+   "voteAverage": 8.5,
+   "voteCount": 17120,
+   "popularity": 101.3,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10751,
+     "name": "Family"
+    },
+    {
+     "id": 14,
+     "name": "Fantasy"
+    }
+   ],
+   "posterPath": "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+   "backdropPath": "/Ab8mkHmkYADjU7wQiOkia9BzGvS.jpg",
+   "palette": {
+    "vibrant": "#5f9bb0",
+    "base": "#1c2a2e",
+    "tint1": "#29444d",
+    "tint2": "#192629",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAADQAQCdASoIAAwAA4BaJZACdAD0MjZboADwzgO/flEWwJaU4NkavgAA",
+    "v": 1
+   },
+   "overviewShort": "Ten-year-old Chihiro wanders into a bathhouse for spirits, where her parents are turned into pigs and she must work for a witch to find a way home.",
+   "runtimeMinutes": 125,
+   "seasonCount": null,
+   "overview": "Ten-year-old Chihiro wanders into a bathhouse for spirits, where her parents are turned into pigs and she must work for a witch to find a way home.",
+   "tagline": null,
+   "directors": [
+    "Hayao Miyazaki"
+   ],
+   "cast": [
+    {
+     "name": "Rumi Hiiragi",
+     "character": "Chihiro Ogino (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Miyu Irino",
+     "character": "Haku (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Mari Natsuki",
+     "character": "Yubaba (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:496243",
+   "mediaType": "movie",
+   "tmdbId": 496243,
+   "imdbId": "tt6751668",
+   "title": "Parasite",
+   "originalTitle": "기생충",
+   "slug": "parasite",
+   "releaseDate": "2019-05-30",
+   "year": 2019,
+   "voteAverage": 8.5,
+   "voteCount": 19310,
+   "popularity": 76.8,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 53,
+     "name": "Thriller"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+   "backdropPath": "/TU9NIjwzjoKPwQHoHshkFcQUCG.jpg",
+   "palette": {
+    "vibrant": "#7a8f6a",
+    "base": "#1a1d19",
+    "tint1": "#3b4532",
+    "tint2": "#1a1d19",
+    "lqip": "data:image/webp;base64,UklGRjAAAABXRUJQVlA4ICQAAADQAQCdASoIAAwAA4BaJYwCw7D0MjZLWAD6M4zni07ULziQAAA=",
+    "v": 1
+   },
+   "overviewShort": "A broke family talks its way, one job at a time, into the household of a wealthy one — until a secret in the basement turns the con into something far darker.",
+   "runtimeMinutes": 133,
+   "seasonCount": null,
+   "overview": "A broke family talks its way, one job at a time, into the household of a wealthy one — until a secret in the basement turns the con into something far darker.",
+   "tagline": "Act like you own the place.",
+   "directors": [
+    "Bong Joon-ho"
+   ],
+   "cast": [
+    {
+     "name": "Song Kang-ho",
+     "character": "Kim Ki-taek",
+     "profilePath": null
+    },
+    {
+     "name": "Lee Sun-kyun",
+     "character": "Park Dong-ik",
+     "profilePath": null
+    },
+    {
+     "name": "Cho Yeo-jeong",
+     "character": "Choi Yeon-gyo",
+     "profilePath": null
+    },
+    {
+     "name": "Choi Woo-shik",
+     "character": "Kim Ki-woo",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "5xH0HfJHsaY",
+    "name": "Official Trailer"
+   },
+   "episodeCount": null,
+   "tmdbReviews": [
+    {
+     "id": "c64c4e7f83fb57c91c4532e9",
+     "author": "peach_fuzz",
+     "rating": 9,
+     "content": "Funny for an hour, then it turns the lights off. Brilliant structure.",
+     "createdAt": "2019-11-02T16:30:00Z",
+     "url": "https://www.themoviedb.org/movie/496243/reviews"
+    }
+   ]
+  },
+  {
+   "key": "movie:157336",
+   "mediaType": "movie",
+   "tmdbId": 157336,
+   "imdbId": "tt0816692",
+   "title": "Interstellar",
+   "originalTitle": "Interstellar",
+   "slug": "interstellar",
+   "releaseDate": "2014-11-05",
+   "year": 2014,
+   "voteAverage": 8.5,
+   "voteCount": 37210,
+   "popularity": 154.6,
+   "genres": [
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+   "backdropPath": "/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
+   "palette": {
+    "vibrant": "#b98a4e",
+    "base": "#15181d",
+    "tint1": "#503c21",
+    "tint2": "#15181d",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoIAAwAA4BaJZACdADzgXQaIADJ6QqSjDvvvsVDcWPCffDVD0AAAA==",
+    "v": 1
+   },
+   "overviewShort": "With Earth failing, a former pilot leaves his children to fly through a wormhole in search of a new home, racing time itself to keep a promise.",
+   "runtimeMinutes": 169,
+   "seasonCount": null,
+   "overview": "With Earth failing, a former pilot leaves his children to fly through a wormhole in search of a new home, racing time itself to keep a promise.",
+   "tagline": "Mankind was born on Earth. It was never meant to die here.",
+   "directors": [
+    "Christopher Nolan"
+   ],
+   "cast": [
+    {
+     "name": "Matthew McConaughey",
+     "character": "Cooper",
+     "profilePath": null
+    },
+    {
+     "name": "Anne Hathaway",
+     "character": "Brand",
+     "profilePath": null
+    },
+    {
+     "name": "Jessica Chastain",
+     "character": "Murph",
+     "profilePath": null
+    },
+    {
+     "name": "Michael Caine",
+     "character": "Professor Brand",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "zSWdZVtXT7E",
+    "name": "Official Trailer"
+   },
+   "episodeCount": null,
+   "tmdbReviews": [
+    {
+     "id": "15993576557838228968968a",
+     "author": "docking_scene",
+     "rating": 10,
+     "content": "The docking sequence is the most stressed I have ever been in a cinema.",
+     "createdAt": "2014-11-12T21:40:00Z",
+     "url": "https://www.themoviedb.org/movie/157336/reviews"
+    }
+   ]
+  },
+  {
+   "key": "movie:27205",
+   "mediaType": "movie",
+   "tmdbId": 27205,
+   "imdbId": "tt1375666",
+   "title": "Inception",
+   "originalTitle": "Inception",
+   "slug": "inception",
+   "releaseDate": "2010-07-15",
+   "year": 2010,
+   "voteAverage": 8.4,
+   "voteCount": 37640,
+   "popularity": 121.7,
+   "genres": [
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    }
+   ],
+   "posterPath": "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+   "backdropPath": "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg",
+   "palette": {
+    "vibrant": "#4f6f86",
+    "base": "#121619",
+    "tint1": "#2f424f",
+    "tint2": "#121619",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAADQAQCdASoIAAwAA4BaJYwCdAEOvEP2AAD+oMEDLsUsVZj0MhwWjGwA",
+    "v": 1
+   },
+   "overviewShort": "A thief who steals secrets from dreams is offered one last job: plant an idea in a target’s mind, three dream-levels down, without losing himself.",
+   "runtimeMinutes": 148,
+   "seasonCount": null,
+   "overview": "A thief who steals secrets from dreams is offered one last job: plant an idea in a target’s mind, three dream-levels down, without losing himself.",
+   "tagline": "Your mind is the scene of the crime.",
+   "directors": [
+    "Christopher Nolan"
+   ],
+   "cast": [
+    {
+     "name": "Leonardo DiCaprio",
+     "character": "Dom Cobb",
+     "profilePath": null
+    },
+    {
+     "name": "Joseph Gordon-Levitt",
+     "character": "Arthur",
+     "profilePath": null
+    },
+    {
+     "name": "Elliot Page",
+     "character": "Ariadne",
+     "profilePath": null
+    },
+    {
+     "name": "Tom Hardy",
+     "character": "Eames",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "YoHD9XEInc0",
+    "name": "Official Trailer"
+   },
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:550",
+   "mediaType": "movie",
+   "tmdbId": 550,
+   "imdbId": "tt0137523",
+   "title": "Fight Club",
+   "originalTitle": "Fight Club",
+   "slug": "fight-club",
+   "releaseDate": "1999-10-15",
+   "year": 1999,
+   "voteAverage": 8.4,
+   "voteCount": 30120,
+   "popularity": 84.1,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+   "backdropPath": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
+   "palette": {
+    "vibrant": "#c44a6a",
+    "base": "#1c1216",
+    "tint1": "#732c3e",
+    "tint2": "#1c1216",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACQAQCdASoIAAwAA4BaJagAAuaL3MgA/nSj0McMPM8If/UynVCh5gAA",
+    "v": 1
+   },
+   "overviewShort": "An insomniac office worker and a reckless soap salesman start an underground fight club that grows into something neither of them can control.",
+   "runtimeMinutes": 139,
+   "seasonCount": null,
+   "overview": "An insomniac office worker and a reckless soap salesman start an underground fight club that grows into something neither of them can control.",
+   "tagline": null,
+   "directors": [
+    "David Fincher"
+   ],
+   "cast": [
+    {
+     "name": "Edward Norton",
+     "character": "The Narrator",
+     "profilePath": null
+    },
+    {
+     "name": "Brad Pitt",
+     "character": "Tyler Durden",
+     "profilePath": null
+    },
+    {
+     "name": "Helena Bonham Carter",
+     "character": "Marla Singer",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:13",
+   "mediaType": "movie",
+   "tmdbId": 13,
+   "imdbId": "tt0109830",
+   "title": "Forrest Gump",
+   "originalTitle": "Forrest Gump",
+   "slug": "forrest-gump",
+   "releaseDate": "1994-06-23",
+   "year": 1994,
+   "voteAverage": 8.5,
+   "voteCount": 28100,
+   "popularity": 79.4,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+   "backdropPath": "/67HggiWaP9ZLv5sPYmyRV37yAJM.jpg",
+   "palette": {
+    "vibrant": "#8fb0c9",
+    "base": "#262b2f",
+    "tint1": "#38454d",
+    "tint2": "#22272a",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAADQAQCdASoIAAwAA4BaJQBOgB6GSFU8AAD8qRdnKlbxtjN+wP9oxsAA",
+    "v": 1
+   },
+   "overviewShort": "A kind man from Alabama drifts through three decades of American history, always trying to find his way back to the girl he loved as a child.",
+   "runtimeMinutes": 142,
+   "seasonCount": null,
+   "overview": "A kind man from Alabama drifts through three decades of American history, always trying to find his way back to the girl he loved as a child.",
+   "tagline": "The world will never be the same once you’ve seen it through the eyes of Forrest Gump.",
+   "directors": [
+    "Robert Zemeckis"
+   ],
+   "cast": [
+    {
+     "name": "Tom Hanks",
+     "character": "Forrest Gump",
+     "profilePath": null
+    },
+    {
+     "name": "Robin Wright",
+     "character": "Jenny Curran",
+     "profilePath": null
+    },
+    {
+     "name": "Gary Sinise",
+     "character": "Lieutenant Dan Taylor",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:603",
+   "mediaType": "movie",
+   "tmdbId": 603,
+   "imdbId": "tt0133093",
+   "title": "The Matrix",
+   "originalTitle": "The Matrix",
+   "slug": "the-matrix",
+   "releaseDate": "1999-03-31",
+   "year": 1999,
+   "voteAverage": 8.2,
+   "voteCount": 26330,
+   "popularity": 92,
+   "genres": [
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+   "backdropPath": "/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg",
+   "palette": {
+    "vibrant": "#3fa34d",
+    "base": "#0d1a10",
+    "tint1": "#1e4d25",
+    "tint2": "#0d1a10",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACwAQCdASoIAAwAA4BaJaACdAEOtW9oAP4dK4jaG7e2R3uUCufXYLiTQAA=",
+    "v": 1
+   },
+   "overviewShort": "A hacker learns that the world he knows is a simulation built by machines, and that he may be the one person able to break it.",
+   "runtimeMinutes": 136,
+   "seasonCount": null,
+   "overview": "A hacker learns that the world he knows is a simulation built by machines, and that he may be the one person able to break it.",
+   "tagline": "Welcome to the Real World.",
+   "directors": [
+    "Lana Wachowski",
+    "Lilly Wachowski"
+   ],
+   "cast": [
+    {
+     "name": "Keanu Reeves",
+     "character": "Neo",
+     "profilePath": null
+    },
+    {
+     "name": "Laurence Fishburne",
+     "character": "Morpheus",
+     "profilePath": null
+    },
+    {
+     "name": "Carrie-Anne Moss",
+     "character": "Trinity",
+     "profilePath": null
+    },
+    {
+     "name": "Hugo Weaving",
+     "character": "Agent Smith",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:769",
+   "mediaType": "movie",
+   "tmdbId": 769,
+   "imdbId": "tt0099685",
+   "title": "GoodFellas",
+   "originalTitle": "GoodFellas",
+   "slug": "goodfellas",
+   "releaseDate": "1990-09-12",
+   "year": 1990,
+   "voteAverage": 8.5,
+   "voteCount": 13050,
+   "popularity": 58.3,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    }
+   ],
+   "posterPath": "/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg",
+   "backdropPath": "/sw7mordbZxgITU877yTpZCud90M.jpg",
+   "palette": {
+    "vibrant": "#b3372c",
+    "base": "#1c1010",
+    "tint1": "#76251d",
+    "tint2": "#1c1010",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADwAQCdASoIAAwAA4BaJbACdAEfbiJ1EAAA/sy6t56k4BtRhJA/bHfRhRygAA==",
+    "v": 1
+   },
+   "overviewShort": "From teenage errand boy to made man and finally informant: thirty years inside the mob, told by the guy who always wanted to be a gangster.",
+   "runtimeMinutes": 145,
+   "seasonCount": null,
+   "overview": "From teenage errand boy to made man and finally informant: thirty years inside the mob, told by the guy who always wanted to be a gangster.",
+   "tagline": null,
+   "directors": [
+    "Martin Scorsese"
+   ],
+   "cast": [
+    {
+     "name": "Robert De Niro",
+     "character": "James Conway",
+     "profilePath": null
+    },
+    {
+     "name": "Ray Liotta",
+     "character": "Henry Hill",
+     "profilePath": null
+    },
+    {
+     "name": "Joe Pesci",
+     "character": "Tommy DeVito",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:244786",
+   "mediaType": "movie",
+   "tmdbId": 244786,
+   "imdbId": "tt2582802",
+   "title": "Whiplash",
+   "originalTitle": "Whiplash",
+   "slug": "whiplash",
+   "releaseDate": "2014-10-10",
+   "year": 2014,
+   "voteAverage": 8.4,
+   "voteCount": 15620,
+   "popularity": 61.9,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10402,
+     "name": "Music"
+    }
+   ],
+   "posterPath": "/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
+   "backdropPath": "/fRGxZuo7jJUWQsVg9PREb98Aclp.jpg",
+   "palette": {
+    "vibrant": "#d18a2a",
+    "base": "#140e08",
+    "tint1": "#5a3c13",
+    "tint2": "#140e08",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJbACdAD0MjZboADMQCyR+fgIg430ebrAlSPrrWTmmYAA",
+    "v": 1
+   },
+   "overviewShort": "A young drummer at an elite conservatory falls under a bandleader whose methods push him to greatness — or to breaking point.",
+   "runtimeMinutes": 107,
+   "seasonCount": null,
+   "overview": "A young drummer at an elite conservatory falls under a bandleader whose methods push him to greatness — or to breaking point.",
+   "tagline": "The road to greatness can take you to the edge.",
+   "directors": [
+    "Damien Chazelle"
+   ],
+   "cast": [
+    {
+     "name": "Miles Teller",
+     "character": "Andrew Neiman",
+     "profilePath": null
+    },
+    {
+     "name": "J.K. Simmons",
+     "character": "Terence Fletcher",
+     "profilePath": null
+    },
+    {
+     "name": "Melissa Benoist",
+     "character": "Nicole",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:324857",
+   "mediaType": "movie",
+   "tmdbId": 324857,
+   "imdbId": "tt4633694",
+   "title": "Spider-Man: Into the Spider-Verse",
+   "originalTitle": "Spider-Man: Into the Spider-Verse",
+   "slug": "spider-man-into-the-spider-verse",
+   "releaseDate": "2018-12-06",
+   "year": 2018,
+   "voteAverage": 8.4,
+   "voteCount": 16030,
+   "popularity": 88.2,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg",
+   "backdropPath": "/uUiId6cG32JSRI6RyBQSvQtLjz2.jpg",
+   "palette": {
+    "vibrant": "#e0314b",
+    "base": "#1a0d1c",
+    "tint1": "#781a29",
+    "tint2": "#1a0d1c",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoIAAwAA4BaJbACdAEOtXEwAP6gwQMuxUDGVQVn+CNT9+0bOLwAAA==",
+    "v": 1
+   },
+   "overviewShort": "Brooklyn teen Miles Morales gets bitten, gets powers and gets company: Spider-People from other dimensions who need him to save every one of their worlds.",
+   "runtimeMinutes": 117,
+   "seasonCount": null,
+   "overview": "Brooklyn teen Miles Morales gets bitten, gets powers and gets company: Spider-People from other dimensions who need him to save every one of their worlds.",
+   "tagline": null,
+   "directors": [
+    "Bob Persichetti",
+    "Peter Ramsey",
+    "Rodney Rothman"
+   ],
+   "cast": [
+    {
+     "name": "Shameik Moore",
+     "character": "Miles Morales (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Jake Johnson",
+     "character": "Peter B. Parker (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Hailee Steinfeld",
+     "character": "Gwen Stacy (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:569094",
+   "mediaType": "movie",
+   "tmdbId": 569094,
+   "imdbId": "tt9362722",
+   "title": "Spider-Man: Across the Spider-Verse",
+   "originalTitle": "Spider-Man: Across the Spider-Verse",
+   "slug": "spider-man-across-the-spider-verse",
+   "releaseDate": "2023-05-31",
+   "year": 2023,
+   "voteAverage": 8.3,
+   "voteCount": 7610,
+   "popularity": 95.1,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+   "backdropPath": "/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg",
+   "palette": {
+    "vibrant": "#d94aa0",
+    "base": "#170f22",
+    "tint1": "#732856",
+    "tint2": "#170f22",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoIAAwAA4BaJagCdAD0LxlEAP0196KyWt3ichTbir/bHekc5gAAAA==",
+    "v": 1
+   },
+   "overviewShort": "Miles reunites with Gwen and is swept into a multiverse-spanning society of Spider-People — who have very firm rules about what a hero must lose.",
+   "runtimeMinutes": 140,
+   "seasonCount": null,
+   "overview": "Miles reunites with Gwen and is swept into a multiverse-spanning society of Spider-People — who have very firm rules about what a hero must lose.",
+   "tagline": null,
+   "directors": [
+    "Joaquim Dos Santos",
+    "Kemp Powers",
+    "Justin K. Thompson"
+   ],
+   "cast": [
+    {
+     "name": "Shameik Moore",
+     "character": "Miles Morales (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Hailee Steinfeld",
+     "character": "Gwen Stacy (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Oscar Isaac",
+     "character": "Miguel O’Hara (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:693134",
+   "mediaType": "movie",
+   "tmdbId": 693134,
+   "imdbId": "tt15239678",
+   "title": "Dune: Part Two",
+   "originalTitle": "Dune: Part Two",
+   "slug": "dune-part-two",
+   "releaseDate": "2024-02-27",
+   "year": 2024,
+   "voteAverage": 8.1,
+   "voteCount": 7420,
+   "popularity": 212.5,
+   "genres": [
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    }
+   ],
+   "posterPath": "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+   "backdropPath": "/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
+   "palette": {
+    "vibrant": "#c8671f",
+    "base": "#4a1d0b",
+    "tint1": "#6a3711",
+    "tint2": "#431a0a",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoIAAwAA4BaJbACdAD0LxdiAAD9Ncwry2twCGPo83WBXDX+2O/B5cHQAAA=",
+    "v": 1
+   },
+   "overviewShort": "Paul Atreides joins the Fremen and Chani on a path of revenge against the conspirators who destroyed his family — while dreading the holy war he keeps seeing in his visions.",
+   "runtimeMinutes": 166,
+   "seasonCount": null,
+   "overview": "Paul Atreides joins the Fremen and Chani on a path of revenge against the conspirators who destroyed his family — while dreading the holy war he keeps seeing in his visions.",
+   "tagline": "Long live the fighters.",
+   "directors": [
+    "Denis Villeneuve"
+   ],
+   "cast": [
+    {
+     "name": "Timothée Chalamet",
+     "character": "Paul Atreides",
+     "profilePath": null
+    },
+    {
+     "name": "Zendaya",
+     "character": "Chani",
+     "profilePath": null
+    },
+    {
+     "name": "Rebecca Ferguson",
+     "character": "Lady Jessica",
+     "profilePath": null
+    },
+    {
+     "name": "Javier Bardem",
+     "character": "Stilgar",
+     "profilePath": null
+    },
+    {
+     "name": "Austin Butler",
+     "character": "Feyd-Rautha Harkonnen",
+     "profilePath": null
+    },
+    {
+     "name": "Florence Pugh",
+     "character": "Princess Irulan",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "Way9Dexny3w",
+    "name": "Official Trailer"
+   },
+   "episodeCount": null,
+   "tmdbReviews": [
+    {
+     "id": "ff9f11cf21ff9077021340f2",
+     "author": "sandworm_enjoyer",
+     "rating": 9,
+     "content": "Scale you can feel in your chest. The sound design alone is worth the ticket.",
+     "createdAt": "2024-03-04T18:22:00Z",
+     "url": "https://www.themoviedb.org/movie/693134/reviews"
+    },
+    {
+     "id": "35ee08dcbb7032d3da26f4b7",
+     "author": "filmgoblin",
+     "rating": 7,
+     "content": "Gorgeous and patient. I wanted a little more Chani, and a little less prophecy.",
+     "createdAt": "2024-03-10T09:05:00Z",
+     "url": "https://www.themoviedb.org/movie/693134/reviews"
+    }
+   ]
+  },
+  {
+   "key": "movie:872585",
+   "mediaType": "movie",
+   "tmdbId": 872585,
+   "imdbId": "tt15398776",
+   "title": "Oppenheimer",
+   "originalTitle": "Oppenheimer",
+   "slug": "oppenheimer",
+   "releaseDate": "2023-07-19",
+   "year": 2023,
+   "voteAverage": 8.1,
+   "voteCount": 10350,
+   "popularity": 142.3,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 36,
+     "name": "History"
+    }
+   ],
+   "posterPath": "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+   "backdropPath": "/nb3xI8XI3w4pMVZ38VijbsyBqP4.jpg",
+   "palette": {
+    "vibrant": "#d4702c",
+    "base": "#1d120c",
+    "tint1": "#663615",
+    "tint2": "#1d120c",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJbACdAD0MjZboAD6M4zni1Bej/oPu1VvW+plNWPAwAAA",
+    "v": 1
+   },
+   "overviewShort": "The physicist who led the Manhattan Project builds the bomb, watches it change the world, and then faces a government hearing designed to break him.",
+   "runtimeMinutes": 181,
+   "seasonCount": null,
+   "overview": "The physicist who led the Manhattan Project builds the bomb, watches it change the world, and then faces a government hearing designed to break him.",
+   "tagline": "The world forever changes.",
+   "directors": [
+    "Christopher Nolan"
+   ],
+   "cast": [
+    {
+     "name": "Cillian Murphy",
+     "character": "J. Robert Oppenheimer",
+     "profilePath": null
+    },
+    {
+     "name": "Emily Blunt",
+     "character": "Kitty Oppenheimer",
+     "profilePath": null
+    },
+    {
+     "name": "Matt Damon",
+     "character": "Leslie Groves",
+     "profilePath": null
+    },
+    {
+     "name": "Robert Downey Jr.",
+     "character": "Lewis Strauss",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "uYPbbksJxIg",
+    "name": "Official Trailer"
+   },
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:545611",
+   "mediaType": "movie",
+   "tmdbId": 545611,
+   "imdbId": "tt6710474",
+   "title": "Everything Everywhere All at Once",
+   "originalTitle": "Everything Everywhere All at Once",
+   "slug": "everything-everywhere-all-at-once",
+   "releaseDate": "2022-03-24",
+   "year": 2022,
+   "voteAverage": 7.8,
+   "voteCount": 7050,
+   "popularity": 64.4,
+   "genres": [
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+   "backdropPath": "/ss0Os3uWJfQAENILHZUdX8Tt1OC.jpg",
+   "palette": {
+    "vibrant": "#6a7fe0",
+    "base": "#16142a",
+    "tint1": "#323d6c",
+    "tint2": "#16142a",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoIAAwAA4BaJagCdADzVMGAAPo0KVqOJm6ykmhc/FsuA/5lNoiwAA==",
+    "v": 1
+   },
+   "overviewShort": "Mid tax audit, a laundromat owner learns she can borrow skills from her other selves across the multiverse — and that only she can stop a threat that looks a lot like her daughter.",
+   "runtimeMinutes": 140,
+   "seasonCount": null,
+   "overview": "Mid tax audit, a laundromat owner learns she can borrow skills from her other selves across the multiverse — and that only she can stop a threat that looks a lot like her daughter.",
+   "tagline": null,
+   "directors": [
+    "Daniel Kwan",
+    "Daniel Scheinert"
+   ],
+   "cast": [
+    {
+     "name": "Michelle Yeoh",
+     "character": "Evelyn Wang",
+     "profilePath": null
+    },
+    {
+     "name": "Ke Huy Quan",
+     "character": "Waymond Wang",
+     "profilePath": null
+    },
+    {
+     "name": "Stephanie Hsu",
+     "character": "Joy Wang",
+     "profilePath": null
+    },
+    {
+     "name": "Jamie Lee Curtis",
+     "character": "Deirdre Beaubeirdre",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:419430",
+   "mediaType": "movie",
+   "tmdbId": 419430,
+   "imdbId": "tt5052448",
+   "title": "Get Out",
+   "originalTitle": "Get Out",
+   "slug": "get-out",
+   "releaseDate": "2017-02-24",
+   "year": 2017,
+   "voteAverage": 7.6,
+   "voteCount": 17080,
+   "popularity": 49.7,
+   "genres": [
+    {
+     "id": 9648,
+     "name": "Mystery"
+    },
+    {
+     "id": 53,
+     "name": "Thriller"
+    },
+    {
+     "id": 27,
+     "name": "Horror"
+    }
+   ],
+   "posterPath": "/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg",
+   "backdropPath": "/5bBGQH3hmE6MXOYE9IbyhYp2Ft3.jpg",
+   "palette": {
+    "vibrant": "#9a8a6a",
+    "base": "#141312",
+    "tint1": "#4b4332",
+    "tint2": "#141312",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAADwAQCdASoIAAwAA4BaJYwCdAD0MjhibgAA8NTkzg6qMZaIitiaAAAA",
+    "v": 1
+   },
+   "overviewShort": "A young photographer meets his girlfriend’s parents for the first time. The weekend is polite, strange, and then something much worse.",
+   "runtimeMinutes": 104,
+   "seasonCount": null,
+   "overview": "A young photographer meets his girlfriend’s parents for the first time. The weekend is polite, strange, and then something much worse.",
+   "tagline": null,
+   "directors": [
+    "Jordan Peele"
+   ],
+   "cast": [
+    {
+     "name": "Daniel Kaluuya",
+     "character": "Chris Washington",
+     "profilePath": null
+    },
+    {
+     "name": "Allison Williams",
+     "character": "Rose Armitage",
+     "profilePath": null
+    },
+    {
+     "name": "Bradley Whitford",
+     "character": "Dean Armitage",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:313369",
+   "mediaType": "movie",
+   "tmdbId": 313369,
+   "imdbId": "tt3783958",
+   "title": "La La Land",
+   "originalTitle": "La La Land",
+   "slug": "la-la-land",
+   "releaseDate": "2016-11-29",
+   "year": 2016,
+   "voteAverage": 7.9,
+   "voteCount": 17220,
+   "popularity": 55.6,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    },
+    {
+     "id": 10402,
+     "name": "Music"
+    }
+   ],
+   "posterPath": "/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
+   "backdropPath": "/nlPCdZlHtRNcF6C9hzUH4ebmV1w.jpg",
+   "palette": {
+    "vibrant": "#6a4fb0",
+    "base": "#130f24",
+    "tint1": "#453473",
+    "tint2": "#130f24",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAABwAQCdASoIAAwAA4BaJaACw7FAAAD+8FybfZxx33/6VpcHf9T0H1C3uN2TouGoAAA=",
+    "v": 1
+   },
+   "overviewShort": "A jazz pianist and an aspiring actor fall in love in Los Angeles while chasing the dreams that might pull them apart.",
+   "runtimeMinutes": 128,
+   "seasonCount": null,
+   "overview": "A jazz pianist and an aspiring actor fall in love in Los Angeles while chasing the dreams that might pull them apart.",
+   "tagline": null,
+   "directors": [
+    "Damien Chazelle"
+   ],
+   "cast": [
+    {
+     "name": "Ryan Gosling",
+     "character": "Sebastian Wilder",
+     "profilePath": null
+    },
+    {
+     "name": "Emma Stone",
+     "character": "Mia Dolan",
+     "profilePath": null
+    },
+    {
+     "name": "John Legend",
+     "character": "Keith",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:76341",
+   "mediaType": "movie",
+   "tmdbId": 76341,
+   "imdbId": "tt1392190",
+   "title": "Mad Max: Fury Road",
+   "originalTitle": "Mad Max: Fury Road",
+   "slug": "mad-max-fury-road",
+   "releaseDate": "2015-05-13",
+   "year": 2015,
+   "voteAverage": 7.6,
+   "voteCount": 22840,
+   "popularity": 57.2,
+   "genres": [
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/hA2ple9q4qnwxp3hKVNhroipsir.jpg",
+   "backdropPath": "/nlCHUWjY9XWbuEUQauCBgnY8ymF.jpg",
+   "palette": {
+    "vibrant": "#e07a2a",
+    "base": "#241208",
+    "tint1": "#613513",
+    "tint2": "#241208",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADwAQCdASoIAAwAA4BaJbACdAD0ruBOeQAA8NTaFfaKDsfo83WBKkf1Mp1Qo2oAAAA=",
+    "v": 1
+   },
+   "overviewShort": "In a scorched wasteland, a road warrior and a rebel commander flee a tyrant across the desert with his most prized possessions in tow.",
+   "runtimeMinutes": 121,
+   "seasonCount": null,
+   "overview": "In a scorched wasteland, a road warrior and a rebel commander flee a tyrant across the desert with his most prized possessions in tow.",
+   "tagline": "What a lovely day.",
+   "directors": [
+    "George Miller"
+   ],
+   "cast": [
+    {
+     "name": "Tom Hardy",
+     "character": "Max Rockatansky",
+     "profilePath": null
+    },
+    {
+     "name": "Charlize Theron",
+     "character": "Imperator Furiosa",
+     "profilePath": null
+    },
+    {
+     "name": "Nicholas Hoult",
+     "character": "Nux",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:329865",
+   "mediaType": "movie",
+   "tmdbId": 329865,
+   "imdbId": "tt2543164",
+   "title": "Arrival",
+   "originalTitle": "Arrival",
+   "slug": "arrival",
+   "releaseDate": "2016-11-10",
+   "year": 2016,
+   "voteAverage": 7.6,
+   "voteCount": 18150,
+   "popularity": 44.3,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    },
+    {
+     "id": 9648,
+     "name": "Mystery"
+    }
+   ],
+   "posterPath": "/x2FJsf1ElAgr63Y3PNPtJrcmpoe.jpg",
+   "backdropPath": "/yIZ1xendyqKvY3FGeeUYUd5X9Mm.jpg",
+   "palette": {
+    "vibrant": "#8ea3ad",
+    "base": "#1b1f22",
+    "tint1": "#3e454b",
+    "tint2": "#1b1f22",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAAAQAgCdASoIAAwAA4BaJZQCdAD0spTyO24AAN+tluO0VkiS0vyyJoAA",
+    "v": 1
+   },
+   "overviewShort": "When twelve alien ships touch down around the world, a linguist is recruited to learn their language before fear turns into war.",
+   "runtimeMinutes": 116,
+   "seasonCount": null,
+   "overview": "When twelve alien ships touch down around the world, a linguist is recruited to learn their language before fear turns into war.",
+   "tagline": null,
+   "directors": [
+    "Denis Villeneuve"
+   ],
+   "cast": [
+    {
+     "name": "Amy Adams",
+     "character": "Louise Banks",
+     "profilePath": null
+    },
+    {
+     "name": "Jeremy Renner",
+     "character": "Ian Donnelly",
+     "profilePath": null
+    },
+    {
+     "name": "Forest Whitaker",
+     "character": "Colonel Weber",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:965150",
+   "mediaType": "movie",
+   "tmdbId": 965150,
+   "imdbId": "tt19770238",
+   "title": "Aftersun",
+   "originalTitle": "Aftersun",
+   "slug": "aftersun",
+   "releaseDate": "2022-10-21",
+   "year": 2022,
+   "voteAverage": 7.7,
+   "voteCount": 1960,
+   "popularity": 21.4,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/evKz85EKouVbIr51zy5fOtpNRPg.jpg",
+   "backdropPath": "/rbWTHZUqu5ZT4bIPHXbqNadUWpv.jpg",
+   "palette": {
+    "vibrant": "#6fb3d6",
+    "base": "#1a2a33",
+    "tint1": "#2b4554",
+    "tint2": "#17262e",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADwAQCdASoIAAwAA4BaJZgCdADdi3o83gAA926eQmxleoLfOxzUu8+uhU9+AAAA",
+    "v": 1
+   },
+   "overviewShort": "Twenty years later, a woman replays the camcorder footage of a Turkish holiday with her young father, looking for the man she didn’t know then.",
+   "runtimeMinutes": 102,
+   "seasonCount": null,
+   "overview": "Twenty years later, a woman replays the camcorder footage of a Turkish holiday with her young father, looking for the man she didn’t know then.",
+   "tagline": null,
+   "directors": [
+    "Charlotte Wells"
+   ],
+   "cast": [
+    {
+     "name": "Paul Mescal",
+     "character": "Calum",
+     "profilePath": null
+    },
+    {
+     "name": "Frankie Corio",
+     "character": "Sophie",
+     "profilePath": null
+    },
+    {
+     "name": "Celia Rowlson-Hall",
+     "character": "Adult Sophie",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:666277",
+   "mediaType": "movie",
+   "tmdbId": 666277,
+   "imdbId": "tt13238346",
+   "title": "Past Lives",
+   "originalTitle": "Past Lives",
+   "slug": "past-lives",
+   "releaseDate": "2023-06-02",
+   "year": 2023,
+   "voteAverage": 7.7,
+   "voteCount": 1680,
+   "popularity": 24.8,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/k3waqVXSnvCZWfJYNtdamTgTtTA.jpg",
+   "backdropPath": "/f8JNnKmSOOtq2FDj0a8dTTSQeBO.jpg",
+   "palette": {
+    "vibrant": "#c79a6a",
+    "base": "#221a14",
+    "tint1": "#4d3d29",
+    "tint2": "#221a14",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADwAQCdASoIAAwAA4BaJZACdAD0ruMtLAAA+Dz2UUhv9CoCtl8o/YCtJVGAAA==",
+    "v": 1
+   },
+   "overviewShort": "Childhood sweethearts separated when one family emigrates from Seoul reconnect twice over twenty-four years, wondering who they might have been.",
+   "runtimeMinutes": 106,
+   "seasonCount": null,
+   "overview": "Childhood sweethearts separated when one family emigrates from Seoul reconnect twice over twenty-four years, wondering who they might have been.",
+   "tagline": null,
+   "directors": [
+    "Celine Song"
+   ],
+   "cast": [
+    {
+     "name": "Greta Lee",
+     "character": "Nora Moon",
+     "profilePath": null
+    },
+    {
+     "name": "Teo Yoo",
+     "character": "Hae Sung",
+     "profilePath": null
+    },
+    {
+     "name": "John Magaro",
+     "character": "Arthur",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:531428",
+   "mediaType": "movie",
+   "tmdbId": 531428,
+   "imdbId": "tt8613070",
+   "title": "Portrait of a Lady on Fire",
+   "originalTitle": "Portrait de la jeune fille en feu",
+   "slug": "portrait-of-a-lady-on-fire",
+   "releaseDate": "2019-09-18",
+   "year": 2019,
+   "voteAverage": 8.1,
+   "voteCount": 2640,
+   "popularity": 19.9,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    },
+    {
+     "id": 36,
+     "name": "History"
+    }
+   ],
+   "posterPath": "/2LquGwEhbg3soxSCs9VNyh5VJd9.jpg",
+   "backdropPath": "/pd0eKEU0nYJXOXPl7SRmfDMVmIK.jpg",
+   "palette": {
+    "vibrant": "#d0582e",
+    "base": "#1f1611",
+    "tint1": "#6e2f18",
+    "tint2": "#1f1611",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACwAQCdASoIAAwAA4BaJbACdAD0LxlEAP4dadMLY81MYyuydTH7A/J7O4ZIgAAA",
+    "v": 1
+   },
+   "overviewShort": "In 1770 Brittany, a painter is hired to secretly paint a reluctant bride’s wedding portrait, and the two women fall into a love with an end date.",
+   "runtimeMinutes": 122,
+   "seasonCount": null,
+   "overview": "In 1770 Brittany, a painter is hired to secretly paint a reluctant bride’s wedding portrait, and the two women fall into a love with an end date.",
+   "tagline": null,
+   "directors": [
+    "Céline Sciamma"
+   ],
+   "cast": [
+    {
+     "name": "Noémie Merlant",
+     "character": "Marianne",
+     "profilePath": null
+    },
+    {
+     "name": "Adèle Haenel",
+     "character": "Héloïse",
+     "profilePath": null
+    },
+    {
+     "name": "Luàna Bajrami",
+     "character": "Sophie",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:194",
+   "mediaType": "movie",
+   "tmdbId": 194,
+   "imdbId": "tt0211915",
+   "title": "Amélie",
+   "originalTitle": "Le Fabuleux Destin d’Amélie Poulain",
+   "slug": "amelie",
+   "releaseDate": "2001-04-25",
+   "year": 2001,
+   "voteAverage": 7.9,
+   "voteCount": 11580,
+   "popularity": 33,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/nSxDa3M9aMvGVLoItzWTepQ5h5d.jpg",
+   "backdropPath": "/5XqSwD9pwWxBh1vaeGkB4yCQy3e.jpg",
+   "palette": {
+    "vibrant": "#3e8f3a",
+    "base": "#2a0f0c",
+    "tint1": "#214d1f",
+    "tint2": "#2a0f0c",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACwAQCdASoIAAwAA4BaJYgCdAEOuwSAAP6gphJN0JMXK64WnsxCIWQAAAA=",
+    "v": 1
+   },
+   "overviewShort": "A shy Montmartre waitress decides to quietly fix the lives of the people around her, and nearly forgets about her own.",
+   "runtimeMinutes": 122,
+   "seasonCount": null,
+   "overview": "A shy Montmartre waitress decides to quietly fix the lives of the people around her, and nearly forgets about her own.",
+   "tagline": null,
+   "directors": [
+    "Jean-Pierre Jeunet"
+   ],
+   "cast": [
+    {
+     "name": "Audrey Tautou",
+     "character": "Amélie Poulain",
+     "profilePath": null
+    },
+    {
+     "name": "Mathieu Kassovitz",
+     "character": "Nino Quincampoix",
+     "profilePath": null
+    },
+    {
+     "name": "Rufus",
+     "character": "Raphaël Poulain",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:354912",
+   "mediaType": "movie",
+   "tmdbId": 354912,
+   "imdbId": "tt2380307",
+   "title": "Coco",
+   "originalTitle": "Coco",
+   "slug": "coco",
+   "releaseDate": "2017-10-27",
+   "year": 2017,
+   "voteAverage": 8.2,
+   "voteCount": 20240,
+   "popularity": 70.6,
+   "genres": [
+    {
+     "id": 10751,
+     "name": "Family"
+    },
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10402,
+     "name": "Music"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    }
+   ],
+   "posterPath": "/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg",
+   "backdropPath": "/askg3SMvhqEl4OL52YuvdtY40Yb.jpg",
+   "palette": {
+    "vibrant": "#e0802a",
+    "base": "#2a0f2a",
+    "tint1": "#613813",
+    "tint2": "#2a0f2a",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAAAQAgCdASoIAAwAA4BaJbACdAD0spOj+ioAAMnpAhfsE5nM9/NHvFjft67sVdnKAAA=",
+    "v": 1
+   },
+   "overviewShort": "A boy who dreams of music, in a family that bans it, stumbles into the Land of the Dead on Día de Muertos and has until sunrise to get home.",
+   "runtimeMinutes": 105,
+   "seasonCount": null,
+   "overview": "A boy who dreams of music, in a family that bans it, stumbles into the Land of the Dead on Día de Muertos and has until sunrise to get home.",
+   "tagline": null,
+   "directors": [
+    "Lee Unkrich"
+   ],
+   "cast": [
+    {
+     "name": "Anthony Gonzalez",
+     "character": "Miguel (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Gael García Bernal",
+     "character": "Héctor (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Benjamin Bratt",
+     "character": "Ernesto de la Cruz (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:361743",
+   "mediaType": "movie",
+   "tmdbId": 361743,
+   "imdbId": "tt1745960",
+   "title": "Top Gun: Maverick",
+   "originalTitle": "Top Gun: Maverick",
+   "slug": "top-gun-maverick",
+   "releaseDate": "2022-05-21",
+   "year": 2022,
+   "voteAverage": 8.2,
+   "voteCount": 9180,
+   "popularity": 67.8,
+   "genres": [
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+   "backdropPath": "/AaV1YIdWKnjAIAOe8UUKBFm327v.jpg",
+   "palette": {
+    "vibrant": "#d69a4a",
+    "base": "#1a1510",
+    "tint1": "#543d1d",
+    "tint2": "#1a1510",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAAAQAgCdASoIAAwAA4BaJagCdAEfh1YXyKPAAPhX7qiRV47fX+P9nHwXD6661FAAAAA=",
+    "v": 1
+   },
+   "overviewShort": "Thirty years on, Maverick is called back to train a squad of young pilots — including the son of his late wingman — for a mission nobody expects them to survive.",
+   "runtimeMinutes": 131,
+   "seasonCount": null,
+   "overview": "Thirty years on, Maverick is called back to train a squad of young pilots — including the son of his late wingman — for a mission nobody expects them to survive.",
+   "tagline": null,
+   "directors": [
+    "Joseph Kosinski"
+   ],
+   "cast": [
+    {
+     "name": "Tom Cruise",
+     "character": "Pete 'Maverick' Mitchell",
+     "profilePath": null
+    },
+    {
+     "name": "Miles Teller",
+     "character": "Bradley 'Rooster' Bradshaw",
+     "profilePath": null
+    },
+    {
+     "name": "Jennifer Connelly",
+     "character": "Penny Benjamin",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:335984",
+   "mediaType": "movie",
+   "tmdbId": 335984,
+   "imdbId": "tt1856101",
+   "title": "Blade Runner 2049",
+   "originalTitle": "Blade Runner 2049",
+   "slug": "blade-runner-2049",
+   "releaseDate": "2017-10-04",
+   "year": 2017,
+   "voteAverage": 7.6,
+   "voteCount": 14030,
+   "popularity": 52.1,
+   "genres": [
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
+   "backdropPath": "/ilRyazdMJwN05exqhwK4tMKBYZs.jpg",
+   "palette": {
+    "vibrant": "#e08a3a",
+    "base": "#1a1116",
+    "tint1": "#613c19",
+    "tint2": "#1a1116",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADwAQCdASoIAAwAA4BaJbACdAD0ruAzIQAA362Vunzg9d4A/HL5+/fxt7SOTMAA",
+    "v": 1
+   },
+   "overviewShort": "A replicant blade runner uncovers a buried secret that could tip society into chaos, and goes looking for a man who disappeared thirty years ago.",
+   "runtimeMinutes": 164,
+   "seasonCount": null,
+   "overview": "A replicant blade runner uncovers a buried secret that could tip society into chaos, and goes looking for a man who disappeared thirty years ago.",
+   "tagline": null,
+   "directors": [
+    "Denis Villeneuve"
+   ],
+   "cast": [
+    {
+     "name": "Ryan Gosling",
+     "character": "K",
+     "profilePath": null
+    },
+    {
+     "name": "Harrison Ford",
+     "character": "Rick Deckard",
+     "profilePath": null
+    },
+    {
+     "name": "Ana de Armas",
+     "character": "Joi",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:120467",
+   "mediaType": "movie",
+   "tmdbId": 120467,
+   "imdbId": "tt2278388",
+   "title": "The Grand Budapest Hotel",
+   "originalTitle": "The Grand Budapest Hotel",
+   "slug": "the-grand-budapest-hotel",
+   "releaseDate": "2014-02-26",
+   "year": 2014,
+   "voteAverage": 8,
+   "voteCount": 15400,
+   "popularity": 41.5,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg",
+   "backdropPath": "/m6d9UT0C5m6hPufQV2EUKiIbSBp.jpg",
+   "palette": {
+    "vibrant": "#d4768e",
+    "base": "#2a1620",
+    "tint1": "#5c323e",
+    "tint2": "#2a1620",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACwAQCdASoIAAwAA4BaJaAAApxZIqYAAMnjtXltX0Iv/jb1P7tUAAAA",
+    "v": 1
+   },
+   "overviewShort": "A legendary concierge and his loyal lobby boy are framed for murder and chase a priceless painting across a fictional, crumbling Europe.",
+   "runtimeMinutes": 100,
+   "seasonCount": null,
+   "overview": "A legendary concierge and his loyal lobby boy are framed for murder and chase a priceless painting across a fictional, crumbling Europe.",
+   "tagline": null,
+   "directors": [
+    "Wes Anderson"
+   ],
+   "cast": [
+    {
+     "name": "Ralph Fiennes",
+     "character": "M. Gustave",
+     "profilePath": null
+    },
+    {
+     "name": "Tony Revolori",
+     "character": "Zero Moustafa",
+     "profilePath": null
+    },
+    {
+     "name": "Saoirse Ronan",
+     "character": "Agatha",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:372058",
+   "mediaType": "movie",
+   "tmdbId": 372058,
+   "imdbId": "tt5311514",
+   "title": "Your Name.",
+   "originalTitle": "君の名は。",
+   "slug": "your-name",
+   "releaseDate": "2016-08-26",
+   "year": 2016,
+   "voteAverage": 8.5,
+   "voteCount": 11620,
+   "popularity": 58.9,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/q719jXXEzOoYaps6babgKnONONX.jpg",
+   "backdropPath": "/dIWwZW7dJJtqC6CgWzYkNVKIUm8.jpg",
+   "palette": {
+    "vibrant": "#5a8fe0",
+    "base": "#141a33",
+    "tint1": "#2b456c",
+    "tint2": "#141a33",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoIAAwAA4BaJbACdAD0Ma+IAAD6M4znR6ifQXMH+LZcB/zKudWl2t8AAAA=",
+    "v": 1
+   },
+   "overviewShort": "A Tokyo boy and a country girl start waking up in each other’s bodies, then try to find each other before a comet changes everything.",
+   "runtimeMinutes": 106,
+   "seasonCount": null,
+   "overview": "A Tokyo boy and a country girl start waking up in each other’s bodies, then try to find each other before a comet changes everything.",
+   "tagline": null,
+   "directors": [
+    "Makoto Shinkai"
+   ],
+   "cast": [
+    {
+     "name": "Ryunosuke Kamiki",
+     "character": "Taki Tachibana (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Mone Kamishiraishi",
+     "character": "Mitsuha Miyamizu (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:346698",
+   "mediaType": "movie",
+   "tmdbId": 346698,
+   "imdbId": "tt1517268",
+   "title": "Barbie",
+   "originalTitle": "Barbie",
+   "slug": "barbie",
+   "releaseDate": "2023-07-19",
+   "year": 2023,
+   "voteAverage": 7,
+   "voteCount": 9760,
+   "popularity": 88.8,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 12,
+     "name": "Adventure"
+    }
+   ],
+   "posterPath": "/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+   "backdropPath": "/nHf61UzkfFno5X1ofIhugCPus2R.jpg",
+   "palette": {
+    "vibrant": "#e85aa0",
+    "base": "#2a1020",
+    "tint1": "#6f2b4d",
+    "tint2": "#2a1020",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAADQAQCdASoIAAwAA4BaJagCdAD0MjZboADw1OTOEH5u+CuZ9sd+DyungAA=",
+    "v": 1
+   },
+   "overviewShort": "Stereotypical Barbie starts thinking about death, gets flat feet and heads to the real world with Ken for answers she did not order.",
+   "runtimeMinutes": 114,
+   "seasonCount": null,
+   "overview": "Stereotypical Barbie starts thinking about death, gets flat feet and heads to the real world with Ken for answers she did not order.",
+   "tagline": null,
+   "directors": [
+    "Greta Gerwig"
+   ],
+   "cast": [
+    {
+     "name": "Margot Robbie",
+     "character": "Barbie",
+     "profilePath": null
+    },
+    {
+     "name": "Ryan Gosling",
+     "character": "Ken",
+     "profilePath": null
+    },
+    {
+     "name": "America Ferrera",
+     "character": "Gloria",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:792307",
+   "mediaType": "movie",
+   "tmdbId": 792307,
+   "imdbId": "tt14230458",
+   "title": "Poor Things",
+   "originalTitle": "Poor Things",
+   "slug": "poor-things",
+   "releaseDate": "2023-12-07",
+   "year": 2023,
+   "voteAverage": 7.7,
+   "voteCount": 4560,
+   "popularity": 46.2,
+   "genres": [
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    },
+    {
+     "id": 35,
+     "name": "Comedy"
+    }
+   ],
+   "posterPath": "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+   "backdropPath": "/bQS43HSLZzMjZkcHJz4fGc7fNdz.jpg",
+   "palette": {
+    "vibrant": "#8fc0b0",
+    "base": "#1c2422",
+    "tint1": "#32443e",
+    "tint2": "#1c2422",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACwAQCdASoIAAwAA4BaJQAAXPABZN8AAP3vWbv2ZC3yj+kuBwAAAA==",
+    "v": 1
+   },
+   "overviewShort": "Brought back to life by an unorthodox scientist, Bella Baxter runs off on a whirlwind tour of Victorian Europe to learn everything at once.",
+   "runtimeMinutes": 141,
+   "seasonCount": null,
+   "overview": "Brought back to life by an unorthodox scientist, Bella Baxter runs off on a whirlwind tour of Victorian Europe to learn everything at once.",
+   "tagline": null,
+   "directors": [
+    "Yorgos Lanthimos"
+   ],
+   "cast": [
+    {
+     "name": "Emma Stone",
+     "character": "Bella Baxter",
+     "profilePath": null
+    },
+    {
+     "name": "Mark Ruffalo",
+     "character": "Duncan Wedderburn",
+     "profilePath": null
+    },
+    {
+     "name": "Willem Dafoe",
+     "character": "Godwin Baxter",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:1064213",
+   "mediaType": "movie",
+   "tmdbId": 1064213,
+   "imdbId": "tt28607951",
+   "title": "Anora",
+   "originalTitle": "Anora",
+   "slug": "anora",
+   "releaseDate": "2024-10-14",
+   "year": 2024,
+   "voteAverage": 7,
+   "voteCount": 2080,
+   "popularity": 38.4,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/7MrgIUeq0DD2iF7GR6wqJfYZNeC.jpg",
+   "backdropPath": "/4cp40IyTpFfsT2IoRG8aqg0hwgo.jpg",
+   "palette": {
+    "vibrant": "#e05a7a",
+    "base": "#1a1018",
+    "tint1": "#6c2b3b",
+    "tint2": "#1a1018",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACwAQCdASoIAAwAA4BaJagAApxZIrnAAPozjOeLUF6J//bHfRhTVgAA",
+    "v": 1
+   },
+   "overviewShort": "A Brooklyn dancer impulsively marries the son of a Russian oligarch in Las Vegas, and his family sends a crew to undo it by any means.",
+   "runtimeMinutes": 139,
+   "seasonCount": null,
+   "overview": "A Brooklyn dancer impulsively marries the son of a Russian oligarch in Las Vegas, and his family sends a crew to undo it by any means.",
+   "tagline": null,
+   "directors": [
+    "Sean Baker"
+   ],
+   "cast": [
+    {
+     "name": "Mikey Madison",
+     "character": "Ani",
+     "profilePath": null
+    },
+    {
+     "name": "Mark Eydelshteyn",
+     "character": "Ivan",
+     "profilePath": null
+    },
+    {
+     "name": "Yura Borisov",
+     "character": "Igor",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:933260",
+   "mediaType": "movie",
+   "tmdbId": 933260,
+   "imdbId": "tt17526714",
+   "title": "The Substance",
+   "originalTitle": "The Substance",
+   "slug": "the-substance",
+   "releaseDate": "2024-09-07",
+   "year": 2024,
+   "voteAverage": 7.1,
+   "voteCount": 4620,
+   "popularity": 52.6,
+   "genres": [
+    {
+     "id": 27,
+     "name": "Horror"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/lqoMzCcZYEFK729d6qzt349fB4o.jpg",
+   "backdropPath": "/7h6TqPB3ESmjuVbxCxAeB1c9OB1.jpg",
+   "palette": {
+    "vibrant": "#e0c83a",
+    "base": "#1a1a10",
+    "tint1": "#4e4515",
+    "tint2": "#1a1a10",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoIAAwAA4BaJbACdAEPDBLl3AD+lMLJeWnD/z/OMH1tdlwJTLAAAA==",
+    "v": 1
+   },
+   "overviewShort": "A fading TV fitness star tries a black-market serum that creates a younger, better version of herself. They must share one life. They do not share well.",
+   "runtimeMinutes": 141,
+   "seasonCount": null,
+   "overview": "A fading TV fitness star tries a black-market serum that creates a younger, better version of herself. They must share one life. They do not share well.",
+   "tagline": null,
+   "directors": [
+    "Coralie Fargeat"
+   ],
+   "cast": [
+    {
+     "name": "Demi Moore",
+     "character": "Elisabeth Sparkle",
+     "profilePath": null
+    },
+    {
+     "name": "Margaret Qualley",
+     "character": "Sue",
+     "profilePath": null
+    },
+    {
+     "name": "Dennis Quaid",
+     "character": "Harvey",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:346",
+   "mediaType": "movie",
+   "tmdbId": 346,
+   "imdbId": "tt0047478",
+   "title": "Seven Samurai",
+   "originalTitle": "七人の侍",
+   "slug": "seven-samurai",
+   "releaseDate": "1954-04-26",
+   "year": 1954,
+   "voteAverage": 8.5,
+   "voteCount": 3940,
+   "popularity": 22.7,
+   "genres": [
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/8OKmBV5BUFzmozIC3pPWKHy17kx.jpg",
+   "backdropPath": "/qvZ91FwMq6O47VViAr8vZNQz3WI.jpg",
+   "palette": {
+    "vibrant": "#9a9a9a",
+    "base": "#161616",
+    "tint1": "#444444",
+    "tint2": "#161616",
+    "lqip": "data:image/webp;base64,UklGRjAAAABXRUJQVlA4ICQAAADQAQCdASoIAAwAA4BaJaQAAp27W0Yj+ADMPgeaxjFYDnmAAAA=",
+    "v": 1
+   },
+   "overviewShort": "A village of farmers facing bandits hires seven hungry, masterless samurai to defend them through one harvest.",
+   "runtimeMinutes": 207,
+   "seasonCount": null,
+   "overview": "A village of farmers facing bandits hires seven hungry, masterless samurai to defend them through one harvest.",
+   "tagline": null,
+   "directors": [
+    "Akira Kurosawa"
+   ],
+   "cast": [
+    {
+     "name": "Toshirō Mifune",
+     "character": "Kikuchiyo",
+     "profilePath": null
+    },
+    {
+     "name": "Takashi Shimura",
+     "character": "Kambei Shimada",
+     "profilePath": null
+    },
+    {
+     "name": "Keiko Tsushima",
+     "character": "Shino",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:289",
+   "mediaType": "movie",
+   "tmdbId": 289,
+   "imdbId": "tt0034583",
+   "title": "Casablanca",
+   "originalTitle": "Casablanca",
+   "slug": "casablanca",
+   "releaseDate": "1942-11-26",
+   "year": 1942,
+   "voteAverage": 8.2,
+   "voteCount": 5560,
+   "popularity": 20.3,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/5K7cOHoay2mZusSLezBOY0Qxh8a.jpg",
+   "backdropPath": "/pXUjUp6YtmlpDH5Wu8jjC0sLQTf.jpg",
+   "palette": {
+    "vibrant": "#b0a48a",
+    "base": "#1a1814",
+    "tint1": "#453f36",
+    "tint2": "#1a1814",
+    "lqip": "data:image/webp;base64,UklGRjAAAABXRUJQVlA4ICQAAADQAQCdASoIAAwAA4BaJYwCdAEPDBLl3AD4WCWf2SdWDiK1mAA=",
+    "v": 1
+   },
+   "overviewShort": "In wartime Morocco, a cynical club owner is handed the chance to help the woman who broke his heart escape with her husband.",
+   "runtimeMinutes": 102,
+   "seasonCount": null,
+   "overview": "In wartime Morocco, a cynical club owner is handed the chance to help the woman who broke his heart escape with her husband.",
+   "tagline": "They had a date with fate in Casablanca!",
+   "directors": [
+    "Michael Curtiz"
+   ],
+   "cast": [
+    {
+     "name": "Humphrey Bogart",
+     "character": "Rick Blaine",
+     "profilePath": null
+    },
+    {
+     "name": "Ingrid Bergman",
+     "character": "Ilsa Lund",
+     "profilePath": null
+    },
+    {
+     "name": "Paul Henreid",
+     "character": "Victor Laszlo",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:1858",
+   "mediaType": "movie",
+   "tmdbId": 1858,
+   "imdbId": "tt0418279",
+   "title": "Transformers",
+   "originalTitle": "Transformers",
+   "slug": "transformers",
+   "releaseDate": "2007-06-27",
+   "year": 2007,
+   "voteAverage": 6.8,
+   "voteCount": 11240,
+   "popularity": 45,
+   "genres": [
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    },
+    {
+     "id": 28,
+     "name": "Action"
+    }
+   ],
+   "posterPath": "/lAD4wcCnVrWKYNxXwr9ZbDXnPMH.jpg",
+   "backdropPath": "/uTiuBOd3HJXp1mBaYrZAjlqV8Js.jpg",
+   "palette": {
+    "vibrant": "#3a7ad6",
+    "base": "#10141c",
+    "tint1": "#1f4172",
+    "tint2": "#10141c",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoIAAwAA4BaJbACdAEO/gPIAAD+dKSiXKw/8/FsuA9BLn10Km7gAA==",
+    "v": 1
+   },
+   "overviewShort": "A teenager buys his first car and finds out it is an alien robot, caught in a war that has just arrived on Earth.",
+   "runtimeMinutes": 144,
+   "seasonCount": null,
+   "overview": "A teenager buys his first car and finds out it is an alien robot, caught in a war that has just arrived on Earth.",
+   "tagline": null,
+   "directors": [
+    "Michael Bay"
+   ],
+   "cast": [
+    {
+     "name": "Shia LaBeouf",
+     "character": "Sam Witwicky",
+     "profilePath": null
+    },
+    {
+     "name": "Megan Fox",
+     "character": "Mikaela Banes",
+     "profilePath": null
+    },
+    {
+     "name": "Josh Duhamel",
+     "character": "Captain William Lennox",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:333339",
+   "mediaType": "movie",
+   "tmdbId": 333339,
+   "imdbId": "tt1677720",
+   "title": "Ready Player One",
+   "originalTitle": "Ready Player One",
+   "slug": "ready-player-one",
+   "releaseDate": "2018-03-28",
+   "year": 2018,
+   "voteAverage": 7.6,
+   "voteCount": 15480,
+   "popularity": 39.8,
+   "genres": [
+    {
+     "id": 12,
+     "name": "Adventure"
+    },
+    {
+     "id": 28,
+     "name": "Action"
+    },
+    {
+     "id": 878,
+     "name": "Science Fiction"
+    }
+   ],
+   "posterPath": "/pU1ULUq8D3iRxl1fdX2lZIzdHuI.jpg",
+   "backdropPath": "/5a7lMDn3nAj2ByO0X1fg6BhUphR.jpg",
+   "palette": {
+    "vibrant": "#3ab0e0",
+    "base": "#0f1624",
+    "tint1": "#174557",
+    "tint2": "#0f1624",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJbACdAD0MjZboADMQCyR+hP1hl9xuyc3YX8jf7Sgp8AA",
+    "v": 1
+   },
+   "overviewShort": "In 2045, a teenager joins the hunt for three keys hidden inside a vast virtual world, with its creator’s fortune — and control of the game — as the prize.",
+   "runtimeMinutes": 140,
+   "seasonCount": null,
+   "overview": "In 2045, a teenager joins the hunt for three keys hidden inside a vast virtual world, with its creator’s fortune — and control of the game — as the prize.",
+   "tagline": null,
+   "directors": [
+    "Steven Spielberg"
+   ],
+   "cast": [
+    {
+     "name": "Tye Sheridan",
+     "character": "Wade Watts",
+     "profilePath": null
+    },
+    {
+     "name": "Olivia Cooke",
+     "character": "Samantha Cook",
+     "profilePath": null
+    },
+    {
+     "name": "Ben Mendelsohn",
+     "character": "Nolan Sorrento",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": []
+  },
+  {
+   "key": "movie:8966",
+   "mediaType": "movie",
+   "tmdbId": 8966,
+   "imdbId": "tt1099212",
+   "title": "Twilight",
+   "originalTitle": "Twilight",
+   "slug": "twilight",
+   "releaseDate": "2008-11-20",
+   "year": 2008,
+   "voteAverage": 6.4,
+   "voteCount": 13480,
+   "popularity": 60.2,
+   "genres": [
+    {
+     "id": 14,
+     "name": "Fantasy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/3Gkb6jm6962ADUPaCBqzz9CTbn9.jpg",
+   "backdropPath": "/qwc0Dwu9ttnINDxoc7COqs6T2q5.jpg",
+   "palette": {
+    "vibrant": "#6a8a8a",
+    "base": "#141a1a",
+    "tint1": "#324343",
+    "tint2": "#141a1a",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAADQAQCdASoIAAwAA4BaJYwCw7D0MlH98AD9Ncwr3t8Qa5NOTcYAAA==",
+    "v": 1
+   },
+   "overviewShort": "A teenager who moves to a rainy small town falls for a classmate who turns out to be a centuries-old vampire.",
+   "runtimeMinutes": 122,
+   "seasonCount": null,
+   "overview": "A teenager who moves to a rainy small town falls for a classmate who turns out to be a centuries-old vampire.",
+   "tagline": null,
+   "directors": [
+    "Catherine Hardwicke"
+   ],
+   "cast": [
+    {
+     "name": "Kristen Stewart",
+     "character": "Bella Swan",
+     "profilePath": null
+    },
+    {
+     "name": "Robert Pattinson",
+     "character": "Edward Cullen",
+     "profilePath": null
+    },
+    {
+     "name": "Billy Burke",
+     "character": "Charlie Swan",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": [],
+   "edgeCase": "EXCLUDE: 6.4 with high vote count (below 6.5). A seed user has a stub on it → reachable by URL with \"BELOW 6.5 NOW\"."
+  },
+  {
+   "key": "movie:11830",
+   "mediaType": "movie",
+   "tmdbId": 11830,
+   "imdbId": "tt0092048",
+   "title": "Tampopo",
+   "originalTitle": "タンポポ",
+   "slug": "tampopo",
+   "releaseDate": "1985-11-23",
+   "year": 1985,
+   "voteAverage": 8,
+   "voteCount": 150,
+   "popularity": 9.1,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/uDjM0WPzTvlkMlZPQOHIsyedlRx.jpg",
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#d6b04a",
+    "base": "#1f1a10",
+    "tint1": "#4c3e1a",
+    "tint2": "#1f1a10",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoIAAwAA4BaJbACdAD0ruAsyAD971ZFUb7SNrx/HCuZiJIyruFAAA==",
+    "v": 1
+   },
+   "overviewShort": "A truck driver and his sidekick help a widowed noodle-shop owner perfect her ramen, in a comedy made of many small stories about food.",
+   "runtimeMinutes": 114,
+   "seasonCount": null,
+   "overview": "A truck driver and his sidekick help a widowed noodle-shop owner perfect her ramen, in a comedy made of many small stories about food.",
+   "tagline": null,
+   "directors": [
+    "Juzo Itami"
+   ],
+   "cast": [
+    {
+     "name": "Tsutomu Yamazaki",
+     "character": "Goro",
+     "profilePath": null
+    },
+    {
+     "name": "Nobuko Miyamoto",
+     "character": "Tampopo",
+     "profilePath": null
+    },
+    {
+     "name": "Ken Watanabe",
+     "character": "Gun",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": [],
+   "edgeCase": "EXCLUDE: 8.0 but only 150 votes (movie floor is 200)."
+  },
+  {
+   "key": "movie:370755",
+   "mediaType": "movie",
+   "tmdbId": 370755,
+   "imdbId": "tt5247022",
+   "title": "Paterson",
+   "originalTitle": "Paterson",
+   "slug": "paterson",
+   "releaseDate": "2016-11-17",
+   "year": 2016,
+   "voteAverage": 6.5,
+   "voteCount": 200,
+   "popularity": 12.4,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 10749,
+     "name": "Romance"
+    }
+   ],
+   "posterPath": "/wdH6gOixg6wBP0l5vLeXRPtsFXK.jpg",
+   "backdropPath": "/uDvXnUq7E8EcKO7AjZqhN3hC1hJ.jpg",
+   "palette": {
+    "vibrant": "#6a9ab0",
+    "base": "#161c20",
+    "tint1": "#2d444d",
+    "tint2": "#161c20",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAADQAQCdASoIAAwAA4BaJQBOgB6V3NOjAADwzgOpJp1BqHNb3JlAAA==",
+    "v": 1
+   },
+   "overviewShort": "A week in the life of a bus driver in Paterson, New Jersey, who writes poems in a secret notebook between shifts.",
+   "runtimeMinutes": 118,
+   "seasonCount": null,
+   "overview": "A week in the life of a bus driver in Paterson, New Jersey, who writes poems in a secret notebook between shifts.",
+   "tagline": null,
+   "directors": [
+    "Jim Jarmusch"
+   ],
+   "cast": [
+    {
+     "name": "Adam Driver",
+     "character": "Paterson",
+     "profilePath": null
+    },
+    {
+     "name": "Golshifteh Farahani",
+     "character": "Laura",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": null,
+   "tmdbReviews": [],
+   "edgeCase": "INCLUDE: exactly 6.5 and exactly 200 votes (inclusive boundaries)."
+  },
+  {
+   "key": "tv:1396",
+   "mediaType": "tv",
+   "tmdbId": 1396,
+   "imdbId": "tt0903747",
+   "title": "Breaking Bad",
+   "originalTitle": "Breaking Bad",
+   "slug": "breaking-bad",
+   "releaseDate": "2008-01-20",
+   "year": 2008,
+   "voteAverage": 8.9,
+   "voteCount": 15320,
+   "popularity": 180.4,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    }
+   ],
+   "posterPath": "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
+   "backdropPath": "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
+   "palette": {
+    "vibrant": "#6aa04a",
+    "base": "#121a10",
+    "tint1": "#2d4520",
+    "tint2": "#121a10",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAADQAQCdASoIAAwAA4BaJZACdAD0MjZYkAD6M4zni1Bhmauy+UbcNGNgAAA=",
+    "v": 1
+   },
+   "overviewShort": "A chemistry teacher with a terminal diagnosis starts cooking meth to secure his family’s future, and discovers he is very good at being bad.",
+   "runtimeMinutes": null,
+   "seasonCount": 5,
+   "overview": "A chemistry teacher with a terminal diagnosis starts cooking meth to secure his family’s future, and discovers he is very good at being bad.",
+   "tagline": null,
+   "directors": [
+    "Vince Gilligan"
+   ],
+   "cast": [
+    {
+     "name": "Bryan Cranston",
+     "character": "Walter White",
+     "profilePath": null
+    },
+    {
+     "name": "Aaron Paul",
+     "character": "Jesse Pinkman",
+     "profilePath": null
+    },
+    {
+     "name": "Anna Gunn",
+     "character": "Skyler White",
+     "profilePath": null
+    },
+    {
+     "name": "Dean Norris",
+     "character": "Hank Schrader",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "HhesaQXLuRY",
+    "name": "Official Trailer"
+   },
+   "episodeCount": 62,
+   "tmdbReviews": [
+    {
+     "id": "23e1238092544d4a20267571",
+     "author": "heisenfan",
+     "rating": 10,
+     "content": "A slow-burn character study that becomes a thriller without you noticing.",
+     "createdAt": "2013-09-30T12:00:00Z",
+     "url": "https://www.themoviedb.org/tv/1396/reviews"
+    }
+   ]
+  },
+  {
+   "key": "tv:1399",
+   "mediaType": "tv",
+   "tmdbId": 1399,
+   "imdbId": "tt0944947",
+   "title": "Game of Thrones",
+   "originalTitle": "Game of Thrones",
+   "slug": "game-of-thrones",
+   "releaseDate": "2011-04-17",
+   "year": 2011,
+   "voteAverage": 8.5,
+   "voteCount": 25140,
+   "popularity": 210.2,
+   "genres": [
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10759,
+     "name": "Action & Adventure"
+    }
+   ],
+   "posterPath": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
+   "backdropPath": "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg",
+   "palette": {
+    "vibrant": "#8a9ab0",
+    "base": "#14161a",
+    "tint1": "#3c444d",
+    "tint2": "#14161a",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAADwAQCdASoIAAwAA4BaJZQCdAD0ruOy4wAAzD4HmxGqL2iM8FEgAA==",
+    "v": 1
+   },
+   "overviewShort": "Noble houses scheme and bleed for the Iron Throne of Westeros while an ancient threat gathers beyond the Wall.",
+   "runtimeMinutes": null,
+   "seasonCount": 8,
+   "overview": "Noble houses scheme and bleed for the Iron Throne of Westeros while an ancient threat gathers beyond the Wall.",
+   "tagline": null,
+   "directors": [
+    "David Benioff",
+    "D. B. Weiss"
+   ],
+   "cast": [
+    {
+     "name": "Emilia Clarke",
+     "character": "Daenerys Targaryen",
+     "profilePath": null
+    },
+    {
+     "name": "Kit Harington",
+     "character": "Jon Snow",
+     "profilePath": null
+    },
+    {
+     "name": "Peter Dinklage",
+     "character": "Tyrion Lannister",
+     "profilePath": null
+    },
+    {
+     "name": "Lena Headey",
+     "character": "Cersei Lannister",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 73,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:2316",
+   "mediaType": "tv",
+   "tmdbId": 2316,
+   "imdbId": "tt0386676",
+   "title": "The Office",
+   "originalTitle": "The Office",
+   "slug": "the-office",
+   "releaseDate": "2005-03-24",
+   "year": 2005,
+   "voteAverage": 8.6,
+   "voteCount": 4560,
+   "popularity": 150.7,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    }
+   ],
+   "posterPath": "/7DJKHzAi83BmQrWLrYYOqcoKfhR.jpg",
+   "backdropPath": "/mLyW3UTgi2lsMdtueYODcfAB9Ku.jpg",
+   "palette": {
+    "vibrant": "#c8b07a",
+    "base": "#1e1c16",
+    "tint1": "#453e2b",
+    "tint2": "#1e1c16",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAADQAQCdASoIAAwAA4BaJYgCdAEPDBLl3AD971m8TrpEahzqwV+hMfgA",
+    "v": 1
+   },
+   "overviewShort": "A documentary crew follows the staff of a Scranton paper company and a regional manager who wants, more than anything, to be liked.",
+   "runtimeMinutes": null,
+   "seasonCount": 9,
+   "overview": "A documentary crew follows the staff of a Scranton paper company and a regional manager who wants, more than anything, to be liked.",
+   "tagline": null,
+   "directors": [
+    "Greg Daniels"
+   ],
+   "cast": [
+    {
+     "name": "Steve Carell",
+     "character": "Michael Scott",
+     "profilePath": null
+    },
+    {
+     "name": "Rainn Wilson",
+     "character": "Dwight Schrute",
+     "profilePath": null
+    },
+    {
+     "name": "John Krasinski",
+     "character": "Jim Halpert",
+     "profilePath": null
+    },
+    {
+     "name": "Jenna Fischer",
+     "character": "Pam Beesly",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 201,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:66732",
+   "mediaType": "tv",
+   "tmdbId": 66732,
+   "imdbId": "tt4574334",
+   "title": "Stranger Things",
+   "originalTitle": "Stranger Things",
+   "slug": "stranger-things",
+   "releaseDate": "2016-07-15",
+   "year": 2016,
+   "voteAverage": 8.6,
+   "voteCount": 18240,
+   "popularity": 190.1,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    },
+    {
+     "id": 9648,
+     "name": "Mystery"
+    }
+   ],
+   "posterPath": "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+   "backdropPath": "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg",
+   "palette": {
+    "vibrant": "#d63a3a",
+    "base": "#1a0c10",
+    "tint1": "#7f2222",
+    "tint2": "#1a0c10",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJbACdAEOtWtWAAD+oMEDLsNGMsdFuz/8C7fKmLmwAAAA",
+    "v": 1
+   },
+   "overviewShort": "When a boy vanishes in 1980s Indiana, his friends, family and a girl with psychokinetic powers uncover a monstrous world just beneath their own.",
+   "runtimeMinutes": null,
+   "seasonCount": 5,
+   "overview": "When a boy vanishes in 1980s Indiana, his friends, family and a girl with psychokinetic powers uncover a monstrous world just beneath their own.",
+   "tagline": null,
+   "directors": [
+    "The Duffer Brothers"
+   ],
+   "cast": [
+    {
+     "name": "Millie Bobby Brown",
+     "character": "Eleven",
+     "profilePath": null
+    },
+    {
+     "name": "Winona Ryder",
+     "character": "Joyce Byers",
+     "profilePath": null
+    },
+    {
+     "name": "David Harbour",
+     "character": "Jim Hopper",
+     "profilePath": null
+    },
+    {
+     "name": "Finn Wolfhard",
+     "character": "Mike Wheeler",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 42,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:87108",
+   "mediaType": "tv",
+   "tmdbId": 87108,
+   "imdbId": "tt7366338",
+   "title": "Chernobyl",
+   "originalTitle": "Chernobyl",
+   "slug": "chernobyl",
+   "releaseDate": "2019-05-06",
+   "year": 2019,
+   "voteAverage": 8.7,
+   "voteCount": 6640,
+   "popularity": 48.3,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg",
+   "backdropPath": "/20eIP9o5ebArmu2HxJutaBjhLf4.jpg",
+   "palette": {
+    "vibrant": "#7a9a6a",
+    "base": "#141812",
+    "tint1": "#35442d",
+    "tint2": "#141812",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACwAQCdASoIAAwAA4BaJQBOgB6F4yiAAPDU5M4OrrAPayDwuMwAAA==",
+    "v": 1
+   },
+   "overviewShort": "The 1986 nuclear disaster and the scientists, soldiers and ordinary people who paid for the lies that caused it.",
+   "runtimeMinutes": null,
+   "seasonCount": 1,
+   "overview": "The 1986 nuclear disaster and the scientists, soldiers and ordinary people who paid for the lies that caused it.",
+   "tagline": null,
+   "directors": [
+    "Craig Mazin"
+   ],
+   "cast": [
+    {
+     "name": "Jared Harris",
+     "character": "Valery Legasov",
+     "profilePath": null
+    },
+    {
+     "name": "Stellan Skarsgård",
+     "character": "Boris Shcherbina",
+     "profilePath": null
+    },
+    {
+     "name": "Emily Watson",
+     "character": "Ulana Khomyuk",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 5,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:136315",
+   "mediaType": "tv",
+   "tmdbId": 136315,
+   "imdbId": "tt14452776",
+   "title": "The Bear",
+   "originalTitle": "The Bear",
+   "slug": "the-bear",
+   "releaseDate": "2022-06-23",
+   "year": 2022,
+   "voteAverage": 8.2,
+   "voteCount": 1540,
+   "popularity": 72.5,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg",
+   "backdropPath": "/rR5nfHZcyBxJaQRUp2UqD07ktlF.jpg",
+   "palette": {
+    "vibrant": "#3a7ab0",
+    "base": "#10161e",
+    "tint1": "#224868",
+    "tint2": "#10161e",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoIAAwAA4BaJZgCdAEOtW9oAP6gphJN0XDt/S7xEQQNLsvrRlGgAA==",
+    "v": 1
+   },
+   "overviewShort": "A fine-dining chef comes home to Chicago to run his late brother’s chaotic sandwich shop, and tries to turn it into something worth saving.",
+   "runtimeMinutes": null,
+   "seasonCount": 4,
+   "overview": "A fine-dining chef comes home to Chicago to run his late brother’s chaotic sandwich shop, and tries to turn it into something worth saving.",
+   "tagline": null,
+   "directors": [
+    "Christopher Storer"
+   ],
+   "cast": [
+    {
+     "name": "Jeremy Allen White",
+     "character": "Carmen Berzatto",
+     "profilePath": null
+    },
+    {
+     "name": "Ebon Moss-Bachrach",
+     "character": "Richie Jerimovich",
+     "profilePath": null
+    },
+    {
+     "name": "Ayo Edebiri",
+     "character": "Sydney Adamu",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "y-cqqAJIXhs",
+    "name": "Official Trailer"
+   },
+   "episodeCount": 38,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:95396",
+   "mediaType": "tv",
+   "tmdbId": 95396,
+   "imdbId": "tt11280740",
+   "title": "Severance",
+   "originalTitle": "Severance",
+   "slug": "severance",
+   "releaseDate": "2022-02-17",
+   "year": 2022,
+   "voteAverage": 8.4,
+   "voteCount": 2560,
+   "popularity": 98.6,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 9648,
+     "name": "Mystery"
+    },
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    }
+   ],
+   "posterPath": "/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+   "backdropPath": "/npD65vPa4vvn1ZHpp3o05A5vdKT.jpg",
+   "palette": {
+    "vibrant": "#5ab0c0",
+    "base": "#e8eef0",
+    "tint1": "#23454b",
+    "tint2": "#232525",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoIAAwAA4BaJaACdAEOvBWYAAD+kEeZ7/1RKIgKZ4rsnWWAxoAAAA==",
+    "v": 1
+   },
+   "overviewShort": "Employees at Lumon have had their memories surgically split between work and home. One of them starts to wonder what his other self is hiding.",
+   "runtimeMinutes": null,
+   "seasonCount": 2,
+   "overview": "Employees at Lumon have had their memories surgically split between work and home. One of them starts to wonder what his other self is hiding.",
+   "tagline": null,
+   "directors": [
+    "Dan Erickson"
+   ],
+   "cast": [
+    {
+     "name": "Adam Scott",
+     "character": "Mark Scout",
+     "profilePath": null
+    },
+    {
+     "name": "Britt Lower",
+     "character": "Helly R.",
+     "profilePath": null
+    },
+    {
+     "name": "Zach Cherry",
+     "character": "Dylan George",
+     "profilePath": null
+    },
+    {
+     "name": "John Turturro",
+     "character": "Irving Bailiff",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "xEQP4VVuyrY",
+    "name": "Official Trailer"
+   },
+   "episodeCount": 19,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:94605",
+   "mediaType": "tv",
+   "tmdbId": 94605,
+   "imdbId": "tt11126994",
+   "title": "Arcane",
+   "originalTitle": "Arcane",
+   "slug": "arcane",
+   "releaseDate": "2021-11-06",
+   "year": 2021,
+   "voteAverage": 8.7,
+   "voteCount": 5130,
+   "popularity": 86.1,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    },
+    {
+     "id": 10759,
+     "name": "Action & Adventure"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
+   "backdropPath": "/q8eejQcg1bAqImEV8jh8RtBD4uH.jpg",
+   "palette": {
+    "vibrant": "#3ad0d6",
+    "base": "#1a1026",
+    "tint1": "#15484c",
+    "tint2": "#1a1026",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJbACdAEPDBLl3AD4WCWf2Co39c7HNS7/EVv+L3twuAAA",
+    "v": 1
+   },
+   "overviewShort": "Two sisters from the undercity end up on opposite sides of a war between gleaming Piltover and the toxic streets of Zaun.",
+   "runtimeMinutes": null,
+   "seasonCount": 2,
+   "overview": "Two sisters from the undercity end up on opposite sides of a war between gleaming Piltover and the toxic streets of Zaun.",
+   "tagline": null,
+   "directors": [
+    "Christian Linke",
+    "Alex Yee"
+   ],
+   "cast": [
+    {
+     "name": "Hailee Steinfeld",
+     "character": "Vi (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Ella Purnell",
+     "character": "Jinx (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Kevin Alejandro",
+     "character": "Jayce (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": {
+    "site": "YouTube",
+    "key": "fXmAurh012s",
+    "name": "Official Trailer"
+   },
+   "episodeCount": 18,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:126308",
+   "mediaType": "tv",
+   "tmdbId": 126308,
+   "imdbId": "tt2788316",
+   "title": "Shōgun",
+   "originalTitle": "Shōgun",
+   "slug": "shogun",
+   "releaseDate": "2024-02-27",
+   "year": 2024,
+   "voteAverage": 8.5,
+   "voteCount": 1320,
+   "popularity": 64,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10768,
+     "name": "War & Politics"
+    }
+   ],
+   "posterPath": "/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg",
+   "backdropPath": "/2COFGyDp9FrHNCrfmFL2dRpQoJL.jpg",
+   "palette": {
+    "vibrant": "#b0402a",
+    "base": "#140e0c",
+    "tint1": "#732a1c",
+    "tint2": "#140e0c",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoIAAwAA4BaJbACdAEO/nKjAAD+zL7x8sb9OB2C5XLfxbLgPNIAAA==",
+    "v": 1
+   },
+   "overviewShort": "In 1600 Japan, a shipwrecked English navigator becomes a pawn — and then a player — in a warlord’s fight for survival against the regents who want him dead.",
+   "runtimeMinutes": null,
+   "seasonCount": 1,
+   "overview": "In 1600 Japan, a shipwrecked English navigator becomes a pawn — and then a player — in a warlord’s fight for survival against the regents who want him dead.",
+   "tagline": null,
+   "directors": [
+    "Rachel Kondo",
+    "Justin Marks"
+   ],
+   "cast": [
+    {
+     "name": "Hiroyuki Sanada",
+     "character": "Yoshii Toranaga",
+     "profilePath": null
+    },
+    {
+     "name": "Cosmo Jarvis",
+     "character": "John Blackthorne",
+     "profilePath": null
+    },
+    {
+     "name": "Anna Sawai",
+     "character": "Toda Mariko",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 10,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:60059",
+   "mediaType": "tv",
+   "tmdbId": 60059,
+   "imdbId": "tt3032476",
+   "title": "Better Call Saul",
+   "originalTitle": "Better Call Saul",
+   "slug": "better-call-saul",
+   "releaseDate": "2015-02-08",
+   "year": 2015,
+   "voteAverage": 8.7,
+   "voteCount": 5580,
+   "popularity": 70.2,
+   "genres": [
+    {
+     "id": 80,
+     "name": "Crime"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/fC2HDm5t0kHl7mTm7jxMR31b7by.jpg",
+   "backdropPath": "/9faGSFi5jam6pDWGNd0p8JcJgXQ.jpg",
+   "palette": {
+    "vibrant": "#e0b03a",
+    "base": "#1a160c",
+    "tint1": "#4e3e15",
+    "tint2": "#1a160c",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJbACdAD0ruAsyAD971ZFUpp8w6Sv8jf7Si3ka0MoyQAA",
+    "v": 1
+   },
+   "overviewShort": "Six years before Breaking Bad, small-time lawyer Jimmy McGill slowly, charmingly becomes the criminal lawyer Saul Goodman.",
+   "runtimeMinutes": null,
+   "seasonCount": 6,
+   "overview": "Six years before Breaking Bad, small-time lawyer Jimmy McGill slowly, charmingly becomes the criminal lawyer Saul Goodman.",
+   "tagline": null,
+   "directors": [
+    "Vince Gilligan",
+    "Peter Gould"
+   ],
+   "cast": [
+    {
+     "name": "Bob Odenkirk",
+     "character": "Jimmy McGill",
+     "profilePath": null
+    },
+    {
+     "name": "Rhea Seehorn",
+     "character": "Kim Wexler",
+     "profilePath": null
+    },
+    {
+     "name": "Jonathan Banks",
+     "character": "Mike Ehrmantraut",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 63,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:1438",
+   "mediaType": "tv",
+   "tmdbId": 1438,
+   "imdbId": "tt0306414",
+   "title": "The Wire",
+   "originalTitle": "The Wire",
+   "slug": "the-wire",
+   "releaseDate": "2002-06-02",
+   "year": 2002,
+   "voteAverage": 8.6,
+   "voteCount": 2650,
+   "popularity": 41.8,
+   "genres": [
+    {
+     "id": 80,
+     "name": "Crime"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/4lbclFySvugI51fwsyxBTOm4DqK.jpg",
+   "backdropPath": "/layPSOJGckJv3PXZDIVluMq69mn.jpg",
+   "palette": {
+    "vibrant": "#8a8a5a",
+    "base": "#161610",
+    "tint1": "#43432b",
+    "tint2": "#161610",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACQAQCdASoIAAwAA4BaJQAAU4oRLIAA+jQpWorIpj4l373JlAAAAA==",
+    "v": 1
+   },
+   "overviewShort": "Baltimore’s drug trade, seen from every side: the corners, the police, the docks, city hall, the schools and the newsroom.",
+   "runtimeMinutes": null,
+   "seasonCount": 5,
+   "overview": "Baltimore’s drug trade, seen from every side: the corners, the police, the docks, city hall, the schools and the newsroom.",
+   "tagline": null,
+   "directors": [
+    "David Simon"
+   ],
+   "cast": [
+    {
+     "name": "Dominic West",
+     "character": "Jimmy McNulty",
+     "profilePath": null
+    },
+    {
+     "name": "Idris Elba",
+     "character": "Stringer Bell",
+     "profilePath": null
+    },
+    {
+     "name": "Michael K. Williams",
+     "character": "Omar Little",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 60,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:76331",
+   "mediaType": "tv",
+   "tmdbId": 76331,
+   "imdbId": "tt7660850",
+   "title": "Succession",
+   "originalTitle": "Succession",
+   "slug": "succession",
+   "releaseDate": "2018-06-03",
+   "year": 2018,
+   "voteAverage": 8.3,
+   "voteCount": 2560,
+   "popularity": 55.4,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 35,
+     "name": "Comedy"
+    }
+   ],
+   "posterPath": "/7HW47XbkNQ5fiwQFYGWdw9gs144.jpg",
+   "backdropPath": "/bcdUYUFk8GdpZJPiSAas9UeocLH.jpg",
+   "palette": {
+    "vibrant": "#8a9aa0",
+    "base": "#161a1c",
+    "tint1": "#3c4445",
+    "tint2": "#161a1c",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAADwAQCdASoIAAwAA4BaJZQCdAD0Mkav6AAAyeT2QbVhASMkqnAAAA==",
+    "v": 1
+   },
+   "overviewShort": "The Roy children circle their media-mogul father’s throne, each one convinced they deserve it and none of them able to take it.",
+   "runtimeMinutes": null,
+   "seasonCount": 4,
+   "overview": "The Roy children circle their media-mogul father’s throne, each one convinced they deserve it and none of them able to take it.",
+   "tagline": null,
+   "directors": [
+    "Jesse Armstrong"
+   ],
+   "cast": [
+    {
+     "name": "Brian Cox",
+     "character": "Logan Roy",
+     "profilePath": null
+    },
+    {
+     "name": "Jeremy Strong",
+     "character": "Kendall Roy",
+     "profilePath": null
+    },
+    {
+     "name": "Sarah Snook",
+     "character": "Shiv Roy",
+     "profilePath": null
+    },
+    {
+     "name": "Kieran Culkin",
+     "character": "Roman Roy",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 39,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:67070",
+   "mediaType": "tv",
+   "tmdbId": 67070,
+   "imdbId": "tt5687612",
+   "title": "Fleabag",
+   "originalTitle": "Fleabag",
+   "slug": "fleabag",
+   "releaseDate": "2016-07-21",
+   "year": 2016,
+   "voteAverage": 8.2,
+   "voteCount": 1660,
+   "popularity": 28.7,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/27vEYsRKa3eAniwmoccOoluEXQ1.jpg",
+   "backdropPath": "/ttIdhjAS1CsAlnUUqkYlhKq7Rpo.jpg",
+   "palette": {
+    "vibrant": "#c8505a",
+    "base": "#1c1012",
+    "tint1": "#6a2b30",
+    "tint2": "#1c1012",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACwAQCdASoIAAwAA4BaJagCdAEOtW9oAP50d/E3j+fL1eGf1MpqyULAAAA=",
+    "v": 1
+   },
+   "overviewShort": "A grieving, oversharing Londoner runs a failing café and talks straight to camera while her life, and a very tempting priest, fall apart around her.",
+   "runtimeMinutes": null,
+   "seasonCount": 2,
+   "overview": "A grieving, oversharing Londoner runs a failing café and talks straight to camera while her life, and a very tempting priest, fall apart around her.",
+   "tagline": null,
+   "directors": [
+    "Phoebe Waller-Bridge"
+   ],
+   "cast": [
+    {
+     "name": "Phoebe Waller-Bridge",
+     "character": "Fleabag",
+     "profilePath": null
+    },
+    {
+     "name": "Sian Clifford",
+     "character": "Claire",
+     "profilePath": null
+    },
+    {
+     "name": "Andrew Scott",
+     "character": "The Priest",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 12,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:246",
+   "mediaType": "tv",
+   "tmdbId": 246,
+   "imdbId": "tt0417299",
+   "title": "Avatar: The Last Airbender",
+   "originalTitle": "Avatar: The Last Airbender",
+   "slug": "avatar-the-last-airbender",
+   "releaseDate": "2005-02-21",
+   "year": 2005,
+   "voteAverage": 8.7,
+   "voteCount": 4620,
+   "popularity": 77.9,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10759,
+     "name": "Action & Adventure"
+    },
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    }
+   ],
+   "posterPath": "/9jUH3Q1Cm5vvHdHr7eYpb1Lwz1B.jpg",
+   "backdropPath": "/kU98MbVVgi72wzceyrEbClZmMFe.jpg",
+   "palette": {
+    "vibrant": "#e0a03a",
+    "base": "#141c26",
+    "tint1": "#573e17",
+    "tint2": "#141c26",
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAAAQAgCdASoIAAwAA4BaJbACdAEfh1YXyKmQAPyxnSugDoQSeupPo83V/PVwdvAYAAA=",
+    "v": 1
+   },
+   "overviewShort": "A twelve-year-old monk wakes from a century frozen in ice to learn he is the Avatar, the only one who can end a hundred-year war.",
+   "runtimeMinutes": null,
+   "seasonCount": 3,
+   "overview": "A twelve-year-old monk wakes from a century frozen in ice to learn he is the Avatar, the only one who can end a hundred-year war.",
+   "tagline": null,
+   "directors": [
+    "Michael Dante DiMartino",
+    "Bryan Konietzko"
+   ],
+   "cast": [
+    {
+     "name": "Zach Tyler Eisen",
+     "character": "Aang (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Mae Whitman",
+     "character": "Katara (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Dante Basco",
+     "character": "Zuko (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 61,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:100088",
+   "mediaType": "tv",
+   "tmdbId": 100088,
+   "imdbId": "tt3581920",
+   "title": "The Last of Us",
+   "originalTitle": "The Last of Us",
+   "slug": "the-last-of-us",
+   "releaseDate": "2023-01-15",
+   "year": 2023,
+   "voteAverage": 8.6,
+   "voteCount": 5640,
+   "popularity": 112.4,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg",
+   "backdropPath": "/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg",
+   "palette": {
+    "vibrant": "#7a9a5a",
+    "base": "#12160e",
+    "tint1": "#354427",
+    "tint2": "#12160e",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAADQAQCdASoIAAwAA4BaJQBOgB6V3AWZAAD6M4zlV7Mj57k/ZgAAAA==",
+    "v": 1
+   },
+   "overviewShort": "Twenty years after a fungal outbreak ends the world, a hardened smuggler is hired to get a fourteen-year-old girl across a ruined America.",
+   "runtimeMinutes": null,
+   "seasonCount": 2,
+   "overview": "Twenty years after a fungal outbreak ends the world, a hardened smuggler is hired to get a fourteen-year-old girl across a ruined America.",
+   "tagline": null,
+   "directors": [
+    "Craig Mazin",
+    "Neil Druckmann"
+   ],
+   "cast": [
+    {
+     "name": "Pedro Pascal",
+     "character": "Joel Miller",
+     "profilePath": null
+    },
+    {
+     "name": "Bella Ramsey",
+     "character": "Ellie Williams",
+     "profilePath": null
+    },
+    {
+     "name": "Gabriel Luna",
+     "character": "Tommy Miller",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 16,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:1429",
+   "mediaType": "tv",
+   "tmdbId": 1429,
+   "imdbId": "tt2560140",
+   "title": "Attack on Titan",
+   "originalTitle": "進撃の巨人",
+   "slug": "attack-on-titan",
+   "releaseDate": "2013-04-07",
+   "year": 2013,
+   "voteAverage": 8.7,
+   "voteCount": 7120,
+   "popularity": 101.5,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    },
+    {
+     "id": 10759,
+     "name": "Action & Adventure"
+    }
+   ],
+   "posterPath": "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+   "backdropPath": "/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
+   "palette": {
+    "vibrant": "#b05a3a",
+    "base": "#1a120e",
+    "tint1": "#683522",
+    "tint2": "#1a120e",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADwAQCdASoIAAwAA4BaJaACdAEOvH0aJAAA/nSkoyUX9vWI7svlG3W8RKfwRAAA",
+    "v": 1
+   },
+   "overviewShort": "Humanity survives behind enormous walls until the day giant man-eating Titans break through, and a furious boy swears to wipe them out.",
+   "runtimeMinutes": null,
+   "seasonCount": 4,
+   "overview": "Humanity survives behind enormous walls until the day giant man-eating Titans break through, and a furious boy swears to wipe them out.",
+   "tagline": null,
+   "directors": [
+    "Hajime Isayama"
+   ],
+   "cast": [
+    {
+     "name": "Yuki Kaji",
+     "character": "Eren Yeager (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Yui Ishikawa",
+     "character": "Mikasa Ackerman (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Marina Inoue",
+     "character": "Armin Arlert (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 94,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:1668",
+   "mediaType": "tv",
+   "tmdbId": 1668,
+   "imdbId": "tt0108778",
+   "title": "Friends",
+   "originalTitle": "Friends",
+   "slug": "friends",
+   "releaseDate": "1994-09-22",
+   "year": 1994,
+   "voteAverage": 8.4,
+   "voteCount": 8120,
+   "popularity": 130.8,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/f496cm9enuEsZkSPzCwnTESEK5s.jpg",
+   "backdropPath": "/l0qVZIpXtIo7km9u5Yqh0nKPOr5.jpg",
+   "palette": {
+    "vibrant": "#a05aa0",
+    "base": "#1a121a",
+    "tint1": "#5f355f",
+    "tint2": "#1a121a",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACwAQCdASoIAAwAA4BaJYgCdAD0LxlEAP4dadMLY81Lo9rsbcHbxzoAAAA=",
+    "v": 1
+   },
+   "overviewShort": "Six twenty-somethings in Manhattan get through jobs, breakups and one very orange couch together.",
+   "runtimeMinutes": null,
+   "seasonCount": 10,
+   "overview": "Six twenty-somethings in Manhattan get through jobs, breakups and one very orange couch together.",
+   "tagline": null,
+   "directors": [
+    "David Crane",
+    "Marta Kauffman"
+   ],
+   "cast": [
+    {
+     "name": "Jennifer Aniston",
+     "character": "Rachel Green",
+     "profilePath": null
+    },
+    {
+     "name": "Courteney Cox",
+     "character": "Monica Geller",
+     "profilePath": null
+    },
+    {
+     "name": "Matthew Perry",
+     "character": "Chandler Bing",
+     "profilePath": null
+    },
+    {
+     "name": "David Schwimmer",
+     "character": "Ross Geller",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 236,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:70523",
+   "mediaType": "tv",
+   "tmdbId": 70523,
+   "imdbId": "tt5753856",
+   "title": "Dark",
+   "originalTitle": "Dark",
+   "slug": "dark",
+   "releaseDate": "2017-12-01",
+   "year": 2017,
+   "voteAverage": 8.4,
+   "voteCount": 7040,
+   "popularity": 43.2,
+   "genres": [
+    {
+     "id": 80,
+     "name": "Crime"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 10765,
+     "name": "Sci-Fi & Fantasy"
+    },
+    {
+     "id": 9648,
+     "name": "Mystery"
+    }
+   ],
+   "posterPath": "/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+   "backdropPath": "/3jDXL4Xvj3AzDOF6UH1xeyHW8MH.jpg",
+   "palette": {
+    "vibrant": "#5a7a8a",
+    "base": "#0e1214",
+    "tint1": "#30414a",
+    "tint2": "#0e1214",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAAAQAgCdASoIAAwAA4BaJYwCdAEPDBeaFiWAAP50pKEkaeWw9jgi2MAA",
+    "v": 1
+   },
+   "overviewShort": "A child’s disappearance in a German town exposes four families whose secrets repeat every thirty-three years.",
+   "runtimeMinutes": null,
+   "seasonCount": 3,
+   "overview": "A child’s disappearance in a German town exposes four families whose secrets repeat every thirty-three years.",
+   "tagline": null,
+   "directors": [
+    "Baran bo Odar",
+    "Jantje Friese"
+   ],
+   "cast": [
+    {
+     "name": "Louis Hofmann",
+     "character": "Jonas Kahnwald",
+     "profilePath": null
+    },
+    {
+     "name": "Lisa Vicari",
+     "character": "Martha Nielsen",
+     "profilePath": null
+    },
+    {
+     "name": "Oliver Masucci",
+     "character": "Ulrich Nielsen",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 26,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:19885",
+   "mediaType": "tv",
+   "tmdbId": 19885,
+   "imdbId": "tt1475582",
+   "title": "Sherlock",
+   "originalTitle": "Sherlock",
+   "slug": "sherlock",
+   "releaseDate": "2010-07-25",
+   "year": 2010,
+   "voteAverage": 8.5,
+   "voteCount": 5060,
+   "popularity": 61.7,
+   "genres": [
+    {
+     "id": 80,
+     "name": "Crime"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 9648,
+     "name": "Mystery"
+    }
+   ],
+   "posterPath": "/7WTsnHkbA0FaG6R9twfFde0I9hl.jpg",
+   "backdropPath": "/bvS50jBZXtglmLu72EAt5KgJBrL.jpg",
+   "palette": {
+    "vibrant": "#5a8aa0",
+    "base": "#12161a",
+    "tint1": "#2b434d",
+    "tint2": "#12161a",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACwAQCdASoIAAwAA4BaJQBOgB6F4yiAAP0196KyWt3j5ZyZptJcDgAA",
+    "v": 1
+   },
+   "overviewShort": "A brilliant, impossible consulting detective and an army doctor back from Afghanistan solve crimes in modern London.",
+   "runtimeMinutes": null,
+   "seasonCount": 4,
+   "overview": "A brilliant, impossible consulting detective and an army doctor back from Afghanistan solve crimes in modern London.",
+   "tagline": null,
+   "directors": [
+    "Mark Gatiss",
+    "Steven Moffat"
+   ],
+   "cast": [
+    {
+     "name": "Benedict Cumberbatch",
+     "character": "Sherlock Holmes",
+     "profilePath": null
+    },
+    {
+     "name": "Martin Freeman",
+     "character": "Dr. John Watson",
+     "profilePath": null
+    },
+    {
+     "name": "Una Stubbs",
+     "character": "Mrs. Hudson",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 13,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:97546",
+   "mediaType": "tv",
+   "tmdbId": 97546,
+   "imdbId": "tt10986410",
+   "title": "Ted Lasso",
+   "originalTitle": "Ted Lasso",
+   "slug": "ted-lasso",
+   "releaseDate": "2020-08-14",
+   "year": 2020,
+   "voteAverage": 8.4,
+   "voteCount": 1340,
+   "popularity": 36.9,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/5fhZdwP1DVJ0FyVH6vrFdHwpXIn.jpg",
+   "backdropPath": "/9rpDJVRw4fwwSkbl1PSe2TDQqpP.jpg",
+   "palette": {
+    "vibrant": "#e0c03a",
+    "base": "#101a2a",
+    "tint1": "#4e4415",
+    "tint2": "#101a2a",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADwAQCdASoIAAwAA4BaJbACdAEPDBLmlgAA/mDwO6vgqHpPzNMPo1phOGqHoAAA",
+    "v": 1
+   },
+   "overviewShort": "An American college football coach with no soccer experience is hired to manage a struggling English Premier League club, and believes in everyone anyway.",
+   "runtimeMinutes": null,
+   "seasonCount": 3,
+   "overview": "An American college football coach with no soccer experience is hired to manage a struggling English Premier League club, and believes in everyone anyway.",
+   "tagline": null,
+   "directors": [
+    "Bill Lawrence",
+    "Jason Sudeikis",
+    "Brendan Hunt",
+    "Joe Kelly"
+   ],
+   "cast": [
+    {
+     "name": "Jason Sudeikis",
+     "character": "Ted Lasso",
+     "profilePath": null
+    },
+    {
+     "name": "Hannah Waddingham",
+     "character": "Rebecca Welton",
+     "profilePath": null
+    },
+    {
+     "name": "Brett Goldstein",
+     "character": "Roy Kent",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 34,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:1398",
+   "mediaType": "tv",
+   "tmdbId": 1398,
+   "imdbId": "tt0141842",
+   "title": "The Sopranos",
+   "originalTitle": "The Sopranos",
+   "slug": "the-sopranos",
+   "releaseDate": "1999-01-10",
+   "year": 1999,
+   "voteAverage": 8.6,
+   "voteCount": 2720,
+   "popularity": 52.3,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    },
+    {
+     "id": 80,
+     "name": "Crime"
+    }
+   ],
+   "posterPath": "/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg",
+   "backdropPath": "/lNpkvX2s8LGB0mjGODMT4o6Up7j.jpg",
+   "palette": {
+    "vibrant": "#a0402a",
+    "base": "#140e0c",
+    "tint1": "#752f1f",
+    "tint2": "#140e0c",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACwAQCdASoIAAwAA4BaJagCdAEO/gLsAP7Z6KJ68AejCSB8bep/BEAA",
+    "v": 1
+   },
+   "overviewShort": "A New Jersey mob boss starts seeing a therapist about his panic attacks while juggling two families that both want too much from him.",
+   "runtimeMinutes": null,
+   "seasonCount": 6,
+   "overview": "A New Jersey mob boss starts seeing a therapist about his panic attacks while juggling two families that both want too much from him.",
+   "tagline": null,
+   "directors": [
+    "David Chase"
+   ],
+   "cast": [
+    {
+     "name": "James Gandolfini",
+     "character": "Tony Soprano",
+     "profilePath": null
+    },
+    {
+     "name": "Edie Falco",
+     "character": "Carmela Soprano",
+     "profilePath": null
+    },
+    {
+     "name": "Lorraine Bracco",
+     "character": "Dr. Jennifer Melfi",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 86,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:93405",
+   "mediaType": "tv",
+   "tmdbId": 93405,
+   "imdbId": "tt10919420",
+   "title": "Squid Game",
+   "originalTitle": "오징어 게임",
+   "slug": "squid-game",
+   "releaseDate": "2021-09-17",
+   "year": 2021,
+   "voteAverage": 7.9,
+   "voteCount": 15520,
+   "popularity": 140.6,
+   "genres": [
+    {
+     "id": 10759,
+     "name": "Action & Adventure"
+    },
+    {
+     "id": 9648,
+     "name": "Mystery"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+   "backdropPath": "/2meX1nMdScFOoV4370rqHWKmXhY.jpg",
+   "palette": {
+    "vibrant": "#e0407a",
+    "base": "#0e1a18",
+    "tint1": "#782241",
+    "tint2": "#0e1a18",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACwAQCdASoIAAwAA4BaJagAApxZIsDgAP4dadMM2ocHjP/zCzfx0fE4AAA=",
+    "v": 1
+   },
+   "overviewShort": "Hundreds of people drowning in debt accept an invitation to play children’s games for a fortune. Losing costs more than money.",
+   "runtimeMinutes": null,
+   "seasonCount": 3,
+   "overview": "Hundreds of people drowning in debt accept an invitation to play children’s games for a fortune. Losing costs more than money.",
+   "tagline": null,
+   "directors": [
+    "Hwang Dong-hyuk"
+   ],
+   "cast": [
+    {
+     "name": "Lee Jung-jae",
+     "character": "Seong Gi-hun",
+     "profilePath": null
+    },
+    {
+     "name": "Park Hae-soo",
+     "character": "Cho Sang-woo",
+     "profilePath": null
+    },
+    {
+     "name": "Wi Ha-jun",
+     "character": "Hwang Jun-ho",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 22,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:65494",
+   "mediaType": "tv",
+   "tmdbId": 65494,
+   "imdbId": "tt4786824",
+   "title": "The Crown",
+   "originalTitle": "The Crown",
+   "slug": "the-crown",
+   "releaseDate": "2016-11-04",
+   "year": 2016,
+   "voteAverage": 8.2,
+   "voteCount": 3040,
+   "popularity": 47.5,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/1M876KPjulVwppEpldhdc8V4o68.jpg",
+   "backdropPath": "/5zmiBoMzeeVdQ62no55JOJMY498.jpg",
+   "palette": {
+    "vibrant": "#a08a5a",
+    "base": "#16140e",
+    "tint1": "#4d432b",
+    "tint2": "#16140e",
+    "lqip": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAADQAQCdASoIAAwAA4BaJQBOgB6HPoC0AADw1OTOD+/NVNZTEKF+u7yAAAA=",
+    "v": 1
+   },
+   "overviewShort": "The reign of Queen Elizabeth II from her wedding onward: the politics, the scandals and the private cost of wearing the crown.",
+   "runtimeMinutes": null,
+   "seasonCount": 6,
+   "overview": "The reign of Queen Elizabeth II from her wedding onward: the politics, the scandals and the private cost of wearing the crown.",
+   "tagline": null,
+   "directors": [
+    "Peter Morgan"
+   ],
+   "cast": [
+    {
+     "name": "Claire Foy",
+     "character": "Queen Elizabeth II",
+     "profilePath": null
+    },
+    {
+     "name": "Olivia Colman",
+     "character": "Queen Elizabeth II",
+     "profilePath": null
+    },
+    {
+     "name": "Matt Smith",
+     "character": "Prince Philip",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 60,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:105248",
+   "mediaType": "tv",
+   "tmdbId": 105248,
+   "imdbId": "tt11815682",
+   "title": "Hacks",
+   "originalTitle": "Hacks",
+   "slug": "hacks",
+   "releaseDate": "2021-05-13",
+   "year": 2021,
+   "voteAverage": 8.1,
+   "voteCount": 520,
+   "popularity": 26.3,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/tDt9ozCMEBx6kRxPkfC2yC8MLHr.jpg",
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#e0a0c0",
+    "base": "#1c1418",
+    "tint1": "#573e4b",
+    "tint2": "#1c1418",
+    "lqip": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACwAQCdASoIAAwAA4BaJQAAXPABZTaAAP5g8KVlMdfP+vw1sQEAAA==",
+    "v": 1
+   },
+   "overviewShort": "A legendary Las Vegas comic and an entitled, out-of-work young writer are forced into a partnership neither of them wanted.",
+   "runtimeMinutes": null,
+   "seasonCount": 4,
+   "overview": "A legendary Las Vegas comic and an entitled, out-of-work young writer are forced into a partnership neither of them wanted.",
+   "tagline": null,
+   "directors": [
+    "Lucia Aniello",
+    "Paul W. Downs",
+    "Jen Statsky"
+   ],
+   "cast": [
+    {
+     "name": "Jean Smart",
+     "character": "Deborah Vance",
+     "profilePath": null
+    },
+    {
+     "name": "Hannah Einbinder",
+     "character": "Ava Daniels",
+     "profilePath": null
+    },
+    {
+     "name": "Carl Clemons-Hopkins",
+     "character": "Marcus",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 38,
+   "tmdbReviews": []
+  },
+  {
+   "key": "tv:82728",
+   "mediaType": "tv",
+   "tmdbId": 82728,
+   "imdbId": null,
+   "title": "Bluey",
+   "originalTitle": "Bluey",
+   "slug": "bluey",
+   "releaseDate": "2018-10-01",
+   "year": 2018,
+   "voteAverage": 8.6,
+   "voteCount": 360,
+   "popularity": 58,
+   "genres": [
+    {
+     "id": 16,
+     "name": "Animation"
+    },
+    {
+     "id": 10751,
+     "name": "Family"
+    },
+    {
+     "id": 10762,
+     "name": "Kids"
+    }
+   ],
+   "posterPath": "/b9mY0X5T20ZqPPc6mwHGpzJ3k2g.jpg",
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#5aa0e0",
+    "base": "#10182a",
+    "tint1": "#274561",
+    "tint2": "#10182a",
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoIAAwAA4BaJagCdAD0MjYx4ADJ6YYZlEc2kdz429T+76H4we0ZRoAA",
+    "v": 1
+   },
+   "overviewShort": "An endlessly energetic Blue Heeler puppy turns everyday family life in Brisbane into games, with her little sister and two very patient parents.",
+   "runtimeMinutes": null,
+   "seasonCount": 3,
+   "overview": "An endlessly energetic Blue Heeler puppy turns everyday family life in Brisbane into games, with her little sister and two very patient parents.",
+   "tagline": null,
+   "directors": [
+    "Joe Brumm"
+   ],
+   "cast": [
+    {
+     "name": "Dave McCormack",
+     "character": "Bandit (voice)",
+     "profilePath": null
+    },
+    {
+     "name": "Melanie Zanetti",
+     "character": "Chilli (voice)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 154,
+   "tmdbReviews": [],
+   "edgeCase": "INCLUDE, but imdbId is null → IMDb chip and \"Also post on IMDb\" must be hidden (PRD D3-AC1)."
+  },
+  {
+   "key": "tv:96580",
+   "mediaType": "tv",
+   "tmdbId": 96580,
+   "imdbId": "tt8962124",
+   "title": "Emily in Paris",
+   "originalTitle": "Emily in Paris",
+   "slug": "emily-in-paris",
+   "releaseDate": "2020-10-02",
+   "year": 2020,
+   "voteAverage": 6.5,
+   "voteCount": 100,
+   "popularity": 44.1,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/kwMqIYOC4U9WmLVBnIBHqyVdmGp.jpg",
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#e05a8a",
+    "base": "#1a1018",
+    "tint1": "#6c2b43",
+    "tint2": "#1a1018",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACwAQCdASoIAAwAA4BaJagAAp2xTHk4APozjOVXsyMv/i2Xf1y6AAAA",
+    "v": 1
+   },
+   "overviewShort": "A Chicago marketing exec lands a job in Paris and sets out to teach a French agency about social media, one outfit at a time.",
+   "runtimeMinutes": null,
+   "seasonCount": 4,
+   "overview": "A Chicago marketing exec lands a job in Paris and sets out to teach a French agency about social media, one outfit at a time.",
+   "tagline": null,
+   "directors": [
+    "Darren Star"
+   ],
+   "cast": [
+    {
+     "name": "Lily Collins",
+     "character": "Emily Cooper",
+     "profilePath": null
+    },
+    {
+     "name": "Philippine Leroy-Beaulieu",
+     "character": "Sylvie Grateau",
+     "profilePath": null
+    },
+    {
+     "name": "Ashley Park",
+     "character": "Mindy Chen",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 40,
+   "tmdbReviews": [],
+   "edgeCase": "INCLUDE: exactly 6.5 and exactly 100 votes (TV floor, inclusive)."
+  },
+  {
+   "key": "tv:110382",
+   "mediaType": "tv",
+   "tmdbId": 110382,
+   "imdbId": "tt8888540",
+   "title": "Pachinko",
+   "originalTitle": "Pachinko",
+   "slug": "pachinko",
+   "releaseDate": "2022-03-25",
+   "year": 2022,
+   "voteAverage": 8,
+   "voteCount": 99,
+   "popularity": 14.2,
+   "genres": [
+    {
+     "id": 18,
+     "name": "Drama"
+    }
+   ],
+   "posterPath": "/fsbGQ1YZpg0wZqrrh5SGBtB0HF6.jpg",
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#c0905a",
+    "base": "#1a1410",
+    "tint1": "#533e27",
+    "tint2": "#1a1410",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADwAQCdASoIAAwAA4BaJZACdAD0ruOy6PAAzD4HmxGqL2is3ZfWiY13rqGiAA==",
+    "v": 1
+   },
+   "overviewShort": "Four generations of a Korean family chase survival and belonging from occupied Korea to Japan and America.",
+   "runtimeMinutes": null,
+   "seasonCount": 2,
+   "overview": "Four generations of a Korean family chase survival and belonging from occupied Korea to Japan and America.",
+   "tagline": null,
+   "directors": [
+    "Soo Hugh"
+   ],
+   "cast": [
+    {
+     "name": "Youn Yuh-jung",
+     "character": "Sunja (elder)",
+     "profilePath": null
+    },
+    {
+     "name": "Lee Min-ho",
+     "character": "Koh Hansu",
+     "profilePath": null
+    },
+    {
+     "name": "Kim Min-ha",
+     "character": "Sunja (young)",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 16,
+   "tmdbReviews": [],
+   "edgeCase": "EXCLUDE: 8.0 but 99 votes (TV floor is 100)."
+  },
+  {
+   "key": "tv:34549",
+   "mediaType": "tv",
+   "tmdbId": 34549,
+   "imdbId": "tt1877368",
+   "title": "The Great British Bake Off",
+   "originalTitle": "The Great British Bake Off",
+   "slug": "the-great-british-bake-off",
+   "releaseDate": "2010-08-17",
+   "year": 2010,
+   "voteAverage": 7.7,
+   "voteCount": 410,
+   "popularity": 30.5,
+   "genres": [
+    {
+     "id": 10764,
+     "name": "Reality"
+    }
+   ],
+   "posterPath": "/kd3kOBoQeWt1W4DqKLdQbt5hxaU.jpg",
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#e0c0a0",
+    "base": "#1c1814",
+    "tint1": "#463d32",
+    "tint2": "#1c1814",
+    "lqip": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAADQAQCdASoIAAwAA4BaJQBOgCHhgly7gAD+tAOgMP/3kUvWQ3sAsAAA",
+    "v": 1
+   },
+   "overviewShort": "Amateur bakers compete in a tent in the English countryside, one showstopper at a time.",
+   "runtimeMinutes": null,
+   "seasonCount": 15,
+   "overview": "Amateur bakers compete in a tent in the English countryside, one showstopper at a time.",
+   "tagline": null,
+   "directors": [
+    "Anna Beattie"
+   ],
+   "cast": [
+    {
+     "name": "Paul Hollywood",
+     "character": "Himself - Judge",
+     "profilePath": null
+    },
+    {
+     "name": "Prue Leith",
+     "character": "Herself - Judge",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "episodeCount": 150,
+   "tmdbReviews": [],
+   "edgeCase": "EXCLUDE: Reality genre (10764) is excluded from the TV catalogue by default."
+  }
+ ]
+}

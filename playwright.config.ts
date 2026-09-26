@@ -1,0 +1,49 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * E2E runs against the production build in demo mode (zero env vars, zero network).
+ * Chromium comes from /opt/pw-browsers (PLAYWRIGHT_BROWSERS_PATH). Never run `playwright install`.
+ * @playwright/test is pinned to 1.56.1 because that release matches the pre-installed chromium-1194.
+ */
+const PORT = Number(process.env.E2E_PORT ?? 3100);
+const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: false,
+  workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  reporter: [['list'], ['html', { open: 'never' }]],
+  timeout: 45_000,
+  expect: { timeout: 7_000 },
+  use: {
+    baseURL,
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    { name: 'mobile', use: { ...devices['Pixel 7'], browserName: 'chromium' } },
+  ],
+  webServer: process.env.E2E_BASE_URL
+    ? undefined
+    : {
+        command: `npm run build && npx next start -p ${PORT}`,
+        url: `${baseURL}/api/health`,
+        timeout: 240_000,
+        reuseExistingServer: !process.env.CI,
+        env: {
+          // Force demo mode even if a developer has keys in .env.local.
+          CATALOG_MODE: 'fixtures',
+          DATA_MODE: 'local',
+          // Container cannot reach image.tmdb.org; render generated posters so the console stays clean.
+          IMAGE_MODE: 'off',
+          DEMO_DATA_DIR: '.data/e2e',
+          DEMO_RESET_ON_BOOT: 'true',
+          DEMO_TODAY: '2026-09-26',
+        },
+      },
+});

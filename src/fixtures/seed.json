@@ -1,0 +1,662 @@
+{
+ "generatedAt": "2026-09-26T00:00:00Z",
+ "users": [
+  {
+   "id": "00000000-0000-4000-8000-000000000001",
+   "handle": "maya",
+   "email": "maya@demo.stubbed.app",
+   "displayName": "Maya",
+   "bio": "Film student. Will cry at anything by Celine Song.",
+   "avatarUrl": null,
+   "passwordHash": "scrypt$16384$8$1$JJhzTTOvozDIOTDoGA5Oew==$yZXU+I9H/D9B7cfmMpWOVnnI6LpziwTIDfKJNA8a1dk=",
+   "createdAt": "2022-04-11T10:00:00Z"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000002",
+   "handle": "dev",
+   "email": "dev@demo.stubbed.app",
+   "displayName": "Dev",
+   "bio": "Professional rewatcher. The Office is a lifestyle.",
+   "avatarUrl": null,
+   "passwordHash": "scrypt$16384$8$1$luJptxTMvzt5s5Xnxgd7IA==$Tk6UwDAKraj/TL98pDEtEDsP/Hbf+2ybE+3Pd3YeaiU=",
+   "createdAt": "2023-01-02T10:00:00Z"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000003",
+   "handle": "priya",
+   "email": "priya@demo.stubbed.app",
+   "displayName": "Priya",
+   "bio": "I write long reviews so you don’t have to.",
+   "avatarUrl": null,
+   "passwordHash": "scrypt$16384$8$1$tAkQUb/srmc9m4vGOxMwgA==$sEHAx+J7LKRExNU5odGGdGrMu0YyKKi0HBN5iFb9G4w=",
+   "createdAt": "2022-09-20T10:00:00Z"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000004",
+   "handle": "sam",
+   "email": "sam@demo.stubbed.app",
+   "displayName": "Sam",
+   "bio": "Sci-fi or bust.",
+   "avatarUrl": null,
+   "passwordHash": "scrypt$16384$8$1$Hs5bBEPKuR0ChiL5GsrNNg==$FJYdSetGo5JjJi45pOE6tm3coicr9hJiskgOWbJL+Ds=",
+   "createdAt": "2024-02-01T10:00:00Z"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000005",
+   "handle": "jun",
+   "email": "jun@demo.stubbed.app",
+   "displayName": "Jun",
+   "bio": "Anime, K-drama, and anything with a good score.",
+   "avatarUrl": null,
+   "passwordHash": "scrypt$16384$8$1$i3QMed8UBdlytsQ4H4MH8w==$KrtHQt+t4QO3taNX1qtds879nM1kHf55AAcg0Qhnq3o=",
+   "createdAt": "2024-06-15T10:00:00Z"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000006",
+   "handle": "leo",
+   "email": "leo@demo.stubbed.app",
+   "displayName": "Leo",
+   "bio": "",
+   "avatarUrl": null,
+   "passwordHash": "scrypt$16384$8$1$xIi6sa3bMGBMlhHifUzsxQ==$3NMxjB2bEO6HKYEIUP5s29zcpsZRJjQI+EAr3PwLuc4=",
+   "createdAt": "2026-09-20T10:00:00Z"
+  }
+ ],
+ "stubs": [
+  {
+   "id": "10000000-0000-4000-8000-000000000001",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:693134",
+   "watchedOn": "2026-03-02",
+   "watchedWhere": "cinema",
+   "note": "IMAX. Front row was a mistake.",
+   "createdAt": "2026-03-02T20:00:00Z",
+   "updatedAt": "2026-03-02T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000002",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:693134",
+   "watchedOn": "2026-09-12",
+   "watchedWhere": "streaming",
+   "note": "Better the second time.",
+   "createdAt": "2026-09-12T20:00:00Z",
+   "updatedAt": "2026-09-12T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000003",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:666277",
+   "watchedOn": "2026-08-30",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-08-30T20:00:00Z",
+   "updatedAt": "2026-08-30T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000004",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:965150",
+   "watchedOn": "2026-08-14",
+   "watchedWhere": "streaming",
+   "note": "Under Pressure. Gone.",
+   "createdAt": "2026-08-14T20:00:00Z",
+   "updatedAt": "2026-08-14T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000005",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "tv:95396",
+   "watchedOn": "2026-09-20",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-09-20T20:00:00Z",
+   "updatedAt": "2026-09-20T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000006",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "tv:136315",
+   "watchedOn": "2026-07-05",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-07-05T20:00:00Z",
+   "updatedAt": "2026-07-05T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000007",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:346698",
+   "watchedOn": "2026-06-21",
+   "watchedWhere": "cinema",
+   "note": "",
+   "createdAt": "2026-06-21T20:00:00Z",
+   "updatedAt": "2026-06-21T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000008",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:545611",
+   "watchedOn": "2026-05-09",
+   "watchedWhere": "tv",
+   "note": "",
+   "createdAt": "2026-05-09T20:00:00Z",
+   "updatedAt": "2026-05-09T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000009",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:129",
+   "watchedOn": "2026-04-18",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-04-18T20:00:00Z",
+   "updatedAt": "2026-04-18T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000010",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:531428",
+   "watchedOn": "2026-02-14",
+   "watchedWhere": "streaming",
+   "note": "Valentine’s Day, alone, on purpose.",
+   "createdAt": "2026-02-14T20:00:00Z",
+   "updatedAt": "2026-02-14T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000011",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:2316",
+   "watchedOn": "2024-01-15",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2024-01-15T20:00:00Z",
+   "updatedAt": "2024-01-15T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000012",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:2316",
+   "watchedOn": "2025-01-20",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2025-01-20T20:00:00Z",
+   "updatedAt": "2025-01-20T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000013",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:2316",
+   "watchedOn": "2026-01-11",
+   "watchedWhere": "streaming",
+   "note": "Annual tradition.",
+   "createdAt": "2026-01-11T20:00:00Z",
+   "updatedAt": "2026-01-11T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000014",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:2316",
+   "watchedOn": "2026-09-25",
+   "watchedWhere": "tv",
+   "note": "Dinner Party episode on loop.",
+   "createdAt": "2026-09-25T20:00:00Z",
+   "updatedAt": "2026-09-25T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000015",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:157336",
+   "watchedOn": "2014-11-08",
+   "watchedWhere": "cinema",
+   "note": "",
+   "createdAt": "2014-11-08T20:00:00Z",
+   "updatedAt": "2014-11-08T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000016",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:157336",
+   "watchedOn": "2020-06-01",
+   "watchedWhere": "tv",
+   "note": "",
+   "createdAt": "2020-06-01T20:00:00Z",
+   "updatedAt": "2020-06-01T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000017",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:157336",
+   "watchedOn": "2026-07-19",
+   "watchedWhere": "cinema",
+   "note": "70mm re-release!",
+   "createdAt": "2026-07-19T20:00:00Z",
+   "updatedAt": "2026-07-19T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000018",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:1668",
+   "watchedOn": "2025-05-03",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2025-05-03T20:00:00Z",
+   "updatedAt": "2025-05-03T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000019",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:1668",
+   "watchedOn": "2026-08-02",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-08-02T20:00:00Z",
+   "updatedAt": "2026-08-02T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000020",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:8966",
+   "watchedOn": "2026-03-20",
+   "watchedWhere": "streaming",
+   "note": "Ironically. Mostly.",
+   "createdAt": "2026-03-20T20:00:00Z",
+   "updatedAt": "2026-03-20T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000021",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:1396",
+   "watchedOn": "2025-11-30",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2025-11-30T20:00:00Z",
+   "updatedAt": "2025-11-30T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000022",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:94605",
+   "watchedOn": "2026-09-01",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-09-01T20:00:00Z",
+   "updatedAt": "2026-09-01T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000023",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:496243",
+   "watchedOn": "2026-01-25",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-01-25T20:00:00Z",
+   "updatedAt": "2026-01-25T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000024",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:872585",
+   "watchedOn": "2023-07-22",
+   "watchedWhere": "cinema",
+   "note": "",
+   "createdAt": "2023-07-22T20:00:00Z",
+   "updatedAt": "2023-07-22T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000025",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "tv:87108",
+   "watchedOn": "2025-10-12",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2025-10-12T20:00:00Z",
+   "updatedAt": "2025-10-12T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000026",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "tv:76331",
+   "watchedOn": "2026-05-30",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-05-30T20:00:00Z",
+   "updatedAt": "2026-05-30T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000027",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "tv:126308",
+   "watchedOn": "2026-04-22",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-04-22T20:00:00Z",
+   "updatedAt": "2026-04-22T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000028",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:244786",
+   "watchedOn": "2026-02-03",
+   "watchedWhere": "tv",
+   "note": "",
+   "createdAt": "2026-02-03T20:00:00Z",
+   "updatedAt": "2026-02-03T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000029",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:238",
+   "watchedOn": "2025-12-24",
+   "watchedWhere": "tv",
+   "note": "",
+   "createdAt": "2025-12-24T20:00:00Z",
+   "updatedAt": "2025-12-24T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000030",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:693134",
+   "watchedOn": "2026-03-09",
+   "watchedWhere": "cinema",
+   "note": "",
+   "createdAt": "2026-03-09T20:00:00Z",
+   "updatedAt": "2026-03-09T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000031",
+   "userId": "00000000-0000-4000-8000-000000000004",
+   "titleKey": "movie:693134",
+   "watchedOn": "2026-03-01",
+   "watchedWhere": "cinema",
+   "note": "",
+   "createdAt": "2026-03-01T20:00:00Z",
+   "updatedAt": "2026-03-01T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000032",
+   "userId": "00000000-0000-4000-8000-000000000004",
+   "titleKey": "movie:335984",
+   "watchedOn": "2026-06-06",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-06-06T20:00:00Z",
+   "updatedAt": "2026-06-06T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000033",
+   "userId": "00000000-0000-4000-8000-000000000005",
+   "titleKey": "movie:693134",
+   "watchedOn": "2026-03-15",
+   "watchedWhere": "cinema",
+   "note": "",
+   "createdAt": "2026-03-15T20:00:00Z",
+   "updatedAt": "2026-03-15T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000034",
+   "userId": "00000000-0000-4000-8000-000000000005",
+   "titleKey": "tv:1429",
+   "watchedOn": "2026-01-08",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-01-08T20:00:00Z",
+   "updatedAt": "2026-01-08T20:00:00Z"
+  },
+  {
+   "id": "10000000-0000-4000-8000-000000000035",
+   "userId": "00000000-0000-4000-8000-000000000005",
+   "titleKey": "movie:372058",
+   "watchedOn": "2026-02-21",
+   "watchedWhere": "streaming",
+   "note": "",
+   "createdAt": "2026-02-21T20:00:00Z",
+   "updatedAt": "2026-02-21T20:00:00Z"
+  }
+ ],
+ "reviews": [
+  {
+   "id": "20000000-0000-4000-8000-000000000001",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:693134",
+   "rating10": 9,
+   "body": "The second watch is where it clicked for me: this is a tragedy wearing a blockbuster’s clothes. Zendaya carries the ending.",
+   "isSpoiler": false,
+   "stubId": "10000000-0000-4000-8000-000000000002",
+   "imdbSharedAt": null,
+   "createdAt": "2026-09-12T22:10:00Z",
+   "updatedAt": "2026-09-13T08:00:00Z",
+   "editedAt": "2026-09-13T08:00:00Z"
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000002",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:666277",
+   "rating10": 10,
+   "body": "In-yun. That’s it, that’s the review.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-08-30T23:00:00Z",
+   "updatedAt": "2026-08-30T23:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000003",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:965150",
+   "rating10": 9,
+   "body": "",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-08-14T23:30:00Z",
+   "updatedAt": "2026-08-14T23:30:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000004",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:2316",
+   "rating10": 10,
+   "body": "Fourth full rewatch. Still finding jokes in the background of the conference room.",
+   "isSpoiler": false,
+   "stubId": "10000000-0000-4000-8000-000000000014",
+   "imdbSharedAt": null,
+   "createdAt": "2026-09-25T21:00:00Z",
+   "updatedAt": "2026-09-25T21:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000005",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:157336",
+   "rating10": 10,
+   "body": "Saw it in 70mm this summer. The organ still rattles your ribs.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-07-19T23:40:00Z",
+   "updatedAt": "2026-07-19T23:40:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000006",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:496243",
+   "rating10": 10,
+   "body": "Bong Joon-ho builds the house before he floods it. Every staircase in this film is an argument about class, and the peach scene is the most tense thing I have seen about fruit.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": "2026-01-26T09:15:00Z",
+   "createdAt": "2026-01-25T22:00:00Z",
+   "updatedAt": "2026-01-25T22:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000007",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "tv:76331",
+   "rating10": 9,
+   "body": "The finale lands exactly where it should: Kendall on the waterfront, having lost the only thing he ever wanted, and Tom walking away with it. Shiv’s hand on the car is the whole show.",
+   "isSpoiler": true,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-05-30T23:10:00Z",
+   "updatedAt": "2026-05-30T23:10:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000008",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "tv:87108",
+   "rating10": 10,
+   "body": "The best TV about institutional failure ever made. Episode one is a horror film.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2025-10-13T20:00:00Z",
+   "updatedAt": "2025-10-13T20:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000009",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "tv:126308",
+   "rating10": 9,
+   "body": "Patient, gorgeous, and ruthless. Anna Sawai deserves every award.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-04-23T19:00:00Z",
+   "updatedAt": "2026-04-23T19:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000010",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:244786",
+   "rating10": 8,
+   "body": "A thriller about a drum solo. The final ten minutes are an action sequence.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-02-03T22:00:00Z",
+   "updatedAt": "2026-02-03T22:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000011",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:238",
+   "rating10": 10,
+   "body": "Christmas Eve tradition. Nothing has ever been lit like the opening wedding.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2025-12-24T23:00:00Z",
+   "updatedAt": "2025-12-24T23:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000012",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:872585",
+   "rating10": 8,
+   "body": "Three hours that feel like two. The Trinity sequence is silence used as a weapon.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2023-07-23T10:00:00Z",
+   "updatedAt": "2023-07-23T10:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000013",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:693134",
+   "rating10": 8,
+   "body": "Villeneuve directs sand better than anyone alive.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-03-09T23:00:00Z",
+   "updatedAt": "2026-03-09T23:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000014",
+   "userId": "00000000-0000-4000-8000-000000000004",
+   "titleKey": "movie:693134",
+   "rating10": 10,
+   "body": "Harkonnen arena in black-and-white sunlight. I gasped.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-03-01T23:00:00Z",
+   "updatedAt": "2026-03-01T23:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000015",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:693134",
+   "rating10": 8,
+   "body": "Haven’t stubbed it yet (watched at a friend’s), but the worm ride alone is an 8.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-04-02T21:00:00Z",
+   "updatedAt": "2026-04-02T21:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000016",
+   "userId": "00000000-0000-4000-8000-000000000005",
+   "titleKey": "movie:693134",
+   "rating10": 7,
+   "body": "Great spectacle, but I missed the weirdness of the book.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-03-15T23:00:00Z",
+   "updatedAt": "2026-03-15T23:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000017",
+   "userId": "00000000-0000-4000-8000-000000000005",
+   "titleKey": "tv:1429",
+   "rating10": 9,
+   "body": "The season 3 part 2 turn changes the whole show. Stick with it.",
+   "isSpoiler": false,
+   "stubId": null,
+   "imdbSharedAt": null,
+   "createdAt": "2026-01-09T12:00:00Z",
+   "updatedAt": "2026-01-09T12:00:00Z",
+   "editedAt": null
+  }
+ ],
+ "watchlist": [
+  {
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:792307",
+   "addedAt": "2026-09-10T12:00:00Z"
+  },
+  {
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "tv:100088",
+   "addedAt": "2026-09-15T12:00:00Z"
+  },
+  {
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:1064213",
+   "addedAt": "2026-09-18T12:00:00Z"
+  },
+  {
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "tv:1438",
+   "addedAt": "2026-08-01T12:00:00Z"
+  }
+ ]
+}

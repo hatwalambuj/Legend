@@ -1,0 +1,9 @@
+node_modules
+.next
+.data
+coverage
+playwright-report
+test-results
+package-lock.json
+docs/02-design/prototype.html
+src/fixtures/*.json

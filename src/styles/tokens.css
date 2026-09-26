@@ -1,0 +1,118 @@
+/* =========================================================================
+   Stubbed design tokens — mirror of docs/02-design/DESIGN.md §2.
+   OWNER: Architect. FROZEN. Components consume these; never hard-code values.
+   Dark only in MVP (color-scheme: dark). Token names are semantic so a light theme can come later.
+   ========================================================================= */
+:root {
+  color-scheme: dark;
+
+  /* neutrals */
+  --bg: #0b0b0d;
+  --surface: #16161a;
+  --surface-2: #1d1d22;
+  --surface-3: #26262c;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --glass: rgba(22, 22, 26, 0.62);
+  --fg: #f4f1ea;
+  --fg-2: #bdb8ae;
+  --fg-3: #8a857c; /* solid surfaces only — never directly on the adaptive background */
+
+  /* ticket paper */
+  --paper: #efe9de;
+  --paper-2: #e3dccd;
+  --paper-3: #d6cebd;
+  --ink: #141210;
+  --ink-2: #5e584f;
+  --perf: rgba(20, 18, 16, 0.26);
+
+  /* accent: primary CTA, focus ring, stamps, counts (max one filled accent element per viewport) */
+  --accent: #ff5b3a;
+  --accent-press: #e84a2a;
+  --on-accent: #0b0b0d;
+  --stamp: #b02e17;
+  --ok: #5ed39a;
+  --warn: #f5c451;
+  --danger: #ff6b6b;
+
+  /* adaptive tint: set per focused title from Palette.tint1 / tint2 (clamped, DESIGN §4) */
+  --tint-1: #3a2a4a;
+  --tint-2: #141020;
+
+  /* type — the font variables are injected by next/font/local in src/app/fonts.ts */
+  --font-display:
+    var(--font-bricolage), var(--font-bricolage-ext), 'Bricolage Grotesque', ui-sans-serif,
+    system-ui, sans-serif;
+  --font-ui:
+    var(--font-geist), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:
+    var(--font-geist-mono), 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* space (4-pt) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-14: 56px;
+  --s-18: 72px;
+  --s-24: 96px;
+
+  /* radii */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --notch: 9px;
+
+  /* elevation (tickets use filter: drop-shadow on a wrapper, not box-shadow) */
+  --shadow-ticket: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  --shadow-sheet: 0 16px 40px rgba(0, 0, 0, 0.5);
+
+  /* motion */
+  --d-1: 120ms;
+  --d-2: 200ms;
+  --d-3: 320ms;
+  --d-4: 560ms;
+  --d-5: 900ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-snap: cubic-bezier(0.3, 1.5, 0.5, 1);
+  --ease-tear: cubic-bezier(0.55, 0, 0.75, 0.05);
+
+  /* layout */
+  --gutter: 16px;
+  --maxw: 1320px;
+  --header-h: 64px;
+
+  /* static grain texture (no request) */
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+@media (min-width: 640px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+@media (min-width: 1200px) {
+  :root {
+    --gutter: 60px;
+    --header-h: 72px;
+  }
+}
+
+/* Reduced motion: collapse durations; components must also drop transforms/clones (DESIGN §2.6). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --d-1: 1ms;
+    --d-2: 1ms;
+    --d-3: 1ms;
+    --d-4: 1ms;
+    --d-5: 1ms;
+  }
+}
