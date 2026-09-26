@@ -329,8 +329,8 @@ The sheet uses a native `<dialog>`, which provides the focus trap, Esc to close,
 | **Segmented control** | A pill track with an active segment in `--fg` bg and `--bg` text. `role=group` and `aria-pressed` on each button. Used for type filter (All/Movies/Shows), review source, and where-watched. |
 | **Sort select** | Native `<select>` in a pill, with a chevron pseudo-element. Options exactly as in A2-AC1: "Release date · newest", "Release date · oldest", "Rating · highest", "Rating · lowest". The value syncs to `?sort=`. |
 | **Chip** | 28px outline pill, used for genres. |
-| **Tag** | 20px mono label with a 5px radius. Examples: `STUB #2`, `EDITED`, `IMDb ✓` (yellow), `BELOW 6.5 NOW`. |
-| **Score chip** | Glass panel with a big number and a two-line source label: `TMDB · 6.9k votes`, `IMDb 8.5 · IMDb rating via OMDb` (P1), and `Stubbed` (the community average appears only once there are 5+ ratings; before that it reads "N reviews · avg unlocks at 5"). |
+| **Tag** | 20px mono label with a 5px radius. Examples: `STUB #2`, `EDITED`, `BELOW 6.5 NOW`, `SPLIT`. |
+| **Score chip** | Glass panel with a big number and a two-line source label: `TMDB · 6.9k votes`, `IMDb 8.5 · IMDb rating via OMDb` (P0, ADR-008; hidden when the title has no IMDb rating), and `Stubbed` (the community average appears only once there are 5+ ratings; before that it reads "N reviews · avg unlocks at 5"). |
 | **Star input** | 5 stars × 2 half-hit targets (10 radios, `role=radiogroup`). Arrow keys step by half-stars. Required (D1-AC1). It shows "4.5/5" beside the stars, and the value is stored as 1–10. |
 | **Review card** | Avatar (gradient initials), `@handle`, stars, date, tags, body (max 68ch). Spoiler reviews render the body with `filter: blur(7px)`, `user-select:none`, and `aria-hidden` on the blurred text, plus a "Show spoiler" button (A6-AC2). |
 | **Toast** | Light (`--fg` bg, `--bg` text) for maximum pop on dark screens. Includes a ticket icon, a message, and an optional action in `--stamp`. `role=status`. At most 2 stacked. Duration 2.6 s, or 5 s with an action. |
@@ -405,7 +405,7 @@ For each screen: routes, layouts at mobile 375 and desktop 1440, and states. "Ad
   - Loading: ticket skeleton, 3 text bars, and a disabled CTA.
   - 404 (A5-AC4): a centred empty state, "This ticket doesn't exist", [Back to Discover], on a neutral tint.
   - Title below the rule (D4): a notice under the eyebrow: "This title dropped below our 6.5 bar. Your stubs are safe."
-  - No IMDb ID: the IMDb chip and the IMDb assist are hidden (D3-AC1).
+  - No IMDb rating (`imdbRating` is null): the IMDb chip on the stub and the IMDb score chip are hidden, never shown as 0 (A7-AC3).
 - **SEO/OG** (A5-AC3): `og:image` is the poster `w780`, or the v1 share ticket.
 
 ### 7.4.1 "Worth it?" block and ticket time line (PRD §4.2, F1–F5; added 2026-09-26)
@@ -426,24 +426,14 @@ The block is a **paper "programme slip"**: it uses the same language as the tick
 - **Test ids**: `worth-it`, `worth-it-hook`, `worth-it-vibes`, `worth-it-time`, `worth-it-cert`, `worth-it-verdict`, `worth-it-like`, and `ticket-time` on the stub.
 - **Quick-peek sheet (v1)**: the same slip inside the standard bottom sheet, opened from the card's `⋯` menu, with [Stub it] [Watchlist] [Open].
 
-### 7.5 Reviews (on the title page) + composer (D1–D3)
+### 7.5 Reviews (on the title page) + composer (D1–D2)
 - Header "Reviews". A segmented control switches "On Stubbed · N" / "From TMDB · N", and a sort select offers Newest / Highest rated.
 - **Composer** (logged-in; logged-out users see "Sign in to review" with the same frame):
   - "Write a review" or "Your review" (edit mode, prefilled per D1-AC2).
   - Star input (required), textarea (5,000 max, with a counter "108 / 5,000"), and a "Contains spoilers" switch.
   - [Post review] or [Update review].
   - Saving with no stubs triggers the toast "Review saved. Add a stub too?" [Add stub] (D1-AC4, default action).
-  - **"Also post on IMDb" block** (inside the composer, under the form, dashed border; only when `imdb_id` exists):
-    - Button: `[IMDb] Also post on IMDb ↗` (ghost, sm).
-    - Helper copy, verbatim from D3-AC3: *"IMDb doesn't allow apps to post for you. We've copied your review — paste it on IMDb."*
-    - On click:
-      1. `navigator.clipboard.writeText(body)`. On failure, select the textarea and toast "Press Ctrl/⌘+C, then paste on IMDb."
-      2. Toast "Copied. Paste it on IMDb."
-      3. `window.open('https://www.imdb.com/title/{imdb_id}/reviews/', '_blank', 'noopener')`.
-      4. Reveal the inline row "Did you post it?" [Yes, mark as posted] [Not yet].
-    - **Yes** stores `imdb_shared_at` and shows the tag `IMDb ✓` on the review (D3-AC4). The app never sets it automatically.
-    - If the body is empty, the button toasts "Write something first — we copy your text for you."
-    - Analytics: `imdb_assist_clicked`.
+  - Reviews are saved to Stubbed only. There is no "post to IMDb" (or any other site) option anywhere (ADR-008).
 - **List**: Stubbed reviews first, the user's own review pinned at the top (D1-AC3, with the `EDITED` tag if changed), and `STUB #N` if the review is linked to a stub. The TMDB tab lists read-only reviews with a TMDB mark and author name, followed by the line "Reviews from TMDB community members. Read-only."
 - **Empty** (A6-AC3): "No reviews yet. Be the first to review {title}. Stars are enough — words optional." [Be the first to review] focuses the composer.
 - **Delete** (D2): the owner gets a "⋯" menu with Edit and Delete. Delete asks "Delete your review? This can't be undone." [Cancel] [Delete] (danger).
@@ -555,7 +545,6 @@ Open item for the Architect/legal: confirm that IMDb's brand rules allow the yel
 | Search miss | "Not in Stubbed — we only list titles rated 6.5+." |
 | Empty wallet | "Your wallet is empty. Every watch earns a stub." |
 | Empty reviews | "No reviews yet. Be the first to review {title}. Stars are enough — words optional." |
-| IMDb assist | "IMDb doesn't allow apps to post for you. We've copied your review — paste it on IMDb." / "Did you post it?" |
 | Review needs rating | "Pick a star rating first — half stars are fine." |
 | Network error | "The projector jammed. We couldn't load titles." [Try again] |
 | Stub failed | "Couldn't save that stub. Try again." [Retry] |
@@ -569,7 +558,7 @@ Open item for the Architect/legal: confirm that IMDb's brand rules allow the yel
 
 ## 11. Handoff notes
 
-- **Hooks for QA**: the prototype uses `data-ticket`, `data-stub`, `data-focus` and `data-count`. Keep equivalent `data-testid`s in the app: `ticket-{id}`, `stub-button`, `stub-count`, `sort-select`, `type-filter`, `review-composer`, `imdb-assist`, `demo-pill`, `toast`.
+- **Hooks for QA**: the prototype uses `data-ticket`, `data-stub`, `data-focus` and `data-count`. Keep equivalent `data-testid`s in the app: `ticket-{id}`, `stub-button`, `stub-count`, `sort-select`, `type-filter`, `review-composer`, `imdb-rating` (the IMDb chip on stubs and the detail score chip), `demo-pill`, `toast`, plus the `worth-it-*` ids in §7.4.1.
 - **CSS**: tokens as custom properties in a global stylesheet. The ticket mask and adaptive background are plain CSS with no JS dependency (JS only swaps the `--tint-*` vars and the LQIP). Tailwind is fine; keep the mask and keyframes in a component CSS module.
 - **Images** (E3): TMDB `w342` in grids (`w185` for rows), `w500` for the detail ticket, `w780` backdrop / OG, `w92` for extraction only. Always set `width`/`height` so CLS stays < 0.1. The adaptive bg uses the inline LQIP, so it causes zero CLS and zero requests.
 - **Performance**: `drop-shadow` filters on up to about 30 visible tickets are fine. Beyond that, virtualise the grid. Use `content-visibility:auto` on off-screen grid rows.

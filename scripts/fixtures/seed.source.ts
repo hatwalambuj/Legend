@@ -8,7 +8,8 @@
  * - dev has a stub on Twilight (movie:8966, rated 6.4, unlisted) → hysteresis "BELOW 6.5 NOW".
  * - priya's Succession review is a spoiler.
  * - maya's Dune: Part Two review is linked to her stub #2.
- * - Dune: Part Two has 5 user ratings → the Stubbed community average unlocks.
+ * - Dune: Part Two has 5 user ratings → the Stubbed community average unlocks ("Widely loved").
+ * - Transformers has 5 low ratings (avg 5.0) → "Split opinions: IMDb rates it higher than Stubbed users".
  * - leo has no stubs/reviews → empty wallet state.
  */
 
@@ -435,6 +436,47 @@ export const REVIEWS: SourceReview[] = [
     rating10: 9,
     body: 'The season 3 part 2 turn changes the whole show. Stick with it.',
     createdAt: '2026-01-09T12:00:00Z',
+  },
+  // Transformers: 5 low community ratings (avg 5.0) vs TMDB 6.8 / IMDb 7.0 → "Split opinions" (F3-AC4).
+  {
+    id: rid(),
+    user: 'maya',
+    title: 'movie:1858',
+    rating10: 4,
+    body: 'Loud. I could not tell which robot was which.',
+    createdAt: '2026-06-01T21:00:00Z',
+  },
+  {
+    id: rid(),
+    user: 'dev',
+    title: 'movie:1858',
+    rating10: 6,
+    body: 'A childhood rewatch that did not survive adulthood, but the first transformation still rules.',
+    createdAt: '2026-06-02T21:00:00Z',
+  },
+  {
+    id: rid(),
+    user: 'priya',
+    title: 'movie:1858',
+    rating10: 4,
+    body: '',
+    createdAt: '2026-06-03T21:00:00Z',
+  },
+  {
+    id: rid(),
+    user: 'sam',
+    title: 'movie:1858',
+    rating10: 6,
+    body: 'Fun for the cars, forgettable for everything else.',
+    createdAt: '2026-06-04T21:00:00Z',
+  },
+  {
+    id: rid(),
+    user: 'jun',
+    title: 'movie:1858',
+    rating10: 5,
+    body: '',
+    createdAt: '2026-06-05T21:00:00Z',
   },
 ];
 

@@ -1,3 +1,5 @@
+import { titleScores } from '@/lib/format';
+import { ticketTimeLabel } from '@/lib/worth-it';
 import { dal } from '@/server/dal';
 
 // OWNER: Frontend. PLACEHOLDER proving the scaffold wiring (DAL → fixtures) — replace with the real Home.
@@ -31,7 +33,11 @@ export default async function HomePage() {
       <ul>
         {page.items.map((t) => (
           <li key={t.key}>
-            {t.title} ({t.year}) · {t.voteAverage.toFixed(1)} TMDB
+            {t.title} ({t.year}) ·{' '}
+            {titleScores(t)
+              .map((x) => `${x.label} ${x.value}`)
+              .join(' · ')}{' '}
+            · {ticketTimeLabel(t)}
           </li>
         ))}
       </ul>

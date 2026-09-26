@@ -1,5 +1,5 @@
 -- =============================================================================
--- Stubbed — initial schema (ADR-002/003/004/005/008). OWNER: Architect.
+-- Stubbed — initial schema (ADR-002/003/004/005/008/009). OWNER: Architect.
 -- Later changes: add NEW migration files (Backend); never edit an applied migration.
 -- Pre-launch note: this file was revised in place for ADR-008 before it was ever applied to any
 -- environment (no third-party sync tables; IMDb rating cached on catalog_index).
@@ -42,6 +42,18 @@ create table public.catalog_index (
   needs_palette    boolean not null default true,
   runtime_minutes  smallint,
   season_count     smallint,
+  -- Per-title enrichment for tickets + "Worth it?" (PRD §4.2). Filled by the nightly job's enrich step
+  -- (one TMDB detail call per new or stale row), from fixtures in demo mode. Deterministic, no AI (D15).
+  episode_count    smallint,
+  episode_runtime  smallint,                                   -- TV: typical minutes per episode, null = unknown
+  series_status    text check (series_status is null or series_status in
+                     ('returning', 'ended', 'limited', 'canceled', 'in_production', 'planned')),
+  tagline          text check (tagline is null or char_length(tagline) <= 300),
+  certification    text check (certification is null or char_length(certification) <= 12),
+  keywords         text[] not null default '{}',               -- TMDB keyword names, lowercased (vibe mapping input)
+  recommendation_keys text[] not null default '{}',            -- TMDB recommendations/similar as title keys
+  pitch_hook       text check (pitch_hook is null or char_length(pitch_hook) <= 120),  -- OURS (editorial), never synced
+  enriched_at      timestamptz,                                -- null = never enriched (enrich first)
   sort_title       text collate "C" not null,
   search_text      text not null,
   is_listed        boolean not null default false,
@@ -69,8 +81,9 @@ create index catalog_t_popularity   on public.catalog_index (media_type, popular
 create index catalog_search_trgm    on public.catalog_index using gin (search_text gin_trgm_ops);
 create index catalog_genres         on public.catalog_index using gin (genre_ids);
 create index catalog_needs_palette  on public.catalog_index (id) where needs_palette;
--- Staggered OMDb refresh (1,000 calls/day): never-checked first, then the oldest check.
+-- Staggered OMDb refresh (ADR-008): never-checked first, then the oldest check.
 create index catalog_imdb_due       on public.catalog_index (imdb_checked_at nulls first, id) where imdb_id is not null;
+create index catalog_enrich_due     on public.catalog_index (enriched_at nulls first, id);
 
 -- Staging table for the nightly sync (same shape, no identity/constraints beyond the key).
 create unlogged table public.catalog_staging (
@@ -472,18 +485,39 @@ begin
   return jsonb_build_object('upserted', v_upserted, 'unlisted', v_unlisted);
 end $$;
 
--- IMDb ratings via OMDb (ADR-008), service role only. The job asks for at most its daily budget
--- (OMDB_DAILY_BUDGET, <= 1,000/day free tier): never-checked titles first (new rows, changed ids), then
--- listed before unlisted, then the oldest check, skipping anything checked within the TTL (7 days).
-create or replace function public.catalog_imdb_due(p_limit integer, p_ttl_days integer default 7)
-returns table (id bigint, imdb_id text)
+-- IMDb ratings via OMDb (ADR-008), service role only. Rolling, tiered refresh within the daily budget
+-- (OMDB_DAILY_BUDGET, default 900 < 1,000/day free tier):
+--   1. never-checked rows (new titles, changed imdb ids), listed first, most popular first;
+--   2. "hot" rows (top p_hot_count listed titles by popularity) older than p_hot_ttl_days (default 7);
+--   3. everything else older than p_ttl_days (default 30), oldest check first.
+-- At ~15k titles that is ~150 (hot) + ~500 (rest) + new ≈ 700 calls/night. A paid OMDb key simply raises
+-- the budget and lowers p_ttl_days; no code change.
+create or replace function public.catalog_imdb_due(
+  p_limit         integer,
+  p_hot_ttl_days  integer default 7,
+  p_ttl_days      integer default 30,
+  p_hot_count     integer default 1000
+) returns table (id bigint, imdb_id text)
 language sql stable security definer set search_path = public as $$
-  select c.id, c.imdb_id from public.catalog_index c
-   where c.imdb_id is not null
-     and (c.imdb_checked_at is null or c.imdb_checked_at < now() - make_interval(days => greatest(p_ttl_days, 1)))
-   order by (c.imdb_checked_at is null) desc, c.is_listed desc, c.imdb_checked_at asc nulls first,
-            c.popularity desc, c.id
-   limit least(greatest(p_limit, 0), 1000)
+  with ranked as (
+    select c.id, c.imdb_id, c.is_listed, c.popularity, c.imdb_checked_at,
+           case when c.is_listed then row_number() over (partition by c.is_listed order by c.popularity desc, c.id) end as pop_rank
+      from public.catalog_index c
+     where c.imdb_id is not null
+  ), due as (
+    select r.*,
+           case
+             when r.imdb_checked_at is null then 1
+             when r.pop_rank <= p_hot_count
+                  and r.imdb_checked_at < now() - make_interval(days => greatest(p_hot_ttl_days, 1)) then 2
+             when r.imdb_checked_at < now() - make_interval(days => greatest(p_ttl_days, 1)) then 3
+           end as tier
+      from ranked r
+  )
+  select d.id, d.imdb_id from due d
+   where d.tier is not null
+   order by d.tier, d.is_listed desc, d.imdb_checked_at asc nulls first, d.popularity desc, d.id
+   limit greatest(p_limit, 0)
 $$;
 
 -- p_rows = [{ "id": 1, "rating": 8.5 | null, "votes": 684000 | null }, ...]. A null rating means OMDb had
@@ -502,6 +536,61 @@ begin
   get diagnostics v_count = row_count;
   return v_count;
 end $$;
+
+-- Enrichment (tickets + "Worth it?"): rows never enriched first, then those older than p_ttl_days.
+create or replace function public.catalog_enrich_due(p_limit integer, p_ttl_days integer default 30)
+returns table (id bigint, media_type text, tmdb_id integer)
+language sql stable security definer set search_path = public as $$
+  select c.id, c.media_type, c.tmdb_id from public.catalog_index c
+   where c.enriched_at is null or c.enriched_at < now() - make_interval(days => greatest(p_ttl_days, 1))
+   order by c.enriched_at asc nulls first, c.is_listed desc, c.popularity desc, c.id
+   limit greatest(p_limit, 0)
+$$;
+
+-- p_rows = [{ id, imdb_id, runtime_minutes, season_count, episode_count, episode_runtime, series_status,
+--             tagline, certification, keywords: [..], recommendation_keys: [..] }, ...]
+-- Never touches pitch_hook (ours). A changed imdb_id resets the cached IMDb rating.
+create or replace function public.catalog_set_enrichment(p_rows jsonb)
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer;
+begin
+  update public.catalog_index c set
+    imdb_id             = coalesce(r.imdb_id, c.imdb_id),
+    imdb_rating         = case when coalesce(r.imdb_id, c.imdb_id) is distinct from c.imdb_id then null else c.imdb_rating end,
+    imdb_votes          = case when coalesce(r.imdb_id, c.imdb_id) is distinct from c.imdb_id then null else c.imdb_votes end,
+    imdb_checked_at     = case when coalesce(r.imdb_id, c.imdb_id) is distinct from c.imdb_id then null else c.imdb_checked_at end,
+    runtime_minutes     = r.runtime_minutes,
+    season_count        = r.season_count,
+    episode_count       = r.episode_count,
+    episode_runtime     = r.episode_runtime,
+    series_status       = r.series_status,
+    tagline             = nullif(r.tagline, ''),
+    certification       = nullif(r.certification, ''),
+    keywords            = coalesce(r.keywords, '{}'),
+    recommendation_keys = coalesce(r.recommendation_keys, '{}'),
+    enriched_at         = now()
+  from jsonb_to_recordset(p_rows) as r(
+    id bigint, imdb_id text, runtime_minutes smallint, season_count smallint, episode_count smallint,
+    episode_runtime smallint, series_status text, tagline text, certification text, keywords text[],
+    recommendation_keys text[])
+  where c.id = r.id;
+  get diagnostics v_count = row_count;
+  return v_count;
+end $$;
+
+-- PRD §4.1 "disagreement report": listed titles where IMDb and TMDB differ by >= p_min_diff, or IMDb is
+-- below p_low_imdb. Logged by the nightly job for the monthly PM review; never changes curation.
+create or replace function public.catalog_rating_disagreements(
+  p_min_diff numeric default 1.0,
+  p_low_imdb numeric default 6.0
+) returns table (title_key text, title text, vote_average numeric, imdb_rating numeric)
+language sql stable security definer set search_path = public as $$
+  select c.title_key, c.title, c.vote_average, c.imdb_rating from public.catalog_index c
+   where c.is_listed and c.imdb_rating is not null
+     and (abs(c.imdb_rating - c.vote_average) >= p_min_diff or c.imdb_rating < p_low_imdb)
+   order by abs(c.imdb_rating - c.vote_average) desc, c.title_key
+$$;
 
 -- Retention (TMDB: cache <= 6 months). Run by the nightly job.
 create or replace function public.catalog_purge_stale()
@@ -574,7 +663,10 @@ revoke insert, update, delete on public.catalog_index, public.title_detail_cache
 
 revoke execute on function public.catalog_apply_staging(uuid) from public, anon, authenticated;
 revoke execute on function public.catalog_purge_stale() from public, anon, authenticated;
-revoke execute on function public.catalog_imdb_due(integer, integer) from public, anon, authenticated;
+revoke execute on function public.catalog_imdb_due(integer, integer, integer, integer) from public, anon, authenticated;
+revoke execute on function public.catalog_enrich_due(integer, integer) from public, anon, authenticated;
+revoke execute on function public.catalog_set_enrichment(jsonb) from public, anon, authenticated;
+revoke execute on function public.catalog_rating_disagreements(numeric, numeric) from public, anon, authenticated;
 revoke execute on function public.catalog_set_imdb(jsonb) from public, anon, authenticated;
 revoke execute on function public.title_stats_apply(bigint, int, int, int, int) from public, anon, authenticated;
 grant  execute on function public.handle_available(text) to anon, authenticated;

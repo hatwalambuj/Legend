@@ -45,6 +45,8 @@ export interface DataAccess {
   /**
    * Title page payload (listed OR unlisted — hysteresis titles stay reachable by URL, D4).
    * null → 404. Never throws for TMDB outages: degrades to detailStatus 'stale' | 'index_only'.
+   * Always includes `imdbRating` (null = hide the chip, ADR-008) and a computed `worthIt` block
+   * (ADR-009), even when index-only.
    */
   getTitle(mediaType: MediaType, tmdbId: number): Promise<TitleDetail | null>;
   getTitleStats(key: TitleKey): Promise<TitleStats>;

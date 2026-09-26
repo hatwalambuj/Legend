@@ -3,9 +3,10 @@ import { OmdbLimitError, OmdbRatingProvider, parseOmdbRating } from '@/server/pr
 
 describe('OMDb parsing (ADR-008)', () => {
   it('parses rating and comma-grouped votes', () => {
-    expect(
-      parseOmdbRating({ Response: 'True', imdbRating: '8.5', imdbVotes: '684,123' }),
-    ).toEqual({ rating: 8.5, votes: 684123 });
+    expect(parseOmdbRating({ Response: 'True', imdbRating: '8.5', imdbVotes: '684,123' })).toEqual({
+      rating: 8.5,
+      votes: 684123,
+    });
   });
   it('maps N/A to a null rating (chip hidden)', () => {
     expect(parseOmdbRating({ Response: 'True', imdbRating: 'N/A', imdbVotes: 'N/A' })).toEqual({

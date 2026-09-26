@@ -35,6 +35,15 @@
   --warn: #f5c451;
   --danger: #ff6b6b;
 
+  /* IMDb chip on every ticket stub + detail score chip (ADR-008, prototype v2). Brand yellow with
+     black text (11.6:1). DESIGN §8 open item: if IMDb brand rules disallow it, set --imdb to transparent
+     and --on-imdb to currentColor for a neutral outlined label — components must only use these tokens. */
+  --imdb: #f5c518;
+  --on-imdb: #000000;
+
+  /* "Worth it?" programme slip (DESIGN §7.4.1): ink-on-paper chips and the SPLIT stamp. */
+  --chip-on-paper-line: rgba(20, 18, 16, 0.24);
+
   /* adaptive tint: set per focused title from Palette.tint1 / tint2 (clamped, DESIGN §4) */
   --tint-1: #3a2a4a;
   --tint-2: #141020;

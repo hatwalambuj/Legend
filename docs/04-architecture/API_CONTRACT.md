@@ -1,12 +1,14 @@
 # Stubbed — API contract
 
-Status: **Frozen v1** · Owner: Architect · Date: 2026-09-26
+Status: **Frozen v1.1** (ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?") · Owner: Architect · Date: 2026-09-26
 Source of truth in code (keep in sync; a change needs both):
 - `src/lib/types.ts` (domain types)
 - `src/lib/contracts.ts` (zod request schemas + response types)
 - `src/lib/errors.ts` (error model)
 - `src/lib/data-access.ts` (server read interface for pages)
 - `src/lib/api-client.ts` (typed browser client)
+- `src/lib/format.ts` (score/count display rules, IMDb chip visibility, ticket accessible name)
+- `src/lib/worth-it.ts` + `src/lib/vibes.ts` ("Worth it?" rules; signatures frozen, Backend tunes the rules)
 
 ---
 
@@ -21,6 +23,42 @@ Rules:
 1. **Public HTML never reads the session cookie.** Personal bits (stub count, "Stub again", watchlist state, own review, header avatar) are client islands filled from `GET /api/me` and `GET /api/me/title-states`. `dal.getSession()` and `dal.my*()` exist for owner-only pages (`/me/*`), which are private by nature.
 2. Pages never mutate. Components never import `@/server/**` (ESLint enforces this).
 3. All inputs are validated with the zod schemas in `contracts.ts`. All outputs use the types in `types.ts`. Dates are `YYYY-MM-DD`, timestamps are ISO-8601 UTC. User ratings are `rating10` 1..10. The title identity is `TitleKey` = `"movie:693134"`.
+
+## 1a. Title payloads (every list and page)
+`TitleSummary` is the shape of **every** title in every response: catalogue pages, trending, search,
+watchlist, wallet (`WalletItem.title`), diary (`DiaryEntry.title`), profile reviews, "If you liked…".
+`TitleDetail extends TitleSummary`. Fields that matter for the contract:
+
+| Field | Type | Notes |
+|---|---|---|
+| `voteAverage`, `voteCount` | number | TMDB. The big score on every stub. Decides curation and the rating sort |
+| `imdbRating` | `number \| null` | IMDb 1.0–10.0 via OMDb, cached nightly (ADR-008). **null → hide the IMDb chip** (never 0 / "N/A") |
+| `imdbVotes` | `number \| null` | Shown on the detail score chip ("684k votes") |
+| `imdbId` | `string \| null` | For the read-only IMDb link (`imdbTitleHref`) |
+| `runtimeMinutes` | `number \| null` | Movies |
+| `seasonCount`, `episodeCount`, `episodeRuntimeMinutes` | `number \| null` | TV. Ticket time line via `ticketTimeLabel()` (F2) |
+| `palette`, `posterPath`, `backdropPath` | | ADR-007 |
+| `isListed` | boolean | false = hysteresis title reachable by URL ("BELOW 6.5 NOW") |
+
+`TitleDetail` adds `overview`, `tagline`, `directors`, `cast`, `trailer`, `tmdbReviews`, `detailStatus`,
+`fetchedAt` and **`worthIt: WorthIt`** (ADR-009):
+
+```ts
+worthIt: {
+  hook: { text: string /* ≤120 */, source: 'stubbed' | 'tmdb_tagline' | 'tmdb_overview' | 'template' } | null,
+  vibes: { id: VibeId, label: string /* ≤18 */ }[],            // 0–3
+  time: { totalMinutes: number | null, badge: 'short_one' | 'long_one' | 'weekend_binge' | 'big_commitment' | null,
+          label: string /* "2H 46M · LONG ONE" */, ariaLabel: string } | null,
+  certification: string | null,                                   // "PG-13", "TV-MA"
+  verdict: { key: VerdictKey, word: string, sourceLine: string, splitNote: string | null,
+             sources: ('tmdb' | 'imdb' | 'stubbed')[] },           // never a number
+  likeCandidates: TitleSummary[],                                  // P1, listed only, ≤6, most popular first
+  metaDescription: string,                                         // ≤160, for <meta> + og:description (F5)
+}
+```
+UI rules: render `titleScores(title)` for score chips (TMDB always, IMDb only when known); show "FROM TMDB"
+when `hook.source` starts with `tmdb_`; hide any missing line; never print a blended number. Everything
+is computed by rules on the server — **no AI/LLM** (PRD D15).
 
 ## 2. Error model
 Every non-2xx response has the body `ApiErrorBody`:
@@ -79,7 +117,7 @@ Query `catalogQuerySchema`:
 | `cursor` | opaque | — |
 | `limit` | 1..50 | 20 |
 
-→ `200 Page<TitleSummary>` with `total`. Listed titles only. Order per ADR-003.
+→ `200 Page<TitleSummary>` with `total`. Listed titles only. Order per ADR-003. Every item carries `imdbRating`/`imdbVotes` (§1a).
 
 ### 5.4 `GET /api/search?q=&type=&limit=`
 `q` is 1..100 characters. → `200 SearchResult { query, items: TitleSummary[], notInCatalog }`. `notInCatalog: true` when nothing curated matched: show "Not in Stubbed — we only list titles rated 6.5+" (not an error).
@@ -123,8 +161,9 @@ Body `upsertReviewSchema`:
 ### 5.12 `DELETE /api/reviews/{id}` 🔒
 → `204`. Someone else's review gives `404`.
 
-### 5.13 `POST /api/reviews/{id}/imdb-shared` 🔒
-Body `{ shared: boolean }` → `200 ReviewResponse`. Sets or clears `imdbSharedAt`. Call it **only** after the user confirms "Yes, mark as posted" (D3-AC4).
+### 5.13 *(removed — ADR-008)*
+There is no endpoint, field or UI for posting to IMDb, Trakt, TMDB or any other service. Numbering is kept
+stable so references to §5.14–§5.19 stay valid.
 
 ### 5.14 `PUT /api/watchlist/{movie|tv}/{tmdbId}` 🔒 · `DELETE` (same path) 🔒
 PUT takes body `{}`. → `200 WatchlistResponse { watchlisted }`. Both are idempotent.
@@ -163,7 +202,7 @@ Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → 
 | `listCatalog(CatalogQuery)` | `Page<TitleSummary>` + `total` | Browse grid (first page SSR, then `api.catalog` for "Load more") |
 | `listTrending(type, limit=10)` | `TitleSummary[]` | Home rail |
 | `searchCatalog(q, type?, limit?)` | `SearchResult` | `/search?q=` page |
-| `getTitle(mediaType, tmdbId)` | `TitleDetail \| null` | `null` → `notFound()`. `detailStatus` drives the "may be out of date" / "More details unavailable" notes. `isListed=false` → "This title dropped below our 6.5 bar" |
+| `getTitle(mediaType, tmdbId)` | `TitleDetail \| null` | `null` → `notFound()`. `detailStatus` drives the "may be out of date" / "More details unavailable" notes. `isListed=false` → "This title dropped below our 6.5 bar". Includes `worthIt` (always present, even when `detailStatus='index_only'`) |
 | `getTitleStats(key)` | `TitleStats` | `ratingAvg10` is null below 5 ratings |
 | `listTitleReviews(key, {sort, cursor, limit})` | `Page<Review>` | The user's own review is pinned client-side from `TitleState.myReview` |
 | `getProfile(handle)` | `ProfilePage \| null` | Header, stats, palette for `/u/{handle}` |
@@ -180,7 +219,7 @@ Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → 
 | `/` | `listTrending`, `listCatalog` | `?type=&sort=` (the home browse section) |
 | `/browse` | `listCatalog` | `?type=movie\|tv&sort=…&cursor=` (use `browseHref`) |
 | `/search` | `searchCatalog` | `?q=&type=` |
-| `/title/{movie\|tv}/{tmdbId}-{slug}` | `getTitle`, `getTitleStats`, `listTitleReviews` | A wrong slug with the right id → `permanentRedirect` to the canonical `titleHref()`. Unknown → 404 |
+| `/title/{movie\|tv}/{tmdbId}-{slug}` | `getTitle`, `getTitleStats`, `listTitleReviews` | A wrong slug with the right id → `permanentRedirect` to the canonical `titleHref()`. Unknown → 404. `generateMetadata` uses `worthIt.metaDescription` for description + `og:description` |
 | `/u/{handle}` | `getProfile`, `listWallet`, `listDiary`, `listProfileReviews` | `?tab=wallet\|diary\|reviews\|watchlist` |
 | `/me/stubs` | `getSession`, `listDiary(session.handle)` | `?type=` |
 | `/me/settings` | `getSession` | — |
@@ -188,4 +227,6 @@ Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → 
 | `/about` | — | — |
 
 ## 8. QA hooks (`data-testid`), from DESIGN §11
-`ticket-{key}` (for example `ticket-movie:693134`), `stub-button`, `stub-count`, `sort-select`, `type-filter`, `search-input`, `review-composer`, `review-card`, `spoiler-toggle`, `imdb-assist`, `demo-pill`, `toast`, `auth-sheet`, `load-more`, `diary-row`, `wallet-stub`.
+`ticket-{key}` (for example `ticket-movie:693134`), `stub-button`, `stub-count`, `tmdb-rating`, `imdb-rating` (the IMDb chip on a stub and the detail IMDb score chip; absent when `imdbRating` is null), `ticket-time`, `sort-select`, `type-filter`, `search-input`, `review-composer`, `review-card`, `spoiler-toggle`, `demo-pill`, `toast`, `auth-sheet`, `load-more`, `diary-row`, `wallet-stub`, and for "Worth it?" (DESIGN §7.4.1): `worth-it`, `worth-it-hook`, `worth-it-vibes`, `worth-it-time`, `worth-it-cert`, `worth-it-verdict`, `worth-it-like`.
+
+There is deliberately **no** `imdb-assist` (or any "post to…") hook: gap review checks its absence (PRD D3).

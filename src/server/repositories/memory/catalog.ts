@@ -11,6 +11,7 @@ import type {
   CatalogQuery,
   MediaType,
   Page,
+  TitleEnrichment,
   TitleKey,
   TitleSummary,
   TypeFilter,
@@ -43,7 +44,20 @@ export function toSummary(t: FixtureTitle, listed: boolean): TitleSummary {
     overviewShort: t.overviewShort,
     runtimeMinutes: t.runtimeMinutes,
     seasonCount: t.seasonCount,
+    episodeCount: t.episodeCount,
+    episodeRuntimeMinutes: t.episodeRuntimeMinutes,
     isListed: listed,
+  };
+}
+
+export function toEnrichment(t: FixtureTitle): TitleEnrichment {
+  return {
+    tagline: t.tagline,
+    pitchHook: t.pitchHook,
+    certification: t.certification,
+    seriesStatus: t.seriesStatus,
+    keywords: t.keywords,
+    recommendationKeys: t.recommendationKeys,
   };
 }
 
@@ -51,6 +65,7 @@ interface Indexed {
   all: TitleSummary[];
   listed: TitleSummary[];
   byKey: Map<TitleKey, TitleSummary>;
+  enrichment: Map<TitleKey, TitleEnrichment>;
   searchText: Map<TitleKey, string>;
 }
 
@@ -80,6 +95,7 @@ function index(): Indexed {
     all,
     listed: all.filter((t) => t.isListed),
     byKey: new Map(all.map((t) => [t.key, t])),
+    enrichment: new Map(fixtureTitles().map((t) => [t.key, toEnrichment(t)])),
     searchText: new Map(
       fixtureTitles().map((t) => [t.key, normalizeSearch(`${t.title} ${t.originalTitle}`)]),
     ),
@@ -122,6 +138,13 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
 
   async get(mediaType: MediaType, tmdbId: number): Promise<TitleSummary | null> {
     return index().byKey.get(toTitleKey(mediaType, tmdbId)) ?? null;
+  }
+
+  async getEntry(mediaType: MediaType, tmdbId: number) {
+    const key = toTitleKey(mediaType, tmdbId);
+    const summary = index().byKey.get(key);
+    const enrichment = index().enrichment.get(key);
+    return summary && enrichment ? { summary, enrichment } : null;
   }
 
   async getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>> {

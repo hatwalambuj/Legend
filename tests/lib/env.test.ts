@@ -29,17 +29,29 @@ describe('env / mode resolution (ADR-006)', () => {
   it('explicit CATALOG_MODE=tmdb without a key fails fast', () => {
     expect(() => parseEnv({ CATALOG_MODE: 'tmdb' })).toThrow(EnvError);
   });
-  it('OMDb is job-only config with a budget capped under the free tier', () => {
+  it('OMDb and the enrich step are job-only config', () => {
     expect(parseEnv({}).omdb).toBeNull();
     expect(parseEnv({ OMDB_API_KEY: 'k' }).omdb).toEqual({
       apiKey: 'k',
       dailyBudget: 900,
-      ttlDays: 7,
+      hotTtlDays: 7,
+      ttlDays: 30,
+      hotCount: 1000,
     });
-    expect(parseEnv({ OMDB_API_KEY: 'k', OMDB_DAILY_BUDGET: '5000' }).omdb?.dailyBudget).toBe(1000);
+    // A paid key just raises the budget (ADR-008 §3).
+    expect(parseEnv({ OMDB_API_KEY: 'k', OMDB_DAILY_BUDGET: '20000' }).omdb?.dailyBudget).toBe(
+      20000,
+    );
     // OMDb never changes the app mode (the request path does not call it).
     expect(parseEnv({ OMDB_API_KEY: 'k' }).mode.isDemo).toBe(true);
-    expect(parseEnv({}).syncGuards).toEqual({ min: 5000, max: 25000, maxDelta: 0.2 });
+    expect(parseEnv({}).sync).toEqual({
+      guardMin: 5000,
+      guardMax: 25000,
+      guardMaxDelta: 0.2,
+      enrichMax: 3000,
+      enrichTtlDays: 30,
+      certificationRegion: 'US',
+    });
   });
   it('reads curation overrides', () => {
     const e = parseEnv({
@@ -65,14 +77,14 @@ describe('.env.example', () => {
       if (m) vars[m[1]!] = m[2]!;
     }
     expect(Object.keys(vars)).toEqual(
-      expect.arrayContaining([
-        'TMDB_READ_TOKEN',
-        'SUPABASE_SERVICE_ROLE_KEY',
-        'OMDB_API_KEY',
-      ]),
+      expect.arrayContaining(['TMDB_READ_TOKEN', 'SUPABASE_SERVICE_ROLE_KEY', 'OMDB_API_KEY']),
     );
-    // ADR-008: no third-party posting → no Trakt / sync / feature-flag variables at all.
+    // ADR-008: no third-party posting → no Trakt / sync-token / feature-flag variables at all.
     expect(Object.keys(vars).filter((k) => /TRAKT|SYNC_TOKEN|FEATURE_/.test(k))).toEqual([]);
+    // D15: no AI/LLM provider configuration anywhere.
+    expect(
+      Object.keys(vars).filter((k) => /OPENAI|ANTHROPIC|GEMINI|MISTRAL|LLM|_AI_|^AI_/.test(k)),
+    ).toEqual([]);
     const e = parseEnv(vars);
     expect(e.mode.isDemo).toBe(true);
     expect(e.demo.today).toBeNull();

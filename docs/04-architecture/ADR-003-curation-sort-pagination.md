@@ -20,6 +20,8 @@ The brief promises "top-rated titles only: rating ≥ 6.5". Without a vote floor
 | not adult, has a release/first-air date, and that date is not in the future | — | — |
 | **Hysteresis:** a previously listed title stays listed down to `keepRating` | = minRating (off) | `CATALOG_KEEP_RATING` |
 
+**TMDB only.** The IMDb rating (ADR-008) is display-only: it never affects `isListed` or any sort (PRD §4.1, A7-AC5). There is no "sort by IMDb" in the MVP.
+
 Listing only controls **browse and search**. Unlisted rows remain reachable by URL and in diaries (PRD D4). The fixtures include every boundary: 6.4 with high votes (out), 8.0 with 150 votes (out), TV 8.0 with 99 votes (out), Reality (out), and exactly 6.5/200 and 6.5/100 (in).
 
 ### 2. Sort semantics: total orders

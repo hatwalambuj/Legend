@@ -59,8 +59,10 @@ beforeAll(async () => {
     await db.query(
       `insert into public.catalog_index (media_type, tmdb_id, imdb_id, title, original_title, slug, overview_short,
          release_date, vote_average, vote_count, popularity, genre_ids, genres, poster_path, backdrop_path, palette,
-         sort_title, search_text, is_listed)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+         sort_title, search_text, is_listed, imdb_rating, imdb_votes, runtime_minutes, season_count, episode_count,
+         episode_runtime, series_status, tagline, certification, keywords, recommendation_keys, pitch_hook)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,
+               $28,$29,$30,$31)`,
       [
         t.mediaType,
         t.tmdbId,
@@ -81,6 +83,18 @@ beforeAll(async () => {
         sortTitle(t.title),
         normalizeSearch(`${t.title} ${t.originalTitle}`),
         listed,
+        t.imdbRating,
+        t.imdbVotes,
+        t.runtimeMinutes,
+        t.seasonCount,
+        t.episodeCount,
+        t.episodeRuntimeMinutes,
+        t.seriesStatus,
+        t.tagline,
+        t.certification,
+        t.keywords,
+        t.recommendationKeys,
+        t.pitchHook,
       ],
     );
   }
@@ -314,6 +328,23 @@ describe('auth trigger + RLS', () => {
     ).rejects.toThrow(/permission denied/);
   });
 
+  it('has no third-party sync tables or columns (ADR-008)', async () => {
+    const { rows } = await db.query<{ n: string }>(
+      `select table_name as n from information_schema.tables
+        where table_schema = 'public' and table_name in ('sync_accounts', 'sync_jobs', 'rating_enrichment')
+       union all
+       select column_name from information_schema.columns
+        where table_schema = 'public' and column_name in ('imdb_shared_at')`,
+    );
+    expect(rows).toEqual([]);
+    await expect(
+      db.query(
+        `insert into public.stubs (user_id, title_id, watched_on, source) values ($1, $2, '2026-09-01', 'trakt')`,
+        [A, titleId],
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
   it('never lets API roles write the catalogue or read ops tables', async () => {
     await expect(
       asUser(A, () => db.query(`update public.catalog_index set vote_average = 1`)),
@@ -324,5 +355,130 @@ describe('auth trigger + RLS', () => {
     await expect(
       asUser(A, () => db.query(`select public.catalog_apply_staging(gen_random_uuid())`)),
     ).rejects.toThrow(/permission denied/);
+    for (const sql of [
+      `select * from public.catalog_imdb_due(10)`,
+      `select public.catalog_set_imdb('[]'::jsonb)`,
+      `select * from public.catalog_enrich_due(10)`,
+      `select public.catalog_set_enrichment('[]'::jsonb)`,
+      `select * from public.catalog_rating_disagreements()`,
+    ]) {
+      await expect(
+        asUser(null, () => db.query(sql)),
+        sql,
+      ).rejects.toThrow(/permission denied/);
+    }
+  });
+});
+
+describe('IMDb ratings + enrichment (ADR-008, PRD §4.2)', () => {
+  const idOf = async (key: string) =>
+    (
+      await db.query<{ id: number }>('select id from public.catalog_index where title_key = $1', [
+        key,
+      ])
+    ).rows[0]!.id;
+
+  it('exposes imdb_rating on catalogue rows read by anon', async () => {
+    const { rows } = await asUser(null, () =>
+      db.query<{ imdb_rating: string | null; title_key: string }>(
+        `select title_key, imdb_rating from public.catalog_page('movie', 'rating_desc', null, 50)`,
+      ),
+    );
+    const dune = rows.find((r) => r.title_key === 'movie:693134');
+    expect(Number(dune?.imdb_rating)).toBe(8.5);
+  });
+
+  it('staggers OMDb refresh: never-checked first (listed, popular), then hot/stale tiers', async () => {
+    const due = await db.query<{ id: number; imdb_id: string }>(
+      'select * from public.catalog_imdb_due(500)',
+    );
+    // Fixture rows were inserted with ratings but no imdb_checked_at → all are "never checked".
+    const withImdb = catalog.titles.filter((t) => t.imdbId).length;
+    expect(due.rows).toHaveLength(withImdb);
+    expect((await db.query('select * from public.catalog_imdb_due(3)')).rows).toHaveLength(3);
+
+    const dune = await idOf('movie:693134');
+    const n = await db.query<{ n: number }>(`select public.catalog_set_imdb($1::jsonb) as n`, [
+      JSON.stringify([{ id: dune, rating: 8.6, votes: 700000 }]),
+    ]);
+    expect(n.rows[0]!.n).toBe(1);
+    const after = await db.query<{ id: number }>('select id from public.catalog_imdb_due(500)');
+    expect(after.rows.map((r) => r.id)).not.toContain(dune); // checked now → not due for 7 days
+    // Hot tier: checked 8 days ago and among the most popular → due again.
+    await db.query(
+      `update public.catalog_index set imdb_checked_at = now() - interval '8 days' where id = $1`,
+      [dune],
+    );
+    expect(
+      (await db.query<{ id: number }>('select id from public.catalog_imdb_due(500)')).rows.map(
+        (r) => r.id,
+      ),
+    ).toContain(dune);
+    // "N/A" from OMDb → null rating, but marked checked.
+    await db.query(`select public.catalog_set_imdb($1::jsonb)`, [
+      JSON.stringify([{ id: dune, rating: null, votes: null }]),
+    ]);
+    const row = await db.query<{ imdb_rating: string | null; imdb_checked_at: Date | null }>(
+      'select imdb_rating, imdb_checked_at from public.catalog_index where id = $1',
+      [dune],
+    );
+    expect(row.rows[0]!.imdb_rating).toBeNull();
+    expect(row.rows[0]!.imdb_checked_at).not.toBeNull();
+  });
+
+  it('stores enrichment, keeps pitch_hook, and resets the IMDb cache when the imdb id changes', async () => {
+    const id = await idOf('movie:157336');
+    await db.query(`select public.catalog_set_imdb($1::jsonb)`, [
+      JSON.stringify([{ id, rating: 8.7, votes: 2360000 }]),
+    ]);
+    const hookBefore = (
+      await db.query<{ pitch_hook: string | null }>(
+        'select pitch_hook from public.catalog_index where id = $1',
+        [id],
+      )
+    ).rows[0]!.pitch_hook;
+    await db.query(`select public.catalog_set_enrichment($1::jsonb)`, [
+      JSON.stringify([
+        {
+          id,
+          imdb_id: 'tt0816692',
+          runtime_minutes: 169,
+          season_count: null,
+          episode_count: null,
+          episode_runtime: null,
+          series_status: null,
+          tagline: 'Mankind was born on Earth. It was never meant to die here.',
+          certification: 'PG-13',
+          keywords: ['space travel', 'epic'],
+          recommendation_keys: ['movie:27205'],
+        },
+      ]),
+    ]);
+    let r = await db.query<{
+      imdb_rating: string | null;
+      keywords: string[];
+      pitch_hook: string | null;
+    }>('select imdb_rating, keywords, pitch_hook from public.catalog_index where id = $1', [id]);
+    expect(Number(r.rows[0]!.imdb_rating)).toBe(8.7); // same id → kept
+    expect(r.rows[0]!.keywords).toEqual(['space travel', 'epic']);
+    expect(r.rows[0]!.pitch_hook).toBe(hookBefore);
+    await db.query(`select public.catalog_set_enrichment($1::jsonb)`, [
+      JSON.stringify([{ id, imdb_id: 'tt9999999', keywords: [], recommendation_keys: [] }]),
+    ]);
+    r = await db.query(
+      'select imdb_rating, keywords, pitch_hook from public.catalog_index where id = $1',
+      [id],
+    );
+    expect(r.rows[0]!.imdb_rating).toBeNull(); // changed id → re-fetch
+    const due = await db.query<{ id: number }>('select id from public.catalog_imdb_due(500)');
+    expect(due.rows.map((x) => x.id)).toContain(id); // never-checked again → tier 1
+  });
+
+  it('reports TMDB/IMDb disagreements without touching curation', async () => {
+    const { rows } = await db.query<{ title_key: string }>(
+      'select * from public.catalog_rating_disagreements(0.6, 6.0)',
+    );
+    expect(rows.map((r) => r.title_key)).toContain('tv:1438'); // The Wire: 8.6 vs 9.3
+    expect(rows.map((r) => r.title_key)).not.toContain('movie:19908'); // unlisted
   });
 });

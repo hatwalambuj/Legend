@@ -41,3 +41,33 @@ describe('demo auth primitives', () => {
     expect(verifySession(tok, 'secret', Date.now() + 1000 * 60 * 60 * 24 * 31)).toBeNull();
   });
 });
+
+describe('title payloads (ADR-008, PRD §4.2)', () => {
+  it('every list item carries imdbRating/imdbVotes (null only without an IMDb id)', async () => {
+    const { dal } = await import('@/server/dal');
+    const page = await dal.listCatalog({ type: 'all', sort: 'rating_desc', limit: 50 });
+    for (const t of page.items) {
+      expect(t).toHaveProperty('imdbRating');
+      expect(t).toHaveProperty('imdbVotes');
+      expect(t).toHaveProperty('episodeRuntimeMinutes');
+      expect(t.imdbRating === null).toBe(t.imdbId === null);
+    }
+  });
+
+  it('title detail includes a complete "Worth it?" block and degrades without TMDB detail', async () => {
+    const { dal } = await import('@/server/dal');
+    const dune = await dal.getTitle('movie', 693134);
+    expect(dune?.imdbRating).toBe(8.5);
+    expect(dune?.worthIt.hook?.source).toBe('stubbed');
+    expect(dune?.worthIt.time?.label).toBe('2H 46M · LONG ONE');
+    expect(dune?.worthIt.certification).toBe('PG-13');
+    expect(dune?.worthIt.verdict.word).toBe('Widely loved');
+    expect(dune?.worthIt.likeCandidates.every((t) => t.isListed)).toBe(true);
+    const bluey = await dal.getTitle('tv', 82728);
+    expect(bluey?.imdbRating).toBeNull();
+    expect(bluey?.worthIt.verdict.sources).toEqual(['tmdb']);
+    const twilight = await dal.getTitle('movie', 8966);
+    expect(twilight?.isListed).toBe(false);
+    expect(twilight?.worthIt.verdict.key).toBe('mixed_reviews');
+  });
+});

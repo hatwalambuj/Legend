@@ -28,15 +28,16 @@ The build container can reach only the npm registry. QA runs Playwright here aga
    - **Partial config fails fast** (URL without key, `CATALOG_MODE=tmdb` without a key). Absent config means demo, never "half live".
    - `isDemo` = either side is non-live. That shows the "● DEMO DATA" pill (`data-testid="demo-pill"`) on every page.
    - Demo works in production builds too (a deployed demo with zero env vars is a feature). The pill makes it explicit.
-4. **Zero network in demo mode:** no server code path calls TMDB, OMDb, Trakt or Supabase when their mode is off (providers are not even constructed). The only external requests are **browser** `<img>` loads from `image.tmdb.org`, and `IMAGE_MODE=off` disables those too (ADR-007). Playwright sets it for a clean console.
+4. **Zero network in demo mode:** no server code path calls TMDB, OMDb or Supabase when their mode is off (providers are not even constructed). The only external requests are **browser** `<img>` loads from `image.tmdb.org`, and `IMAGE_MODE=off` disables those too (ADR-007). Playwright sets it for a clean console.
 5. **Local auth** as in ADR-005: scrypt, signed httpOnly cookie, seed accounts with password `stubbed-demo`.
 6. **Seed content** (`scripts/fixtures/*.source.ts` → `npm run fixtures:build` → `src/fixtures/*.json`, deterministic):
-   - **70 real titles** (42 movies, 28 shows; 66 listed), 1942–2024, across genres.
-   - Real TMDB ids, IMDb ids, poster/backdrop paths, runtimes and seasons. Realistic `vote_average`/`vote_count`/`popularity` snapshots.
+   - **71 real titles** (43 movies, 28 shows; 66 listed), 1942–2024, across genres.
+   - Real TMDB ids, IMDb ids, **real IMDb ratings + approximate vote counts** (ADR-008), poster/backdrop paths, runtimes and seasons. Realistic `vote_average`/`vote_count`/`popularity` snapshots.
+   - **"Worth it?" data** for every title (`pitch.source.ts`, ADR-009): hand-written hooks, US certifications, keywords, episode runtimes, series status, recommendations.
    - Short original overviews, cast, directors/creators, some trailer keys, a few TMDB-style reviews.
    - A precomputed palette with LQIP per title.
-   - **Edge cases:** Twilight 6.4 with 13k votes (out, but dev has a stub on it, so it shows as hysteresis), Tampopo 8.0 with 150 votes (out), Pachinko TV 8.0 with 99 votes (out), Great British Bake Off (Reality, out), Paterson exactly 6.5/200 (in), Emily in Paris exactly 6.5/100 (in), Bluey with **no IMDb id** (IMDb assist hidden).
-   - **Users:** maya, dev, priya, sam, jun, leo (leo is empty). 35 stubs (dev: The Office ×4, Interstellar ×3), 17 reviews on 13 titles, including a **spoiler** (Succession), one **"Posted on IMDb"** (Parasite), one **linked to stub #2** (Dune: Part Two), and **5 ratings on Dune: Part Two** so the community average unlocks. Watchlist items for maya and dev.
+   - **Edge cases:** Twilight 6.4 with 13k votes (out, but dev has a stub on it, so it shows as hysteresis; verdict "Mixed reviews"), Tampopo 8.0 with 150 votes (out), Pachinko TV 8.0 with 99 votes (out), Great British Bake Off (Reality, out), Paterson exactly 6.5/200 (in), Emily in Paris exactly 6.5/100 (in), **Zombieland** TMDB 6.4 / IMDb 7.5 (out: IMDb never changes membership; also no poster → generated poster), **Bluey** with no IMDb id (IMDb chip hidden), **Avatar: The Last Airbender** with unknown episode length, The Godfather / Paterson without a hand-written hook (fallback chain), Seven Samurai / Tampopo without a certification.
+   - **Users:** maya, dev, priya, sam, jun, leo (leo is empty). 35 stubs (dev: The Office ×4, Interstellar ×3), 22 reviews on 14 titles, including a **spoiler** (Succession), one **linked to stub #2** (Dune: Part Two), **5 ratings on Dune: Part Two** so the community average unlocks, and **5 low ratings on Transformers** so its verdict is "Split opinions". Watchlist items for maya and dev.
    - Dates assume `DEMO_TODAY=2026-09-26`.
 7. **Shared semantics live in `src/lib`** (frozen): `curation.ts`, `catalog-order.ts` (order + cursor + reference `paginate`), `text.ts` (normalisation), `palette.ts`. Both implementations call them, so demo and live cannot drift silently.
 

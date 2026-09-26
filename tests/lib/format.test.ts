@@ -58,9 +58,7 @@ describe('fixture IMDb data (ADR-008)', () => {
   });
 
   it('keeps exactly one title without an IMDb id (hidden-chip edge case)', () => {
-    expect(catalog.titles.filter((t) => t.imdbId === null).map((t) => t.key)).toEqual([
-      'tv:82728',
-    ]);
+    expect(catalog.titles.filter((t) => t.imdbId === null).map((t) => t.key)).toEqual(['tv:82728']);
   });
 
   it('imdb ids are unique', () => {

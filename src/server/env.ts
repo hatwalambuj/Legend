@@ -42,7 +42,9 @@ const rawSchema = z.object({
   /** OMDb key: used ONLY by the nightly job to cache IMDb ratings on catalog_index (ADR-008). */
   OMDB_API_KEY: optionalString,
   OMDB_DAILY_BUDGET: num(900),
-  OMDB_TTL_DAYS: num(7),
+  OMDB_HOT_TTL_DAYS: num(7),
+  OMDB_TTL_DAYS: num(30),
+  OMDB_HOT_COUNT: num(1000),
 
   NEXT_PUBLIC_SUPABASE_URL: optionalString,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
@@ -71,6 +73,12 @@ const rawSchema = z.object({
   SYNC_GUARD_MIN: num(5000),
   SYNC_GUARD_MAX: num(25000),
   SYNC_GUARD_MAX_DELTA: num(0.2),
+  SYNC_ENRICH_MAX: num(3000),
+  SYNC_ENRICH_TTL_DAYS: num(30),
+  CERTIFICATION_REGION: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .default('US'),
 
   VERCEL: optionalString,
 });
@@ -82,9 +90,17 @@ export interface ServerEnv {
   tmdb: { readToken?: string; apiKey?: string } | null;
   /**
    * OMDb (IMDb ratings) for the nightly job only — the request path never calls OMDb (ADR-008).
-   * `dailyBudget` stays under the free tier's 1,000 calls/day; ratings older than `ttlDays` are refreshed.
+   * Rolling tiered refresh within `dailyBudget` calls/night (default 900 < the free tier's 1,000/day):
+   * never-checked first, the `hotCount` most popular listed titles every `hotTtlDays`, the rest every
+   * `ttlDays`. A paid OMDb key only needs a bigger budget / shorter TTL.
    */
-  omdb: { apiKey: string; dailyBudget: number; ttlDays: number } | null;
+  omdb: {
+    apiKey: string;
+    dailyBudget: number;
+    hotTtlDays: number;
+    ttlDays: number;
+    hotCount: number;
+  } | null;
   supabase: { url: string; anonKey: string; serviceRoleKey?: string } | null;
   revalidateSecret?: string;
   curation: CurationRule;
@@ -97,8 +113,18 @@ export interface ServerEnv {
     /** Fixed "today" for deterministic demos/E2E ('YYYY-MM-DD'), else null (use the clock). */
     today: string | null;
   };
-  /** Nightly sync guardrails (ADR-002): listed count per type within [min, max], delta vs last ok run. */
-  syncGuards: { min: number; max: number; maxDelta: number };
+  /** Nightly job settings (ADR-002, ADR-008). */
+  sync: {
+    /** Guardrails: listed count per type within [guardMin, guardMax], delta vs last ok run < guardMaxDelta. */
+    guardMin: number;
+    guardMax: number;
+    guardMaxDelta: number;
+    /** Max TMDB detail calls per night for the enrich step (new rows first, then older than enrichTtlDays). */
+    enrichMax: number;
+    enrichTtlDays: number;
+    /** ISO 3166-1 region for certifications ("Worth it?" line 4). Default US. */
+    certificationRegion: string;
+  };
 }
 
 /** Well-known demo accounts from src/fixtures/users.json (password shown in the demo pill). */
@@ -182,8 +208,10 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     omdb: e.OMDB_API_KEY
       ? {
           apiKey: e.OMDB_API_KEY,
-          dailyBudget: Math.max(0, Math.min(1000, Math.floor(e.OMDB_DAILY_BUDGET))),
-          ttlDays: Math.max(1, e.OMDB_TTL_DAYS),
+          dailyBudget: Math.max(0, Math.floor(e.OMDB_DAILY_BUDGET)),
+          hotTtlDays: Math.max(1, Math.floor(e.OMDB_HOT_TTL_DAYS)),
+          ttlDays: Math.max(1, Math.floor(e.OMDB_TTL_DAYS)),
+          hotCount: Math.max(0, Math.floor(e.OMDB_HOT_COUNT)),
         }
       : null,
     supabase:
@@ -202,10 +230,13 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       resetOnBoot: e.DEMO_RESET_ON_BOOT,
       today: e.DEMO_TODAY ?? null,
     },
-    syncGuards: {
-      min: e.SYNC_GUARD_MIN,
-      max: e.SYNC_GUARD_MAX,
-      maxDelta: e.SYNC_GUARD_MAX_DELTA,
+    sync: {
+      guardMin: e.SYNC_GUARD_MIN,
+      guardMax: e.SYNC_GUARD_MAX,
+      guardMaxDelta: e.SYNC_GUARD_MAX_DELTA,
+      enrichMax: Math.max(0, Math.floor(e.SYNC_ENRICH_MAX)),
+      enrichTtlDays: Math.max(1, Math.floor(e.SYNC_ENRICH_TTL_DAYS)),
+      certificationRegion: e.CERTIFICATION_REGION,
     },
   };
 }

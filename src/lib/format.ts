@@ -69,3 +69,13 @@ export function titleScores(t: Scored): ScoreDisplay[] {
 
 /** Source line for the detail-page IMDb score chip (DESIGN §6, E1 attribution). */
 export const IMDB_SOURCE_LABEL = 'IMDb rating · via OMDb';
+
+/** Accessible name for a ticket (PRD A7-AC6): "Dune: Part Two, movie, 2024, rated 8.2 on TMDB and 8.5 on IMDb". */
+export function ticketAccessibleName(
+  t: Pick<TitleSummary, 'title' | 'mediaType' | 'year' | 'voteAverage' | 'imdbRating'>,
+): string {
+  const kind = t.mediaType === 'movie' ? 'movie' : 'show';
+  const imdb =
+    t.imdbRating !== null && t.imdbRating > 0 ? ` and ${formatScore(t.imdbRating)} on IMDb` : '';
+  return `${t.title}, ${kind}, ${t.year}, rated ${formatScore(t.voteAverage)} on TMDB${imdb}`;
+}

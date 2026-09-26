@@ -1,6 +1,8 @@
 name: Nightly catalogue sync
 
-# ADR-002: refresh the curated catalog_index from TMDB once a night (also keeps Supabase Free from pausing).
+# ADR-002 / ADR-008: refresh the curated catalog_index from TMDB, enrich new titles ("Worth it?"), and
+# refresh cached IMDb ratings from OMDb (staggered). Also keeps Supabase Free from pausing.
+# Deterministic data processing only — no AI/LLM steps or secrets (PRD D15).
 on:
   schedule:
     - cron: '17 3 * * *' # 03:17 UTC
@@ -10,6 +12,11 @@ on:
         description: 'Fetch + guardrails only, write nothing'
         type: boolean
         default: false
+      only:
+        description: 'Run a single step'
+        type: choice
+        options: [all, discover, enrich, imdb]
+        default: all
 
 concurrency:
   group: nightly-sync
@@ -18,7 +25,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # The first run backfills enrichment over several nights (SYNC_ENRICH_MAX per night at ~10 req/s).
+    timeout-minutes: 60
     environment: production
     env:
       NEXT_TELEMETRY_DISABLED: '1'
@@ -27,6 +35,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
       REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
       CATALOG_MIN_RATING: ${{ vars.CATALOG_MIN_RATING || '6.5' }}
@@ -35,6 +44,13 @@ jobs:
       SYNC_GUARD_MIN: ${{ vars.SYNC_GUARD_MIN || '5000' }}
       SYNC_GUARD_MAX: ${{ vars.SYNC_GUARD_MAX || '25000' }}
       SYNC_GUARD_MAX_DELTA: ${{ vars.SYNC_GUARD_MAX_DELTA || '0.2' }}
+      SYNC_ENRICH_MAX: ${{ vars.SYNC_ENRICH_MAX || '3000' }}
+      SYNC_ENRICH_TTL_DAYS: ${{ vars.SYNC_ENRICH_TTL_DAYS || '30' }}
+      CERTIFICATION_REGION: ${{ vars.CERTIFICATION_REGION || 'US' }}
+      OMDB_DAILY_BUDGET: ${{ vars.OMDB_DAILY_BUDGET || '900' }}
+      OMDB_HOT_COUNT: ${{ vars.OMDB_HOT_COUNT || '1000' }}
+      OMDB_HOT_TTL_DAYS: ${{ vars.OMDB_HOT_TTL_DAYS || '7' }}
+      OMDB_TTL_DAYS: ${{ vars.OMDB_TTL_DAYS || '30' }}
     steps:
       - name: Skip when not configured
         id: guard
@@ -53,4 +69,7 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
       - name: Sync
         if: steps.guard.outputs.skip != 'true'
-        run: npm run sync:catalog -- ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: >-
+          npm run sync:catalog --
+          ${{ inputs.dry_run && '--dry-run' || '' }}
+          ${{ inputs.only && inputs.only != 'all' && format('--only={0}', inputs.only) || '' }}

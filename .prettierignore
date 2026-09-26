@@ -7,3 +7,6 @@ test-results
 package-lock.json
 docs/02-design/prototype.html
 src/fixtures/*.json
+# Markdown docs are authored by agents and reviewed as prose; not auto-formatted.
+*.md
+.claude

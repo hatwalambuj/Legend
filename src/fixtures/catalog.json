@@ -39,6 +39,8 @@
    "overviewShort": "A banker sentenced to life for a crime he swears he did not commit spends two decades inside Shawshank prison, where an unlikely friendship and a quiet plan keep hope alive.",
    "runtimeMinutes": 142,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A banker sentenced to life for a crime he swears he did not commit spends two decades inside Shawshank prison, where an unlikely friendship and a quiet plan keep hope alive.",
    "tagline": "Fear can hold you prisoner. Hope can set you free.",
    "directors": [
@@ -67,8 +69,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Two lifers, one prison yard and twenty years of patience. The friendship film people rewatch for comfort.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "prison",
+    "friendship",
+    "based on novel or book",
+    "hope",
+    "character study"
+   ],
+   "recommendationKeys": [
+    "movie:238",
+    "movie:13",
+    "movie:769"
+   ]
   },
   {
    "key": "movie:238",
@@ -108,6 +124,8 @@
    "overviewShort": "The ageing head of a New York crime family hands control to his reluctant youngest son, who discovers exactly how far he will go to protect the people he loves.",
    "runtimeMinutes": 175,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "The ageing head of a New York crime family hands control to his reluctant youngest son, who discovers exactly how far he will go to protect the people he loves.",
    "tagline": "An offer you can't refuse.",
    "directors": [
@@ -136,8 +154,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": null,
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "mafia",
+    "organized crime",
+    "family",
+    "based on novel or book",
+    "patriarch"
+   ],
+   "recommendationKeys": [
+    "movie:769",
+    "tv:1398",
+    "movie:278"
+   ]
   },
   {
    "key": "movie:155",
@@ -185,6 +217,8 @@
    "overviewShort": "Batman, Commissioner Gordon and a new district attorney close in on Gotham’s mobs — until a chaos-loving criminal called the Joker forces each of them to choose what they are willing to lose.",
    "runtimeMinutes": 152,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Batman, Commissioner Gordon and a new district attorney close in on Gotham’s mobs — until a chaos-loving criminal called the Joker forces each of them to choose what they are willing to lose.",
    "tagline": "Why so serious?",
    "directors": [
@@ -217,8 +251,22 @@
     "key": "EXeTwQWrcwY",
     "name": "Official Trailer"
    },
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Batman meets an enemy who only wants to watch Gotham burn. A crime epic dressed as a superhero film.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "superhero",
+    "dc comics",
+    "organized crime",
+    "vigilante",
+    "chaos"
+   ],
+   "recommendationKeys": [
+    "movie:27205",
+    "movie:603",
+    "movie:324857"
+   ]
   },
   {
    "key": "movie:680",
@@ -258,6 +306,8 @@
    "overviewShort": "Two philosophical hitmen, a boxer who won’t take a dive and a gangster’s restless wife collide across one sweaty Los Angeles weekend, told out of order.",
    "runtimeMinutes": 154,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Two philosophical hitmen, a boxer who won’t take a dive and a gangster’s restless wife collide across one sweaty Los Angeles weekend, told out of order.",
    "tagline": "Just because you are a character doesn’t mean you have character.",
    "directors": [
@@ -286,8 +336,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Hitmen, a boxer and a mob wife collide across one LA weekend, told out of order and full of talk.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "nonlinear timeline",
+    "dark comedy",
+    "hitman",
+    "los angeles",
+    "neo-noir"
+   ],
+   "recommendationKeys": [
+    "movie:769",
+    "movie:550",
+    "movie:238"
+   ]
   },
   {
    "key": "movie:129",
@@ -331,6 +395,8 @@
    "overviewShort": "Ten-year-old Chihiro wanders into a bathhouse for spirits, where her parents are turned into pigs and she must work for a witch to find a way home.",
    "runtimeMinutes": 125,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Ten-year-old Chihiro wanders into a bathhouse for spirits, where her parents are turned into pigs and she must work for a witch to find a way home.",
    "tagline": null,
    "directors": [
@@ -354,8 +420,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A ten-year-old takes a job in a bathhouse for spirits to save her parents. Pure Ghibli wonder.",
+   "certification": "PG",
+   "seriesStatus": null,
+   "keywords": [
+    "anime",
+    "spirit",
+    "surreal",
+    "bathhouse",
+    "magic"
+   ],
+   "recommendationKeys": [
+    "movie:372058",
+    "movie:354912",
+    "tv:246"
+   ]
   },
   {
    "key": "movie:496243",
@@ -399,6 +479,8 @@
    "overviewShort": "A broke family talks its way, one job at a time, into the household of a wealthy one — until a secret in the basement turns the con into something far darker.",
    "runtimeMinutes": 133,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A broke family talks its way, one job at a time, into the household of a wealthy one — until a secret in the basement turns the con into something far darker.",
    "tagline": "Act like you own the place.",
    "directors": [
@@ -431,7 +513,6 @@
     "key": "5xH0HfJHsaY",
     "name": "Official Trailer"
    },
-   "episodeCount": null,
    "tmdbReviews": [
     {
      "id": "c64c4e7f83fb57c91c4532e9",
@@ -441,6 +522,21 @@
      "createdAt": "2019-11-02T16:30:00Z",
      "url": "https://www.themoviedb.org/movie/496243/reviews"
     }
+   ],
+   "pitchHook": "A broke family cons its way into a rich household, one fake job at a time. Funny, then very tense.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "class differences",
+    "social commentary",
+    "dark comedy",
+    "con artist",
+    "seoul"
+   ],
+   "recommendationKeys": [
+    "movie:545611",
+    "movie:419430",
+    "tv:93405"
    ]
   },
   {
@@ -485,6 +581,8 @@
    "overviewShort": "With Earth failing, a former pilot leaves his children to fly through a wormhole in search of a new home, racing time itself to keep a promise.",
    "runtimeMinutes": 169,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "With Earth failing, a former pilot leaves his children to fly through a wormhole in search of a new home, racing time itself to keep a promise.",
    "tagline": "Mankind was born on Earth. It was never meant to die here.",
    "directors": [
@@ -517,7 +615,6 @@
     "key": "zSWdZVtXT7E",
     "name": "Official Trailer"
    },
-   "episodeCount": null,
    "tmdbReviews": [
     {
      "id": "15993576557838228968968a",
@@ -527,6 +624,21 @@
      "createdAt": "2014-11-12T21:40:00Z",
      "url": "https://www.themoviedb.org/movie/157336/reviews"
     }
+   ],
+   "pitchHook": "A farmer-pilot leaves his kids behind to find humanity a new home through a wormhole near Saturn.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "space travel",
+    "time dilation",
+    "father daughter relationship",
+    "wormhole",
+    "epic"
+   ],
+   "recommendationKeys": [
+    "movie:27205",
+    "movie:329865",
+    "movie:335984"
    ]
   },
   {
@@ -571,6 +683,8 @@
    "overviewShort": "A thief who steals secrets from dreams is offered one last job: plant an idea in a target’s mind, three dream-levels down, without losing himself.",
    "runtimeMinutes": 148,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A thief who steals secrets from dreams is offered one last job: plant an idea in a target’s mind, three dream-levels down, without losing himself.",
    "tagline": "Your mind is the scene of the crime.",
    "directors": [
@@ -603,8 +717,21 @@
     "key": "YoHD9XEInc0",
     "name": "Official Trailer"
    },
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A thief who steals secrets from dreams takes one last job: planting an idea instead.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "dream",
+    "heist",
+    "subconscious",
+    "alternate reality"
+   ],
+   "recommendationKeys": [
+    "movie:157336",
+    "movie:603",
+    "movie:155"
+   ]
   },
   {
    "key": "movie:550",
@@ -640,6 +767,8 @@
    "overviewShort": "An insomniac office worker and a reckless soap salesman start an underground fight club that grows into something neither of them can control.",
    "runtimeMinutes": 139,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "An insomniac office worker and a reckless soap salesman start an underground fight club that grows into something neither of them can control.",
    "tagline": null,
    "directors": [
@@ -663,8 +792,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "An insomniac office worker and a soap salesman start a basement club that gets out of hand.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "dark comedy",
+    "insomnia",
+    "anti-consumerism",
+    "twist ending",
+    "based on novel or book"
+   ],
+   "recommendationKeys": [
+    "movie:680",
+    "movie:603",
+    "movie:769"
+   ]
   },
   {
    "key": "movie:13",
@@ -708,6 +851,8 @@
    "overviewShort": "A kind man from Alabama drifts through three decades of American history, always trying to find his way back to the girl he loved as a child.",
    "runtimeMinutes": 142,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A kind man from Alabama drifts through three decades of American history, always trying to find his way back to the girl he loved as a child.",
    "tagline": "The world will never be the same once you’ve seen it through the eyes of Forrest Gump.",
    "directors": [
@@ -731,8 +876,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A kind man from Alabama drifts through forty years of American history without meaning to.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "heartwarming",
+    "love",
+    "vietnam war",
+    "running",
+    "based on novel or book"
+   ],
+   "recommendationKeys": [
+    "movie:278",
+    "movie:194",
+    "movie:313369"
+   ]
   },
   {
    "key": "movie:603",
@@ -772,6 +931,8 @@
    "overviewShort": "A hacker learns that the world he knows is a simulation built by machines, and that he may be the one person able to break it.",
    "runtimeMinutes": 136,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A hacker learns that the world he knows is a simulation built by machines, and that he may be the one person able to break it.",
    "tagline": "Welcome to the Real World.",
    "directors": [
@@ -801,8 +962,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A hacker learns the world is a simulation and that he might be the one to break it.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "artificial intelligence",
+    "cyberpunk",
+    "martial arts",
+    "simulated reality"
+   ],
+   "recommendationKeys": [
+    "movie:27205",
+    "movie:335984",
+    "movie:155"
+   ]
   },
   {
    "key": "movie:769",
@@ -842,6 +1016,8 @@
    "overviewShort": "From teenage errand boy to made man and finally informant: thirty years inside the mob, told by the guy who always wanted to be a gangster.",
    "runtimeMinutes": 145,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "From teenage errand boy to made man and finally informant: thirty years inside the mob, told by the guy who always wanted to be a gangster.",
    "tagline": null,
    "directors": [
@@ -865,8 +1041,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Thirty years in the mob, from teenage errand boy to the wrong side of the FBI. Fast, loud, funny.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "mafia",
+    "based on true story",
+    "organized crime",
+    "new york city",
+    "biography"
+   ],
+   "recommendationKeys": [
+    "movie:238",
+    "tv:1398",
+    "movie:680"
+   ]
   },
   {
    "key": "movie:244786",
@@ -906,6 +1096,8 @@
    "overviewShort": "A young drummer at an elite conservatory falls under a bandleader whose methods push him to greatness — or to breaking point.",
    "runtimeMinutes": 107,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A young drummer at an elite conservatory falls under a bandleader whose methods push him to greatness — or to breaking point.",
    "tagline": "The road to greatness can take you to the edge.",
    "directors": [
@@ -929,8 +1121,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A young jazz drummer meets the teacher who will push him further than anyone should.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "jazz",
+    "music school",
+    "obsession",
+    "drummer",
+    "teacher student relationship"
+   ],
+   "recommendationKeys": [
+    "movie:313369",
+    "movie:545611",
+    "movie:666277"
+   ]
   },
   {
    "key": "movie:324857",
@@ -978,6 +1184,8 @@
    "overviewShort": "Brooklyn teen Miles Morales gets bitten, gets powers and gets company: Spider-People from other dimensions who need him to save every one of their worlds.",
    "runtimeMinutes": 117,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Brooklyn teen Miles Morales gets bitten, gets powers and gets company: Spider-People from other dimensions who need him to save every one of their worlds.",
    "tagline": null,
    "directors": [
@@ -1003,8 +1211,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Brooklyn teen Miles Morales gets bitten, gets powers and meets five other Spider-People.",
+   "certification": "PG",
+   "seriesStatus": null,
+   "keywords": [
+    "superhero",
+    "multiverse",
+    "coming of age",
+    "marvel comics"
+   ],
+   "recommendationKeys": [
+    "movie:569094",
+    "movie:155",
+    "tv:94605"
+   ]
   },
   {
    "key": "movie:569094",
@@ -1052,6 +1273,8 @@
    "overviewShort": "Miles reunites with Gwen and is swept into a multiverse-spanning society of Spider-People — who have very firm rules about what a hero must lose.",
    "runtimeMinutes": 140,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Miles reunites with Gwen and is swept into a multiverse-spanning society of Spider-People — who have very firm rules about what a hero must lose.",
    "tagline": null,
    "directors": [
@@ -1077,8 +1300,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Miles swings across the multiverse and finds a whole society of Spider-People with rules of their own.",
+   "certification": "PG",
+   "seriesStatus": null,
+   "keywords": [
+    "superhero",
+    "multiverse",
+    "coming of age",
+    "cliffhanger"
+   ],
+   "recommendationKeys": [
+    "movie:324857",
+    "tv:94605",
+    "movie:545611"
+   ]
   },
   {
    "key": "movie:693134",
@@ -1118,6 +1354,8 @@
    "overviewShort": "Paul Atreides joins the Fremen and Chani on a path of revenge against the conspirators who destroyed his family — while dreading the holy war he keeps seeing in his visions.",
    "runtimeMinutes": 166,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Paul Atreides joins the Fremen and Chani on a path of revenge against the conspirators who destroyed his family — while dreading the holy war he keeps seeing in his visions.",
    "tagline": "Long live the fighters.",
    "directors": [
@@ -1160,7 +1398,6 @@
     "key": "Way9Dexny3w",
     "name": "Official Trailer"
    },
-   "episodeCount": null,
    "tmdbReviews": [
     {
      "id": "ff9f11cf21ff9077021340f2",
@@ -1178,6 +1415,21 @@
      "createdAt": "2024-03-10T09:05:00Z",
      "url": "https://www.themoviedb.org/movie/693134/reviews"
     }
+   ],
+   "pitchHook": "Paul Atreides joins the desert Fremen and has to choose between love and a dangerous prophecy.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "desert planet",
+    "epic",
+    "prophecy",
+    "space opera",
+    "based on novel or book"
+   ],
+   "recommendationKeys": [
+    "movie:335984",
+    "movie:157336",
+    "tv:126308"
    ]
   },
   {
@@ -1218,6 +1470,8 @@
    "overviewShort": "The physicist who led the Manhattan Project builds the bomb, watches it change the world, and then faces a government hearing designed to break him.",
    "runtimeMinutes": 181,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "The physicist who led the Manhattan Project builds the bomb, watches it change the world, and then faces a government hearing designed to break him.",
    "tagline": "The world forever changes.",
    "directors": [
@@ -1250,8 +1504,22 @@
     "key": "uYPbbksJxIg",
     "name": "Official Trailer"
    },
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "The physicist who led the Manhattan Project races to build the bomb, then has to live with it.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "biography",
+    "based on true story",
+    "historical figure",
+    "nuclear weapons",
+    "cold war"
+   ],
+   "recommendationKeys": [
+    "movie:157336",
+    "tv:87108",
+    "movie:27205"
+   ]
   },
   {
    "key": "movie:545611",
@@ -1295,6 +1563,8 @@
    "overviewShort": "Mid tax audit, a laundromat owner learns she can borrow skills from her other selves across the multiverse — and that only she can stop a threat that looks a lot like her daughter.",
    "runtimeMinutes": 140,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Mid tax audit, a laundromat owner learns she can borrow skills from her other selves across the multiverse — and that only she can stop a threat that looks a lot like her daughter.",
    "tagline": null,
    "directors": [
@@ -1324,8 +1594,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A laundromat owner in the middle of a tax audit finds she can borrow skills from other versions of herself.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "multiverse",
+    "absurdism",
+    "mother daughter relationship",
+    "martial arts",
+    "immigrant"
+   ],
+   "recommendationKeys": [
+    "movie:496243",
+    "movie:792307",
+    "movie:569094"
+   ]
   },
   {
    "key": "movie:419430",
@@ -1369,6 +1653,8 @@
    "overviewShort": "A young photographer meets his girlfriend’s parents for the first time. The weekend is polite, strange, and then something much worse.",
    "runtimeMinutes": 104,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A young photographer meets his girlfriend’s parents for the first time. The weekend is polite, strange, and then something much worse.",
    "tagline": null,
    "directors": [
@@ -1392,8 +1678,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A weekend with his girlfriend’s parents gets stranger with every smile. Horror with a sharp satirical edge.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "satire",
+    "suspense",
+    "social commentary",
+    "hypnosis"
+   ],
+   "recommendationKeys": [
+    "movie:496243",
+    "movie:933260",
+    "tv:95396"
+   ]
   },
   {
    "key": "movie:313369",
@@ -1441,6 +1740,8 @@
    "overviewShort": "A jazz pianist and an aspiring actor fall in love in Los Angeles while chasing the dreams that might pull them apart.",
    "runtimeMinutes": 128,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A jazz pianist and an aspiring actor fall in love in Los Angeles while chasing the dreams that might pull them apart.",
    "tagline": null,
    "directors": [
@@ -1464,8 +1765,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A jazz pianist and an aspiring actress fall for each other in LA while chasing very different dreams.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "musical",
+    "jazz",
+    "love",
+    "los angeles",
+    "aspiring actress"
+   ],
+   "recommendationKeys": [
+    "movie:244786",
+    "movie:666277",
+    "movie:194"
+   ]
   },
   {
    "key": "movie:76341",
@@ -1509,6 +1824,8 @@
    "overviewShort": "In a scorched wasteland, a road warrior and a rebel commander flee a tyrant across the desert with his most prized possessions in tow.",
    "runtimeMinutes": 121,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "In a scorched wasteland, a road warrior and a rebel commander flee a tyrant across the desert with his most prized possessions in tow.",
    "tagline": "What a lovely day.",
    "directors": [
@@ -1532,8 +1849,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A two-hour chase across a desert wasteland, with a war rig, a rebel and barely any stops.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "post-apocalyptic future",
+    "car chase",
+    "desert",
+    "survival"
+   ],
+   "recommendationKeys": [
+    "movie:693134",
+    "movie:361743",
+    "movie:335984"
+   ]
   },
   {
    "key": "movie:329865",
@@ -1577,6 +1907,8 @@
    "overviewShort": "When twelve alien ships touch down around the world, a linguist is recruited to learn their language before fear turns into war.",
    "runtimeMinutes": 116,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "When twelve alien ships touch down around the world, a linguist is recruited to learn their language before fear turns into war.",
    "tagline": null,
    "directors": [
@@ -1600,8 +1932,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A linguist is asked to talk to aliens who have parked twelve ships above Earth. Quiet, clever sci-fi.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "first contact",
+    "linguistics",
+    "alien",
+    "based on short story"
+   ],
+   "recommendationKeys": [
+    "movie:157336",
+    "movie:335984",
+    "movie:693134"
+   ]
   },
   {
    "key": "movie:965150",
@@ -1637,6 +1982,8 @@
    "overviewShort": "Twenty years later, a woman replays the camcorder footage of a Turkish holiday with her young father, looking for the man she didn’t know then.",
    "runtimeMinutes": 102,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Twenty years later, a woman replays the camcorder footage of a Turkish holiday with her young father, looking for the man she didn’t know then.",
    "tagline": null,
    "directors": [
@@ -1660,8 +2007,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A woman looks back at a Turkish holiday with her young dad and sees what she missed at eleven.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "father daughter relationship",
+    "melancholy",
+    "memory",
+    "holiday",
+    "slow burn"
+   ],
+   "recommendationKeys": [
+    "movie:666277",
+    "movie:531428",
+    "movie:244786"
+   ]
   },
   {
    "key": "movie:666277",
@@ -1701,6 +2062,8 @@
    "overviewShort": "Childhood sweethearts separated when one family emigrates from Seoul reconnect twice over twenty-four years, wondering who they might have been.",
    "runtimeMinutes": 106,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Childhood sweethearts separated when one family emigrates from Seoul reconnect twice over twenty-four years, wondering who they might have been.",
    "tagline": null,
    "directors": [
@@ -1724,8 +2087,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Two childhood friends from Seoul meet again twenty years later and wonder what might have been.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "childhood sweetheart",
+    "melancholy",
+    "immigrant",
+    "love",
+    "new york city"
+   ],
+   "recommendationKeys": [
+    "movie:965150",
+    "movie:372058",
+    "movie:313369"
+   ]
   },
   {
    "key": "movie:531428",
@@ -1769,6 +2146,8 @@
    "overviewShort": "In 1770 Brittany, a painter is hired to secretly paint a reluctant bride’s wedding portrait, and the two women fall into a love with an end date.",
    "runtimeMinutes": 122,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "In 1770 Brittany, a painter is hired to secretly paint a reluctant bride’s wedding portrait, and the two women fall into a love with an end date.",
    "tagline": null,
    "directors": [
@@ -1792,8 +2171,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A painter is hired to secretly paint a reluctant bride on a remote island in 18th-century France.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "love",
+    "painter",
+    "slow burn",
+    "lgbt",
+    "period drama"
+   ],
+   "recommendationKeys": [
+    "movie:666277",
+    "movie:965150",
+    "movie:792307"
+   ]
   },
   {
    "key": "movie:194",
@@ -1833,6 +2226,8 @@
    "overviewShort": "A shy Montmartre waitress decides to quietly fix the lives of the people around her, and nearly forgets about her own.",
    "runtimeMinutes": 122,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A shy Montmartre waitress decides to quietly fix the lives of the people around her, and nearly forgets about her own.",
    "tagline": null,
    "directors": [
@@ -1856,8 +2251,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A shy Parisian waitress decides to fix other people’s lives in small, secret, very quirky ways.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "quirky",
+    "paris",
+    "love",
+    "feel-good",
+    "eccentric"
+   ],
+   "recommendationKeys": [
+    "movie:120467",
+    "movie:313369",
+    "movie:13"
+   ]
   },
   {
    "key": "movie:354912",
@@ -1905,6 +2314,8 @@
    "overviewShort": "A boy who dreams of music, in a family that bans it, stumbles into the Land of the Dead on Día de Muertos and has until sunrise to get home.",
    "runtimeMinutes": 105,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A boy who dreams of music, in a family that bans it, stumbles into the Land of the Dead on Día de Muertos and has until sunrise to get home.",
    "tagline": null,
    "directors": [
@@ -1928,8 +2339,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A boy who dreams of music ends up in the Land of the Dead on Día de Muertos. Bring tissues.",
+   "certification": "PG",
+   "seriesStatus": null,
+   "keywords": [
+    "family",
+    "musical",
+    "mexico",
+    "day of the dead",
+    "grief"
+   ],
+   "recommendationKeys": [
+    "movie:129",
+    "movie:372058",
+    "tv:82728"
+   ]
   },
   {
    "key": "movie:361743",
@@ -1969,6 +2394,8 @@
    "overviewShort": "Thirty years on, Maverick is called back to train a squad of young pilots — including the son of his late wingman — for a mission nobody expects them to survive.",
    "runtimeMinutes": 131,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Thirty years on, Maverick is called back to train a squad of young pilots — including the son of his late wingman — for a mission nobody expects them to survive.",
    "tagline": null,
    "directors": [
@@ -1992,8 +2419,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Maverick comes back to train young pilots for an impossible mission. Big-screen jet spectacle.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "fighter pilot",
+    "sequel",
+    "navy",
+    "mentor"
+   ],
+   "recommendationKeys": [
+    "movie:76341",
+    "movie:155",
+    "movie:693134"
+   ]
   },
   {
    "key": "movie:335984",
@@ -2033,6 +2473,8 @@
    "overviewShort": "A replicant blade runner uncovers a buried secret that could tip society into chaos, and goes looking for a man who disappeared thirty years ago.",
    "runtimeMinutes": 164,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A replicant blade runner uncovers a buried secret that could tip society into chaos, and goes looking for a man who disappeared thirty years ago.",
    "tagline": null,
    "directors": [
@@ -2056,8 +2498,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A replicant cop uncovers a secret that could break his world apart. Slow, huge and gorgeous.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "cyberpunk",
+    "artificial intelligence",
+    "neo-noir",
+    "dystopia",
+    "slow burn"
+   ],
+   "recommendationKeys": [
+    "movie:693134",
+    "movie:329865",
+    "movie:603"
+   ]
   },
   {
    "key": "movie:120467",
@@ -2097,6 +2553,8 @@
    "overviewShort": "A legendary concierge and his loyal lobby boy are framed for murder and chase a priceless painting across a fictional, crumbling Europe.",
    "runtimeMinutes": 100,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A legendary concierge and his loyal lobby boy are framed for murder and chase a priceless painting across a fictional, crumbling Europe.",
    "tagline": null,
    "directors": [
@@ -2120,8 +2578,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A legendary concierge and his lobby boy get tangled up in a stolen painting and a family fortune.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "hotel",
+    "quirky",
+    "eccentric",
+    "caper",
+    "friendship"
+   ],
+   "recommendationKeys": [
+    "movie:194",
+    "movie:11830",
+    "movie:370755"
+   ]
   },
   {
    "key": "movie:372058",
@@ -2165,6 +2637,8 @@
    "overviewShort": "A Tokyo boy and a country girl start waking up in each other’s bodies, then try to find each other before a comet changes everything.",
    "runtimeMinutes": 106,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A Tokyo boy and a country girl start waking up in each other’s bodies, then try to find each other before a comet changes everything.",
    "tagline": null,
    "directors": [
@@ -2183,8 +2657,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A city boy and a country girl in Japan start waking up in each other’s bodies.",
+   "certification": "PG",
+   "seriesStatus": null,
+   "keywords": [
+    "anime",
+    "body swap",
+    "love",
+    "comet",
+    "coming of age"
+   ],
+   "recommendationKeys": [
+    "movie:129",
+    "movie:666277",
+    "movie:354912"
+   ]
   },
   {
    "key": "movie:346698",
@@ -2224,6 +2712,8 @@
    "overviewShort": "Stereotypical Barbie starts thinking about death, gets flat feet and heads to the real world with Ken for answers she did not order.",
    "runtimeMinutes": 114,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Stereotypical Barbie starts thinking about death, gets flat feet and heads to the real world with Ken for answers she did not order.",
    "tagline": null,
    "directors": [
@@ -2247,8 +2737,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Barbie starts having very un-Barbie thoughts and heads to the real world to find out why.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "satire",
+    "fashion",
+    "feminism",
+    "based on toy"
+   ],
+   "recommendationKeys": [
+    "movie:792307",
+    "movie:313369",
+    "tv:96580"
+   ]
   },
   {
    "key": "movie:792307",
@@ -2292,6 +2795,8 @@
    "overviewShort": "Brought back to life by an unorthodox scientist, Bella Baxter runs off on a whirlwind tour of Victorian Europe to learn everything at once.",
    "runtimeMinutes": 141,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "Brought back to life by an unorthodox scientist, Bella Baxter runs off on a whirlwind tour of Victorian Europe to learn everything at once.",
    "tagline": null,
    "directors": [
@@ -2315,8 +2820,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Brought back to life by a strange scientist, Bella runs off to see the world on her own terms.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "absurdism",
+    "steampunk",
+    "satire",
+    "based on novel or book"
+   ],
+   "recommendationKeys": [
+    "movie:545611",
+    "movie:346698",
+    "movie:933260"
+   ]
   },
   {
    "key": "movie:1064213",
@@ -2360,6 +2878,8 @@
    "overviewShort": "A Brooklyn dancer impulsively marries the son of a Russian oligarch in Las Vegas, and his family sends a crew to undo it by any means.",
    "runtimeMinutes": 139,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A Brooklyn dancer impulsively marries the son of a Russian oligarch in Las Vegas, and his family sends a crew to undo it by any means.",
    "tagline": null,
    "directors": [
@@ -2383,8 +2903,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A Brooklyn stripper marries the son of a Russian oligarch on a whim. His family is not thrilled.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "love",
+    "dark comedy",
+    "new york city",
+    "las vegas"
+   ],
+   "recommendationKeys": [
+    "movie:792307",
+    "movie:666277",
+    "movie:545611"
+   ]
   },
   {
    "key": "movie:933260",
@@ -2424,6 +2957,8 @@
    "overviewShort": "A fading TV fitness star tries a black-market serum that creates a younger, better version of herself. They must share one life. They do not share well.",
    "runtimeMinutes": 141,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A fading TV fitness star tries a black-market serum that creates a younger, better version of herself. They must share one life. They do not share well.",
    "tagline": null,
    "directors": [
@@ -2447,8 +2982,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A fading TV star tries a black-market drug that makes a younger, better version of her.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "body horror",
+    "satire",
+    "aging",
+    "hollywood"
+   ],
+   "recommendationKeys": [
+    "movie:419430",
+    "movie:792307",
+    "movie:346698"
+   ]
   },
   {
    "key": "movie:346",
@@ -2488,6 +3036,8 @@
    "overviewShort": "A village of farmers facing bandits hires seven hungry, masterless samurai to defend them through one harvest.",
    "runtimeMinutes": 207,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A village of farmers facing bandits hires seven hungry, masterless samurai to defend them through one harvest.",
    "tagline": null,
    "directors": [
@@ -2511,8 +3061,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A poor village hires seven samurai to defend its harvest from bandits. The blueprint for team-up films.",
+   "certification": null,
+   "seriesStatus": null,
+   "keywords": [
+    "samurai",
+    "feudal japan",
+    "epic",
+    "bandit",
+    "village"
+   ],
+   "recommendationKeys": [
+    "tv:126308",
+    "movie:238",
+    "movie:289"
+   ]
   },
   {
    "key": "movie:289",
@@ -2552,6 +3116,8 @@
    "overviewShort": "In wartime Morocco, a cynical club owner is handed the chance to help the woman who broke his heart escape with her husband.",
    "runtimeMinutes": 102,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "In wartime Morocco, a cynical club owner is handed the chance to help the woman who broke his heart escape with her husband.",
    "tagline": "They had a date with fate in Casablanca!",
    "directors": [
@@ -2575,8 +3141,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "In wartime Morocco, a cynical club owner gets one chance to help the woman who broke his heart.",
+   "certification": "PG",
+   "seriesStatus": null,
+   "keywords": [
+    "love",
+    "world war ii",
+    "morocco",
+    "nightclub"
+   ],
+   "recommendationKeys": [
+    "movie:238",
+    "movie:278",
+    "movie:346"
+   ]
   },
   {
    "key": "movie:1858",
@@ -2620,6 +3199,8 @@
    "overviewShort": "A teenager buys his first car and finds out it is an alien robot, caught in a war that has just arrived on Earth.",
    "runtimeMinutes": 144,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A teenager buys his first car and finds out it is an alien robot, caught in a war that has just arrived on Earth.",
    "tagline": null,
    "directors": [
@@ -2643,8 +3224,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A teenager’s first car turns out to be an alien robot, and it has enemies.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "alien",
+    "robot",
+    "based on toy",
+    "car chase",
+    "military"
+   ],
+   "recommendationKeys": [
+    "movie:333339",
+    "movie:361743",
+    "movie:76341"
+   ]
   },
   {
    "key": "movie:333339",
@@ -2688,6 +3283,8 @@
    "overviewShort": "In 2045, a teenager joins the hunt for three keys hidden inside a vast virtual world, with its creator’s fortune — and control of the game — as the prize.",
    "runtimeMinutes": 140,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "In 2045, a teenager joins the hunt for three keys hidden inside a vast virtual world, with its creator’s fortune — and control of the game — as the prize.",
    "tagline": null,
    "directors": [
@@ -2711,8 +3308,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "In 2045 everyone lives inside a virtual world, and its creator hid the keys to it inside a game.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "virtual reality",
+    "dystopia",
+    "video game",
+    "based on novel or book"
+   ],
+   "recommendationKeys": [
+    "movie:1858",
+    "movie:603",
+    "movie:324857"
+   ]
   },
   {
    "key": "movie:8966",
@@ -2756,6 +3366,8 @@
    "overviewShort": "A teenager who moves to a rainy small town falls for a classmate who turns out to be a centuries-old vampire.",
    "runtimeMinutes": 122,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A teenager who moves to a rainy small town falls for a classmate who turns out to be a centuries-old vampire.",
    "tagline": null,
    "directors": [
@@ -2779,8 +3391,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
    "tmdbReviews": [],
+   "pitchHook": "A new girl in a rainy town falls for a pale classmate with a very old secret.",
+   "certification": "PG-13",
+   "seriesStatus": null,
+   "keywords": [
+    "vampire",
+    "love",
+    "small town",
+    "high school",
+    "based on young adult novel"
+   ],
+   "recommendationKeys": [
+    "tv:96580",
+    "movie:346698"
+   ],
    "edgeCase": "EXCLUDE: 6.4 with high vote count (below 6.5). A seed user has a stub on it → reachable by URL with \"BELOW 6.5 NOW\"."
   },
   {
@@ -2821,6 +3446,8 @@
    "overviewShort": "A truck driver and his sidekick help a widowed noodle-shop owner perfect her ramen, in a comedy made of many small stories about food.",
    "runtimeMinutes": 114,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A truck driver and his sidekick help a widowed noodle-shop owner perfect her ramen, in a comedy made of many small stories about food.",
    "tagline": null,
    "directors": [
@@ -2844,8 +3471,20 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
    "tmdbReviews": [],
+   "pitchHook": "A truck driver helps a widow perfect her ramen shop, in a comedy built from many small stories about food.",
+   "certification": null,
+   "seriesStatus": null,
+   "keywords": [
+    "cooking",
+    "restaurant",
+    "ramen",
+    "food"
+   ],
+   "recommendationKeys": [
+    "movie:120467",
+    "tv:136315"
+   ],
    "edgeCase": "EXCLUDE: 8.0 but only 150 votes (movie floor is 200)."
   },
   {
@@ -2890,6 +3529,8 @@
    "overviewShort": "A week in the life of a bus driver in Paterson, New Jersey, who writes poems in a secret notebook between shifts.",
    "runtimeMinutes": 118,
    "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
    "overview": "A week in the life of a bus driver in Paterson, New Jersey, who writes poems in a secret notebook between shifts.",
    "tagline": null,
    "directors": [
@@ -2908,9 +3549,108 @@
     }
    ],
    "trailer": null,
-   "episodeCount": null,
    "tmdbReviews": [],
+   "pitchHook": null,
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "poetry",
+    "bus driver",
+    "small town",
+    "slice of life",
+    "meditative"
+   ],
+   "recommendationKeys": [
+    "movie:965150",
+    "movie:120467",
+    "movie:666277"
+   ],
    "edgeCase": "INCLUDE: exactly 6.5 and exactly 200 votes (inclusive boundaries)."
+  },
+  {
+   "key": "movie:19908",
+   "mediaType": "movie",
+   "tmdbId": 19908,
+   "imdbId": "tt1156398",
+   "imdbRating": 7.5,
+   "imdbVotes": 640000,
+   "title": "Zombieland",
+   "originalTitle": "Zombieland",
+   "slug": "zombieland",
+   "releaseDate": "2009-10-02",
+   "year": 2009,
+   "voteAverage": 6.4,
+   "voteCount": 16200,
+   "popularity": 28.3,
+   "genres": [
+    {
+     "id": 35,
+     "name": "Comedy"
+    },
+    {
+     "id": 27,
+     "name": "Horror"
+    }
+   ],
+   "posterPath": null,
+   "backdropPath": null,
+   "palette": {
+    "vibrant": "#9ab83a",
+    "base": "#161a0c",
+    "tint1": "#3d4717",
+    "tint2": "#161a0c",
+    "lqip": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADwAQCdASoIAAwAA4BaJagAAxbIL4ETZwAA4A4A6gPo+RIq7ZP/9Hm6wEIAAA==",
+    "v": 1
+   },
+   "overviewShort": "Two very different survivors of a zombie outbreak team up with a pair of con-artist sisters on a road trip to an amusement park.",
+   "runtimeMinutes": 88,
+   "seasonCount": null,
+   "episodeCount": null,
+   "episodeRuntimeMinutes": null,
+   "overview": "Two very different survivors of a zombie outbreak team up with a pair of con-artist sisters on a road trip to an amusement park.",
+   "tagline": "Nut up or shut up.",
+   "directors": [
+    "Ruben Fleischer"
+   ],
+   "cast": [
+    {
+     "name": "Jesse Eisenberg",
+     "character": "Columbus",
+     "profilePath": null
+    },
+    {
+     "name": "Woody Harrelson",
+     "character": "Tallahassee",
+     "profilePath": null
+    },
+    {
+     "name": "Emma Stone",
+     "character": "Wichita",
+     "profilePath": null
+    },
+    {
+     "name": "Abigail Breslin",
+     "character": "Little Rock",
+     "profilePath": null
+    }
+   ],
+   "trailer": null,
+   "tmdbReviews": [],
+   "pitchHook": "A nervous college kid survives the zombie apocalypse by following rules, until he teams up with people who don’t.",
+   "certification": "R",
+   "seriesStatus": null,
+   "keywords": [
+    "zombie",
+    "post-apocalyptic future",
+    "road trip",
+    "dark comedy",
+    "survival"
+   ],
+   "recommendationKeys": [
+    "movie:1858",
+    "movie:76341"
+   ],
+   "edgeCase": "EXCLUDE: TMDB adjusted to 6.4 while the real IMDb rating is 7.5 → IMDb never changes catalogue membership (PRD A7-AC5). Also has no poster/backdrop path → generated poster."
   },
   {
    "key": "tv:1396",
@@ -2950,6 +3690,8 @@
    "overviewShort": "A chemistry teacher with a terminal diagnosis starts cooking meth to secure his family’s future, and discovers he is very good at being bad.",
    "runtimeMinutes": null,
    "seasonCount": 5,
+   "episodeCount": 62,
+   "episodeRuntimeMinutes": 47,
    "overview": "A chemistry teacher with a terminal diagnosis starts cooking meth to secure his family’s future, and discovers he is very good at being bad.",
    "tagline": null,
    "directors": [
@@ -2982,7 +3724,6 @@
     "key": "HhesaQXLuRY",
     "name": "Official Trailer"
    },
-   "episodeCount": 62,
    "tmdbReviews": [
     {
      "id": "23e1238092544d4a20267571",
@@ -2992,6 +3733,20 @@
      "createdAt": "2013-09-30T12:00:00Z",
      "url": "https://www.themoviedb.org/tv/1396/reviews"
     }
+   ],
+   "pitchHook": "A chemistry teacher with a terminal diagnosis starts cooking meth to provide for his family.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "drug trade",
+    "new mexico",
+    "chemistry teacher",
+    "suspense"
+   ],
+   "recommendationKeys": [
+    "tv:60059",
+    "tv:1398",
+    "tv:1438"
    ]
   },
   {
@@ -3036,6 +3791,8 @@
    "overviewShort": "Noble houses scheme and bleed for the Iron Throne of Westeros while an ancient threat gathers beyond the Wall.",
    "runtimeMinutes": null,
    "seasonCount": 8,
+   "episodeCount": 73,
+   "episodeRuntimeMinutes": 57,
    "overview": "Noble houses scheme and bleed for the Iron Throne of Westeros while an ancient threat gathers beyond the Wall.",
    "tagline": null,
    "directors": [
@@ -3065,8 +3822,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 73,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Noble families scheme, marry and go to war for the Iron Throne while something older stirs in the north.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "dragon",
+    "epic",
+    "medieval",
+    "based on novel or book",
+    "politics"
+   ],
+   "recommendationKeys": [
+    "tv:126308",
+    "tv:94605",
+    "tv:1429"
+   ]
   },
   {
    "key": "tv:2316",
@@ -3102,6 +3873,8 @@
    "overviewShort": "A documentary crew follows the staff of a Scranton paper company and a regional manager who wants, more than anything, to be liked.",
    "runtimeMinutes": null,
    "seasonCount": 9,
+   "episodeCount": 201,
+   "episodeRuntimeMinutes": 22,
    "overview": "A documentary crew follows the staff of a Scranton paper company and a regional manager who wants, more than anything, to be liked.",
    "tagline": null,
    "directors": [
@@ -3130,8 +3903,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 201,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A documentary crew follows a paper company’s office, and its boss who desperately wants to be liked.",
+   "certification": "TV-14",
+   "seriesStatus": "ended",
+   "keywords": [
+    "mockumentary",
+    "workplace comedy",
+    "sitcom",
+    "office"
+   ],
+   "recommendationKeys": [
+    "tv:1668",
+    "tv:97546",
+    "tv:105248"
+   ]
   },
   {
    "key": "tv:66732",
@@ -3175,6 +3961,8 @@
    "overviewShort": "When a boy vanishes in 1980s Indiana, his friends, family and a girl with psychokinetic powers uncover a monstrous world just beneath their own.",
    "runtimeMinutes": null,
    "seasonCount": 5,
+   "episodeCount": 42,
+   "episodeRuntimeMinutes": 51,
    "overview": "When a boy vanishes in 1980s Indiana, his friends, family and a girl with psychokinetic powers uncover a monstrous world just beneath their own.",
    "tagline": null,
    "directors": [
@@ -3203,8 +3991,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 42,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "When a boy vanishes in 1980s Indiana, his friends, family and a strange girl go looking for him.",
+   "certification": "TV-14",
+   "seriesStatus": "ended",
+   "keywords": [
+    "supernatural",
+    "small town",
+    "friendship",
+    "1980s",
+    "coming of age"
+   ],
+   "recommendationKeys": [
+    "tv:70523",
+    "tv:100088",
+    "tv:95396"
+   ]
   },
   {
    "key": "tv:87108",
@@ -3240,6 +4042,8 @@
    "overviewShort": "The 1986 nuclear disaster and the scientists, soldiers and ordinary people who paid for the lies that caused it.",
    "runtimeMinutes": null,
    "seasonCount": 1,
+   "episodeCount": 5,
+   "episodeRuntimeMinutes": 65,
    "overview": "The 1986 nuclear disaster and the scientists, soldiers and ordinary people who paid for the lies that caused it.",
    "tagline": null,
    "directors": [
@@ -3263,8 +4067,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 5,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "The 1986 nuclear disaster, told through the people who tried to contain it and the lies around it.",
+   "certification": "TV-MA",
+   "seriesStatus": "limited",
+   "keywords": [
+    "based on true story",
+    "nuclear disaster",
+    "soviet union",
+    "miniseries"
+   ],
+   "recommendationKeys": [
+    "movie:872585",
+    "tv:126308",
+    "tv:1438"
+   ]
   },
   {
    "key": "tv:136315",
@@ -3304,6 +4121,8 @@
    "overviewShort": "A fine-dining chef comes home to Chicago to run his late brother’s chaotic sandwich shop, and tries to turn it into something worth saving.",
    "runtimeMinutes": null,
    "seasonCount": 4,
+   "episodeCount": 38,
+   "episodeRuntimeMinutes": 30,
    "overview": "A fine-dining chef comes home to Chicago to run his late brother’s chaotic sandwich shop, and tries to turn it into something worth saving.",
    "tagline": null,
    "directors": [
@@ -3331,8 +4150,22 @@
     "key": "y-cqqAJIXhs",
     "name": "Official Trailer"
    },
-   "episodeCount": 38,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A fine-dining chef comes home to run his late brother’s Chicago sandwich shop. Loud, stressful, tender.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "chef",
+    "family business",
+    "chicago",
+    "grief",
+    "anxiety"
+   ],
+   "recommendationKeys": [
+    "tv:105248",
+    "tv:67070",
+    "movie:11830"
+   ]
   },
   {
    "key": "tv:95396",
@@ -3376,6 +4209,8 @@
    "overviewShort": "Employees at Lumon have had their memories surgically split between work and home. One of them starts to wonder what his other self is hiding.",
    "runtimeMinutes": null,
    "seasonCount": 2,
+   "episodeCount": 19,
+   "episodeRuntimeMinutes": 50,
    "overview": "Employees at Lumon have had their memories surgically split between work and home. One of them starts to wonder what his other self is hiding.",
    "tagline": null,
    "directors": [
@@ -3408,8 +4243,22 @@
     "key": "xEQP4VVuyrY",
     "name": "Official Trailer"
    },
-   "episodeCount": 19,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Office workers have their work memories surgically split from their home lives. Then one starts asking questions.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "dystopia",
+    "workplace",
+    "conspiracy",
+    "memory",
+    "mystery"
+   ],
+   "recommendationKeys": [
+    "tv:70523",
+    "movie:419430",
+    "tv:66732"
+   ]
   },
   {
    "key": "tv:94605",
@@ -3457,6 +4306,8 @@
    "overviewShort": "Two sisters from the undercity end up on opposite sides of a war between gleaming Piltover and the toxic streets of Zaun.",
    "runtimeMinutes": null,
    "seasonCount": 2,
+   "episodeCount": 18,
+   "episodeRuntimeMinutes": 40,
    "overview": "Two sisters from the undercity end up on opposite sides of a war between gleaming Piltover and the toxic streets of Zaun.",
    "tagline": null,
    "directors": [
@@ -3485,8 +4336,21 @@
     "key": "fXmAurh012s",
     "name": "Official Trailer"
    },
-   "episodeCount": 18,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Two orphaned sisters end up on opposite sides of a war between a shining city and the undercity below.",
+   "certification": "TV-14",
+   "seriesStatus": "ended",
+   "keywords": [
+    "steampunk",
+    "sisters",
+    "based on video game",
+    "epic"
+   ],
+   "recommendationKeys": [
+    "tv:1429",
+    "movie:569094",
+    "tv:246"
+   ]
   },
   {
    "key": "tv:126308",
@@ -3526,6 +4390,8 @@
    "overviewShort": "In 1600 Japan, a shipwrecked English navigator becomes a pawn — and then a player — in a warlord’s fight for survival against the regents who want him dead.",
    "runtimeMinutes": null,
    "seasonCount": 1,
+   "episodeCount": 10,
+   "episodeRuntimeMinutes": 59,
    "overview": "In 1600 Japan, a shipwrecked English navigator becomes a pawn — and then a player — in a warlord’s fight for survival against the regents who want him dead.",
    "tagline": null,
    "directors": [
@@ -3550,8 +4416,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 10,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "An English navigator shipwrecked in feudal Japan is pulled into a warlord’s fight for survival.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "feudal japan",
+    "samurai",
+    "politics",
+    "based on novel or book"
+   ],
+   "recommendationKeys": [
+    "movie:346",
+    "tv:1399",
+    "tv:87108"
+   ]
   },
   {
    "key": "tv:60059",
@@ -3591,6 +4470,8 @@
    "overviewShort": "Six years before Breaking Bad, small-time lawyer Jimmy McGill slowly, charmingly becomes the criminal lawyer Saul Goodman.",
    "runtimeMinutes": null,
    "seasonCount": 6,
+   "episodeCount": 63,
+   "episodeRuntimeMinutes": 46,
    "overview": "Six years before Breaking Bad, small-time lawyer Jimmy McGill slowly, charmingly becomes the criminal lawyer Saul Goodman.",
    "tagline": null,
    "directors": [
@@ -3615,8 +4496,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 63,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Before he was Saul Goodman, Jimmy McGill was a struggling lawyer trying very hard to be good.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "lawyer",
+    "character study",
+    "slow burn",
+    "new mexico"
+   ],
+   "recommendationKeys": [
+    "tv:1396",
+    "tv:1438",
+    "tv:76331"
+   ]
   },
   {
    "key": "tv:1438",
@@ -3656,6 +4550,8 @@
    "overviewShort": "Baltimore’s drug trade, seen from every side: the corners, the police, the docks, city hall, the schools and the newsroom.",
    "runtimeMinutes": null,
    "seasonCount": 5,
+   "episodeCount": 60,
+   "episodeRuntimeMinutes": 58,
    "overview": "Baltimore’s drug trade, seen from every side: the corners, the police, the docks, city hall, the schools and the newsroom.",
    "tagline": null,
    "directors": [
@@ -3679,8 +4575,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 60,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Baltimore’s drug trade, seen from the corners, the police, the docks, city hall and the schools.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "drug trade",
+    "police",
+    "social commentary",
+    "baltimore"
+   ],
+   "recommendationKeys": [
+    "tv:1398",
+    "tv:1396",
+    "tv:60059"
+   ]
   },
   {
    "key": "tv:76331",
@@ -3720,6 +4629,8 @@
    "overviewShort": "The Roy children circle their media-mogul father’s throne, each one convinced they deserve it and none of them able to take it.",
    "runtimeMinutes": null,
    "seasonCount": 4,
+   "episodeCount": 39,
+   "episodeRuntimeMinutes": 60,
    "overview": "The Roy children circle their media-mogul father’s throne, each one convinced they deserve it and none of them able to take it.",
    "tagline": null,
    "directors": [
@@ -3748,8 +4659,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 39,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Four grown children circle their father’s media empire, and nobody plays nice.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "dark comedy",
+    "satire",
+    "dysfunctional family",
+    "wealth"
+   ],
+   "recommendationKeys": [
+    "tv:1398",
+    "tv:105248",
+    "tv:65494"
+   ]
   },
   {
    "key": "tv:67070",
@@ -3789,6 +4713,8 @@
    "overviewShort": "A grieving, oversharing Londoner runs a failing café and talks straight to camera while her life, and a very tempting priest, fall apart around her.",
    "runtimeMinutes": null,
    "seasonCount": 2,
+   "episodeCount": 12,
+   "episodeRuntimeMinutes": 27,
    "overview": "A grieving, oversharing Londoner runs a failing café and talks straight to camera while her life, and a very tempting priest, fall apart around her.",
    "tagline": null,
    "directors": [
@@ -3812,8 +4738,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 12,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A sharp, grieving Londoner talks straight to camera while her life and family fall apart around her.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "dark comedy",
+    "grief",
+    "london",
+    "breaking the fourth wall"
+   ],
+   "recommendationKeys": [
+    "tv:105248",
+    "tv:136315",
+    "tv:97546"
+   ]
   },
   {
    "key": "tv:246",
@@ -3857,6 +4796,8 @@
    "overviewShort": "A twelve-year-old monk wakes from a century frozen in ice to learn he is the Avatar, the only one who can end a hundred-year war.",
    "runtimeMinutes": null,
    "seasonCount": 3,
+   "episodeCount": 61,
+   "episodeRuntimeMinutes": null,
    "overview": "A twelve-year-old monk wakes from a century frozen in ice to learn he is the Avatar, the only one who can end a hundred-year war.",
    "tagline": null,
    "directors": [
@@ -3881,8 +4822,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 61,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A 12-year-old monk wakes up after a century frozen in ice and has to learn all four elements.",
+   "certification": "TV-Y7",
+   "seriesStatus": "ended",
+   "keywords": [
+    "found family",
+    "martial arts",
+    "coming of age",
+    "epic"
+   ],
+   "recommendationKeys": [
+    "tv:94605",
+    "tv:1429",
+    "movie:129"
+   ]
   },
   {
    "key": "tv:100088",
@@ -3918,6 +4872,8 @@
    "overviewShort": "Twenty years after a fungal outbreak ends the world, a hardened smuggler is hired to get a fourteen-year-old girl across a ruined America.",
    "runtimeMinutes": null,
    "seasonCount": 2,
+   "episodeCount": 16,
+   "episodeRuntimeMinutes": 55,
    "overview": "Twenty years after a fungal outbreak ends the world, a hardened smuggler is hired to get a fourteen-year-old girl across a ruined America.",
    "tagline": null,
    "directors": [
@@ -3942,8 +4898,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 16,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Twenty years after a fungal outbreak, a hardened smuggler escorts a teenage girl across a ruined America.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "post-apocalyptic future",
+    "survival",
+    "based on video game",
+    "father daughter relationship"
+   ],
+   "recommendationKeys": [
+    "tv:66732",
+    "tv:1399",
+    "movie:76341"
+   ]
   },
   {
    "key": "tv:1429",
@@ -3987,6 +4956,8 @@
    "overviewShort": "Humanity survives behind enormous walls until the day giant man-eating Titans break through, and a furious boy swears to wipe them out.",
    "runtimeMinutes": null,
    "seasonCount": 4,
+   "episodeCount": 94,
+   "episodeRuntimeMinutes": 24,
    "overview": "Humanity survives behind enormous walls until the day giant man-eating Titans break through, and a furious boy swears to wipe them out.",
    "tagline": null,
    "directors": [
@@ -4010,8 +4981,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 94,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Humanity hides behind giant walls from man-eating Titans, until the walls stop being enough.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "anime",
+    "survival",
+    "epic",
+    "military",
+    "based on manga"
+   ],
+   "recommendationKeys": [
+    "tv:94605",
+    "tv:246",
+    "tv:1399"
+   ]
   },
   {
    "key": "tv:1668",
@@ -4051,6 +5036,8 @@
    "overviewShort": "Six twenty-somethings in Manhattan get through jobs, breakups and one very orange couch together.",
    "runtimeMinutes": null,
    "seasonCount": 10,
+   "episodeCount": 236,
+   "episodeRuntimeMinutes": 22,
    "overview": "Six twenty-somethings in Manhattan get through jobs, breakups and one very orange couch together.",
    "tagline": null,
    "directors": [
@@ -4080,8 +5067,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 236,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Six friends in Manhattan, one coffee shop and ten years of dating, jobs and bad apartments.",
+   "certification": "TV-PG",
+   "seriesStatus": "ended",
+   "keywords": [
+    "sitcom",
+    "friendship",
+    "new york city",
+    "found family"
+   ],
+   "recommendationKeys": [
+    "tv:2316",
+    "tv:97546",
+    "tv:96580"
+   ]
   },
   {
    "key": "tv:70523",
@@ -4129,6 +5129,8 @@
    "overviewShort": "A child’s disappearance in a German town exposes four families whose secrets repeat every thirty-three years.",
    "runtimeMinutes": null,
    "seasonCount": 3,
+   "episodeCount": 26,
+   "episodeRuntimeMinutes": 53,
    "overview": "A child’s disappearance in a German town exposes four families whose secrets repeat every thirty-three years.",
    "tagline": null,
    "directors": [
@@ -4153,8 +5155,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 26,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A missing child in a small German town opens a mystery that spans four families and several decades.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "time travel",
+    "small town",
+    "mystery",
+    "germany"
+   ],
+   "recommendationKeys": [
+    "tv:95396",
+    "tv:66732",
+    "movie:27205"
+   ]
   },
   {
    "key": "tv:19885",
@@ -4198,6 +5213,8 @@
    "overviewShort": "A brilliant, impossible consulting detective and an army doctor back from Afghanistan solve crimes in modern London.",
    "runtimeMinutes": null,
    "seasonCount": 4,
+   "episodeCount": 13,
+   "episodeRuntimeMinutes": 88,
    "overview": "A brilliant, impossible consulting detective and an army doctor back from Afghanistan solve crimes in modern London.",
    "tagline": null,
    "directors": [
@@ -4222,8 +5239,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 13,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A brilliant, rude consulting detective and an army doctor solve crimes in modern-day London.",
+   "certification": "TV-14",
+   "seriesStatus": "ended",
+   "keywords": [
+    "detective",
+    "london",
+    "based on novel or book",
+    "suspense",
+    "friendship"
+   ],
+   "recommendationKeys": [
+    "tv:70523",
+    "tv:1438",
+    "tv:95396"
+   ]
   },
   {
    "key": "tv:97546",
@@ -4263,6 +5294,8 @@
    "overviewShort": "An American college football coach with no soccer experience is hired to manage a struggling English Premier League club, and believes in everyone anyway.",
    "runtimeMinutes": null,
    "seasonCount": 3,
+   "episodeCount": 34,
+   "episodeRuntimeMinutes": 38,
    "overview": "An American college football coach with no soccer experience is hired to manage a struggling English Premier League club, and believes in everyone anyway.",
    "tagline": null,
    "directors": [
@@ -4289,8 +5322,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 34,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "An American football coach with zero soccer experience is hired to manage an English club.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "heartwarming",
+    "underdog",
+    "feel-good",
+    "soccer",
+    "found family"
+   ],
+   "recommendationKeys": [
+    "tv:2316",
+    "tv:1668",
+    "tv:136315"
+   ]
   },
   {
    "key": "tv:1398",
@@ -4330,6 +5377,8 @@
    "overviewShort": "A New Jersey mob boss starts seeing a therapist about his panic attacks while juggling two families that both want too much from him.",
    "runtimeMinutes": null,
    "seasonCount": 6,
+   "episodeCount": 86,
+   "episodeRuntimeMinutes": 55,
    "overview": "A New Jersey mob boss starts seeing a therapist about his panic attacks while juggling two families that both want too much from him.",
    "tagline": null,
    "directors": [
@@ -4353,8 +5402,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 86,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A New Jersey mob boss starts seeing a therapist, and neither of them is ready for it.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "mafia",
+    "organized crime",
+    "therapy",
+    "new jersey",
+    "character study"
+   ],
+   "recommendationKeys": [
+    "tv:1438",
+    "movie:238",
+    "tv:76331"
+   ]
   },
   {
    "key": "tv:93405",
@@ -4398,6 +5461,8 @@
    "overviewShort": "Hundreds of people drowning in debt accept an invitation to play children’s games for a fortune. Losing costs more than money.",
    "runtimeMinutes": null,
    "seasonCount": 3,
+   "episodeCount": 22,
+   "episodeRuntimeMinutes": 55,
    "overview": "Hundreds of people drowning in debt accept an invitation to play children’s games for a fortune. Losing costs more than money.",
    "tagline": null,
    "directors": [
@@ -4421,8 +5486,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 22,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Hundreds of people in debt compete in deadly versions of children’s games for a huge cash prize.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "survival",
+    "suspense",
+    "class differences",
+    "game",
+    "debt"
+   ],
+   "recommendationKeys": [
+    "tv:1429",
+    "movie:496243",
+    "tv:95396"
+   ]
   },
   {
    "key": "tv:65494",
@@ -4458,6 +5537,8 @@
    "overviewShort": "The reign of Queen Elizabeth II from her wedding onward: the politics, the scandals and the private cost of wearing the crown.",
    "runtimeMinutes": null,
    "seasonCount": 6,
+   "episodeCount": 60,
+   "episodeRuntimeMinutes": 58,
    "overview": "The reign of Queen Elizabeth II from her wedding onward: the politics, the scandals and the private cost of wearing the crown.",
    "tagline": null,
    "directors": [
@@ -4481,8 +5562,22 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 60,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "Elizabeth II’s reign from her wedding onward, and what the crown costs the people who wear it.",
+   "certification": "TV-MA",
+   "seriesStatus": "ended",
+   "keywords": [
+    "biography",
+    "based on true story",
+    "historical figure",
+    "royalty",
+    "politics"
+   ],
+   "recommendationKeys": [
+    "tv:76331",
+    "tv:126308",
+    "tv:87108"
+   ]
   },
   {
    "key": "tv:105248",
@@ -4522,6 +5617,8 @@
    "overviewShort": "A legendary Las Vegas comic and an entitled, out-of-work young writer are forced into a partnership neither of them wanted.",
    "runtimeMinutes": null,
    "seasonCount": 4,
+   "episodeCount": 38,
+   "episodeRuntimeMinutes": 30,
    "overview": "A legendary Las Vegas comic and an entitled, out-of-work young writer are forced into a partnership neither of them wanted.",
    "tagline": null,
    "directors": [
@@ -4547,8 +5644,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 38,
-   "tmdbReviews": []
+   "tmdbReviews": [],
+   "pitchHook": "A Las Vegas comedy legend is forced to work with a young, entitled writer. They clash, then click.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "stand-up comedy",
+    "las vegas",
+    "mentor",
+    "dark comedy"
+   ],
+   "recommendationKeys": [
+    "tv:67070",
+    "tv:136315",
+    "tv:76331"
+   ]
   },
   {
    "key": "tv:82728",
@@ -4592,6 +5702,8 @@
    "overviewShort": "An endlessly energetic Blue Heeler puppy turns everyday family life in Brisbane into games, with her little sister and two very patient parents.",
    "runtimeMinutes": null,
    "seasonCount": 3,
+   "episodeCount": 154,
+   "episodeRuntimeMinutes": 7,
    "overview": "An endlessly energetic Blue Heeler puppy turns everyday family life in Brisbane into games, with her little sister and two very patient parents.",
    "tagline": null,
    "directors": [
@@ -4610,8 +5722,20 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 154,
    "tmdbReviews": [],
+   "pitchHook": "A Blue Heeler puppy and her family turn ordinary Brisbane days into games. Funny for kids and parents.",
+   "certification": "TV-Y",
+   "seriesStatus": "returning",
+   "keywords": [
+    "family",
+    "anthropomorphism",
+    "heartwarming",
+    "dog"
+   ],
+   "recommendationKeys": [
+    "movie:354912",
+    "tv:246"
+   ],
    "edgeCase": "INCLUDE, but imdbId (and so imdbRating) is null → the IMDb chip must be hidden on the stub and detail page (ADR-008)."
   },
   {
@@ -4652,6 +5776,8 @@
    "overviewShort": "A Chicago marketing exec lands a job in Paris and sets out to teach a French agency about social media, one outfit at a time.",
    "runtimeMinutes": null,
    "seasonCount": 4,
+   "episodeCount": 40,
+   "episodeRuntimeMinutes": 30,
    "overview": "A Chicago marketing exec lands a job in Paris and sets out to teach a French agency about social media, one outfit at a time.",
    "tagline": null,
    "directors": [
@@ -4675,8 +5801,21 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 40,
    "tmdbReviews": [],
+   "pitchHook": "A Chicago marketing exec takes a job in Paris and tries to teach a French agency about social media.",
+   "certification": "TV-MA",
+   "seriesStatus": "returning",
+   "keywords": [
+    "paris",
+    "fashion",
+    "love",
+    "fish out of water"
+   ],
+   "recommendationKeys": [
+    "movie:346698",
+    "tv:1668",
+    "movie:194"
+   ],
    "edgeCase": "INCLUDE: exactly 6.5 and exactly 100 votes (TV floor, inclusive)."
   },
   {
@@ -4713,6 +5852,8 @@
    "overviewShort": "Four generations of a Korean family chase survival and belonging from occupied Korea to Japan and America.",
    "runtimeMinutes": null,
    "seasonCount": 2,
+   "episodeCount": 16,
+   "episodeRuntimeMinutes": 58,
    "overview": "Four generations of a Korean family chase survival and belonging from occupied Korea to Japan and America.",
    "tagline": null,
    "directors": [
@@ -4736,8 +5877,20 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 16,
    "tmdbReviews": [],
+   "pitchHook": "Four generations of a Korean family chase survival and belonging from occupied Korea to Japan.",
+   "certification": "TV-14",
+   "seriesStatus": "returning",
+   "keywords": [
+    "family saga",
+    "immigrant",
+    "based on novel or book",
+    "period drama"
+   ],
+   "recommendationKeys": [
+    "movie:666277",
+    "tv:65494"
+   ],
    "edgeCase": "EXCLUDE: 8.0 but 99 votes (TV floor is 100)."
   },
   {
@@ -4774,6 +5927,8 @@
    "overviewShort": "Amateur bakers compete in a tent in the English countryside, one showstopper at a time.",
    "runtimeMinutes": null,
    "seasonCount": 15,
+   "episodeCount": 150,
+   "episodeRuntimeMinutes": 60,
    "overview": "Amateur bakers compete in a tent in the English countryside, one showstopper at a time.",
    "tagline": null,
    "directors": [
@@ -4792,8 +5947,19 @@
     }
    ],
    "trailer": null,
-   "episodeCount": 150,
    "tmdbReviews": [],
+   "pitchHook": "Amateur bakers compete in a tent in the English countryside. The kindest competition on TV.",
+   "certification": "TV-PG",
+   "seriesStatus": "returning",
+   "keywords": [
+    "baking",
+    "competition",
+    "feel-good",
+    "cooking"
+   ],
+   "recommendationKeys": [
+    "tv:136315"
+   ],
    "edgeCase": "EXCLUDE: Reality genre (10764) is excluded from the TV catalogue by default."
   }
  ]

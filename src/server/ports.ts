@@ -21,6 +21,7 @@ import type {
   Session,
   Stub,
   TitleDetail,
+  TitleEnrichment,
   TitleKey,
   TitleState,
   TitleStats,
@@ -42,13 +43,21 @@ export interface CatalogIndexRepository {
   search(normalizedQuery: string, type: TypeFilter, limit: number): Promise<TitleSummary[]>;
   /** Listed OR unlisted row (hysteresis). */
   get(mediaType: MediaType, tmdbId: number): Promise<TitleSummary | null>;
+  /** Same row plus its stored enrichment (the "Worth it?" inputs). Used by dal.getTitle. */
+  getEntry(
+    mediaType: MediaType,
+    tmdbId: number,
+  ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment } | null>;
   getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>>;
   count(): Promise<number>;
   lastSyncAt(): Promise<string | null>;
 }
 
 /** Heavy per-title detail (live: TMDB with L1/L2 cache; demo: fixtures). */
-export type DetailFields = Omit<TitleDetail, keyof TitleSummary | 'detailStatus' | 'fetchedAt'>;
+export type DetailFields = Omit<
+  TitleDetail,
+  keyof TitleSummary | 'detailStatus' | 'fetchedAt' | 'worthIt'
+>;
 
 export interface CatalogDetailProvider {
   readonly name: 'tmdb' | 'fixtures';
@@ -182,7 +191,7 @@ export interface TitleStateRepository {
 
 /**
  * Everything the data-access layer and route handlers need, resolved once per process.
- * There is deliberately no outbound sync adapter: nothing is ever posted to IMDb, TMDB, Trakt or
+ * There is deliberately no outbound sync adapter: nothing is ever posted to IMDb, TMDB or
  * any other third party (ADR-008). User data leaves only via the user's own export (§5.16).
  */
 export interface Container {

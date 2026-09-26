@@ -80,6 +80,10 @@ export interface TitleSummary {
   runtimeMinutes: number | null;
   /** TV only (null if unknown). */
   seasonCount: number | null;
+  /** TV only: total episodes (null if unknown). Drives the ticket time line (PRD F2). */
+  episodeCount: number | null;
+  /** TV only: typical minutes per episode (null if unknown → ticket prints "4 SEASONS" without hours). */
+  episodeRuntimeMinutes: number | null;
   /** False = hidden from browse/search by the curation rule but still reachable by URL (PRD D4). */
   isListed: boolean;
 }
@@ -108,44 +112,130 @@ export interface TmdbReview {
 }
 
 /**
- * RESERVED for the deterministic "Worth it?" decision block (PRD §4.2 / D14). Every field is optional
- * until the PM spec is handed over: producers may omit them and the UI must treat "absent" as "unknown"
- * (hide the line). Everything here is computed from API data, our own mapping tables and templates —
- * never by an AI/LLM, at runtime or in the nightly job (BRIEF: no AI).
- */
-export interface TitlePitchFields {
-  /** Our own hand-written, spoiler-free one-liner (<= 120 chars). Not TMDB text. */
-  pitchHook?: string | null;
-  /** Up to 3 mood tags from our versioned genre/keyword mapping (e.g. "Slow burn"). */
-  vibes?: string[];
-  /** Age rating for the configured region, e.g. "PG-13", "TV-MA". */
-  certification?: string | null;
-  /** TV: typical episode length in minutes. */
-  episodeRuntimeMinutes?: number | null;
-  /** TV: TMDB series status, normalised. */
-  seriesStatus?: 'returning' | 'ended' | 'canceled' | 'in_production' | 'planned' | null;
-  /** TMDB recommendations filtered to our catalogue ("If you liked…"). */
-  recommendationKeys?: TitleKey[];
-}
-
-/**
  * Full title page payload. `detailStatus`:
  * - 'fresh'      : fetched live (or cached < 24h)
  * - 'stale'      : TMDB failed, served from the last good copy (show "details may be out of date")
  * - 'index_only' : no detail available; only TitleSummary fields are real (show "More details unavailable")
  */
-export interface TitleDetail extends TitleSummary, TitlePitchFields {
+export interface TitleDetail extends TitleSummary {
   overview: string;
   tagline: string | null;
   /** Movie: directors. TV: creators. */
   directors: string[];
   cast: CastMember[];
   trailer: Trailer | null;
-  episodeCount: number | null;
   /** "S01–S04" style range is derived by the UI from seasonCount. */
   tmdbReviews: TmdbReview[];
+  /** The "Worth it?" decision block (PRD §4.2, F1). Computed on read by rules, never by AI (D15). */
+  worthIt: WorthIt;
   detailStatus: 'fresh' | 'stale' | 'index_only';
   fetchedAt: IsoDateTime | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* "Worth it?" (PRD §4.2, Epic F). Deterministic: stored data + rules  */
+/* + templates only (D15, no AI). Rules: src/lib/worth-it.ts.          */
+/* ------------------------------------------------------------------ */
+
+/** Mood tags from our versioned mapping table (src/lib/vibes.ts). Labels are <= 18 chars. */
+export type VibeId =
+  | 'feel_good'
+  | 'mind_bending'
+  | 'slow_burn'
+  | 'edge_of_seat'
+  | 'tearjerker'
+  | 'cosy'
+  | 'dark'
+  | 'funny'
+  | 'epic'
+  | 'true_story'
+  | 'family_friendly'
+  | 'bingeable'
+  | 'romantic'
+  | 'thought_provoking'
+  | 'action_packed'
+  | 'spooky'
+  | 'stylish'
+  | 'quirky';
+
+export interface Vibe {
+  id: VibeId;
+  /** e.g. "Slow burn". */
+  label: string;
+}
+
+export type SeriesStatus =
+  'returning' | 'ended' | 'limited' | 'canceled' | 'in_production' | 'planned';
+
+export interface PitchHook {
+  /** <= 120 chars, spoiler-free, one sentence. */
+  text: string;
+  /**
+   * 'stubbed' = our hand-written hook · 'tmdb_tagline' / 'tmdb_overview' = from TMDB (UI shows "FROM TMDB")
+   * · 'template' = built from structured fields ("A 2016 drama movie from Jim Jarmusch.").
+   */
+  source: 'stubbed' | 'tmdb_tagline' | 'tmdb_overview' | 'template';
+}
+
+export type TimeBadge = 'short_one' | 'long_one' | 'weekend_binge' | 'big_commitment';
+
+export interface TimeCommitment {
+  /** Movie runtime or TV total (episodes × episode runtime) in minutes; null when unknown. */
+  totalMinutes: number | null;
+  badge: TimeBadge | null;
+  /** Detail-page print line, e.g. "2H 46M · LONG ONE" or "4 SEASONS · 36 EPS · ~55 MIN · ≈33 H · ENDED". */
+  label: string;
+  /** Plain-language version for screen readers. */
+  ariaLabel: string;
+}
+
+export type VerdictKey =
+  'widely_loved' | 'well_liked' | 'solid_pick' | 'split_opinions' | 'mixed_reviews';
+
+export interface Verdict {
+  key: VerdictKey;
+  /** "Widely loved" | "Well liked" | "Solid pick" | "Split opinions" | "Mixed reviews". Never a number. */
+  word: string;
+  /** "Based on TMDB, IMDb and 12 Stubbed ratings". Names only the sources used. */
+  sourceLine: string;
+  /** Only for split_opinions, e.g. "IMDb rates it higher than TMDB". */
+  splitNote: string | null;
+  sources: ('tmdb' | 'imdb' | 'stubbed')[];
+}
+
+/**
+ * Per-title enrichment stored on the catalogue row (live: nightly enrich step from TMDB; demo: fixtures).
+ * These are the stored inputs of "Worth it?" besides TitleSummary. `pitchHook` is ours (editorial).
+ */
+export interface TitleEnrichment {
+  tagline: string | null;
+  /** Our hand-written, spoiler-free one-liner (<= 120 chars). Never overwritten by the sync. */
+  pitchHook: string | null;
+  certification: string | null;
+  seriesStatus: SeriesStatus | null;
+  /** TMDB keyword names, lowercased. Only allowlisted ones map to vibes (src/lib/vibes.ts). */
+  keywords: string[];
+  /** TMDB recommendations/similar as keys; filtered to listed catalogue titles on read. */
+  recommendationKeys: TitleKey[];
+}
+
+/** The detail-page "Worth it?" block. Every part may be missing; the UI hides missing lines (F1-AC2). */
+export interface WorthIt {
+  hook: PitchHook | null;
+  /** 0–3 tags. */
+  vibes: Vibe[];
+  time: TimeCommitment | null;
+  /** Age rating for the configured region (CERTIFICATION_REGION, default US), e.g. "PG-13". */
+  certification: string | null;
+  verdict: Verdict;
+  /**
+   * P1 "If you liked…": recommended titles that are in our curated catalogue, most popular first (<= 6).
+   * The UI shows the first one, or — in a private island — the first one the user has stubbed
+   * ("You stubbed …"). Empty = hide the line.
+   */
+  likeCandidates: TitleSummary[];
+  /** "{hook} {time} · {verdict}", <= 160 chars, for meta description / og:description (F5). */
+  metaDescription: string;
 }
 
 /** Community aggregates (trigger-maintained in Postgres). */

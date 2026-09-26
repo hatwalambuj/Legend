@@ -618,6 +618,66 @@
    "createdAt": "2026-01-09T12:00:00Z",
    "updatedAt": "2026-01-09T12:00:00Z",
    "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000018",
+   "userId": "00000000-0000-4000-8000-000000000001",
+   "titleKey": "movie:1858",
+   "rating10": 4,
+   "body": "Loud. I could not tell which robot was which.",
+   "isSpoiler": false,
+   "stubId": null,
+   "createdAt": "2026-06-01T21:00:00Z",
+   "updatedAt": "2026-06-01T21:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000019",
+   "userId": "00000000-0000-4000-8000-000000000002",
+   "titleKey": "movie:1858",
+   "rating10": 6,
+   "body": "A childhood rewatch that did not survive adulthood, but the first transformation still rules.",
+   "isSpoiler": false,
+   "stubId": null,
+   "createdAt": "2026-06-02T21:00:00Z",
+   "updatedAt": "2026-06-02T21:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000020",
+   "userId": "00000000-0000-4000-8000-000000000003",
+   "titleKey": "movie:1858",
+   "rating10": 4,
+   "body": "",
+   "isSpoiler": false,
+   "stubId": null,
+   "createdAt": "2026-06-03T21:00:00Z",
+   "updatedAt": "2026-06-03T21:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000021",
+   "userId": "00000000-0000-4000-8000-000000000004",
+   "titleKey": "movie:1858",
+   "rating10": 6,
+   "body": "Fun for the cars, forgettable for everything else.",
+   "isSpoiler": false,
+   "stubId": null,
+   "createdAt": "2026-06-04T21:00:00Z",
+   "updatedAt": "2026-06-04T21:00:00Z",
+   "editedAt": null
+  },
+  {
+   "id": "20000000-0000-4000-8000-000000000022",
+   "userId": "00000000-0000-4000-8000-000000000005",
+   "titleKey": "movie:1858",
+   "rating10": 5,
+   "body": "",
+   "isSpoiler": false,
+   "stubId": null,
+   "createdAt": "2026-06-05T21:00:00Z",
+   "updatedAt": "2026-06-05T21:00:00Z",
+   "editedAt": null
   }
  ],
  "watchlist": [

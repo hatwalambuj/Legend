@@ -17,7 +17,6 @@ export class FixturesDetailProvider implements CatalogDetailProvider {
       directors: t.directors,
       cast: t.cast,
       trailer: t.trailer,
-      episodeCount: t.episodeCount,
       tmdbReviews: t.tmdbReviews,
     };
     return { fields };

@@ -29,6 +29,9 @@ Stubbed is a public, SEO-relevant web app (mobile + desktop) with a small curate
 - **Images:** hot-linked from `image.tmdb.org` at fixed sizes, `images.unoptimized: true` (ADR-007).
 - **Mutations:** Route Handlers under `/api/**` with JSON bodies (not Server Actions). One contract serves browser, tests and future mobile clients, and CSRF is handled uniformly (same-origin `Origin` + JSON content type).
 
+- **No AI/LLM anywhere (founder constraint, PRD D15).** No AI SDK, env var, API call or batch step, at runtime or in the nightly job. Every feature (including "Worth it?", ADR-009) is built from stored data, rules and templates. Enforced by an ESLint `no-restricted-imports` rule on AI SDK packages and `tests/lib/guards.test.ts` on `package.json`.
+- **Portable server:** nothing requires Vercel-specific APIs. The same build runs as a plain Node server (`next build && next start`, Node ≥ 20.9) on the founder's own machine or any VPS/container; only `DEMO_DATA_DIR` and the cron (GitHub Actions or a system cron running `npm run sync:catalog`) need choosing.
+
 ## Consequences
 - Zero cost up to about 10k MAU. The first paid step is Supabase Pro ($25/month) for backups and no pausing, then Vercel Pro ($20/month) when we go commercial.
 - If the product becomes commercial or bandwidth dominates, we move to Cloudflare Workers Paid + Hyperdrive to the same Postgres. The repository interfaces and plain SQL make that a days-long job.

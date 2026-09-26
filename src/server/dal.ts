@@ -10,6 +10,7 @@ import { AppError } from '@/lib/errors';
 import type { DataAccess } from '@/lib/data-access';
 import { normalizeSearch } from '@/lib/text';
 import type { TitleDetail, TitleSummary } from '@/lib/types';
+import { buildWorthIt } from '@/lib/worth-it';
 import { container } from './container';
 import { env, today } from './env';
 
@@ -37,23 +38,24 @@ export const dal: DataAccess = {
 
   async getTitle(mediaType, tmdbId) {
     const c = container();
-    const summary = await c.catalog.get(mediaType, tmdbId);
-    if (!summary) return null; // TODO(Backend, live): lazy-insert unlisted titles reachable by URL (SYSTEM_DESIGN §4.4)
-    try {
-      const d = await c.detail.getDetail(mediaType, tmdbId);
-      if (!d) return indexOnly(summary);
-      return {
-        ...summary,
-        ...d.summaryPatch,
-        ...d.fields,
-        detailStatus: 'fresh',
-        fetchedAt: new Date().toISOString(),
-      };
-    } catch (e) {
-      if (e instanceof AppError && e.code === 'not_implemented') return indexOnly(summary);
-      console.error('[dal.getTitle] detail failed, degrading to index-only', e);
-      return indexOnly(summary);
-    }
+    const entry = await c.catalog.getEntry(mediaType, tmdbId);
+    if (!entry) return null; // TODO(Backend, live): lazy-insert unlisted titles reachable by URL (SYSTEM_DESIGN §4.4)
+    const { summary, enrichment } = entry;
+    const [stats, recommended, base] = await Promise.all([
+      c.titleStates.stats(summary.key),
+      c.catalog.getMany(enrichment.recommendationKeys),
+      loadDetail(summary, enrichment.tagline),
+    ]);
+    // "Worth it?" is computed on read from stored data by pure rules (PRD §4.2, D15: no AI).
+    const worthIt = buildWorthIt({
+      title: base,
+      enrichment: { ...enrichment, tagline: base.tagline ?? enrichment.tagline },
+      overview: base.overview,
+      directors: base.directors,
+      stats,
+      recommended: [...recommended.values()],
+    });
+    return { ...base, worthIt };
   },
 
   async getTitleStats(key) {
@@ -120,15 +122,37 @@ export const dal: DataAccess = {
   },
 };
 
-function indexOnly(summary: TitleSummary): TitleDetail {
+type DetailWithoutPitch = Omit<TitleDetail, 'worthIt'>;
+
+async function loadDetail(
+  summary: TitleSummary,
+  storedTagline: string | null,
+): Promise<DetailWithoutPitch> {
+  try {
+    const d = await container().detail.getDetail(summary.mediaType, summary.tmdbId);
+    if (!d) return indexOnly(summary, storedTagline);
+    return {
+      ...summary,
+      ...d.summaryPatch,
+      ...d.fields,
+      detailStatus: 'fresh',
+      fetchedAt: new Date().toISOString(),
+    };
+  } catch (e) {
+    if (!(e instanceof AppError && e.code === 'not_implemented'))
+      console.error('[dal.getTitle] detail failed, degrading to index-only', e);
+    return indexOnly(summary, storedTagline);
+  }
+}
+
+function indexOnly(summary: TitleSummary, tagline: string | null): DetailWithoutPitch {
   return {
     ...summary,
     overview: summary.overviewShort,
-    tagline: null,
+    tagline,
     directors: [],
     cast: [],
     trailer: null,
-    episodeCount: null,
     tmdbReviews: [],
     detailStatus: 'index_only',
     fetchedAt: null,

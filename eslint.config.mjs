@@ -3,6 +3,29 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 
+// PRD D15 / BRIEF: the app and its jobs run with NO AI/LLM access. Importing an AI SDK is a lint error.
+const noAiSdks = {
+  group: [
+    'openai',
+    'openai/*',
+    '@anthropic-ai/*',
+    'ai',
+    '@ai-sdk/*',
+    '@google/generative-ai',
+    '@google/genai',
+    'langchain',
+    'langchain/*',
+    '@langchain/*',
+    'cohere-ai',
+    '@mistralai/*',
+    'ollama',
+    'replicate',
+    '@huggingface/*',
+    'llamaindex',
+  ],
+  message: 'No AI/LLM anywhere (PRD D15). Build it from stored data, rules and templates.',
+};
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -21,6 +44,7 @@ export default defineConfig([
           message: 'Never render HTML from data (review text is user input). See ADR-004.',
         },
       ],
+      'no-restricted-imports': ['error', { patterns: [noAiSdks] }],
     },
   },
   {
@@ -31,6 +55,7 @@ export default defineConfig([
         'error',
         {
           patterns: [
+            noAiSdks,
             {
               group: ['@/server/*', '@/server/**'],
               message:

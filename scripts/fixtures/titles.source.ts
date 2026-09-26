@@ -1183,6 +1183,35 @@ export const TITLES: SourceTitle[] = [
     colors: ['#6a9ab0', '#161c20'],
     edgeCase: 'INCLUDE: exactly 6.5 and exactly 200 votes (inclusive boundaries).',
   },
+  {
+    mediaType: 'movie',
+    tmdbId: 19908,
+    imdbId: 'tt1156398',
+    imdbRating: 7.5,
+    imdbVotes: 640_000,
+    title: 'Zombieland',
+    releaseDate: '2009-10-02',
+    voteAverage: 6.4,
+    voteCount: 16_200,
+    popularity: 28.3,
+    genreIds: [35, 27],
+    runtime: 88,
+    posterPath: null,
+    backdropPath: null,
+    overview:
+      'Two very different survivors of a zombie outbreak team up with a pair of con-artist sisters on a road trip to an amusement park.',
+    tagline: 'Nut up or shut up.',
+    directors: ['Ruben Fleischer'],
+    cast: [
+      ['Jesse Eisenberg', 'Columbus'],
+      ['Woody Harrelson', 'Tallahassee'],
+      ['Emma Stone', 'Wichita'],
+      ['Abigail Breslin', 'Little Rock'],
+    ],
+    colors: ['#9ab83a', '#161a0c'],
+    edgeCase:
+      'EXCLUDE: TMDB adjusted to 6.4 while the real IMDb rating is 7.5 → IMDb never changes catalogue membership (PRD A7-AC5). Also has no poster/backdrop path → generated poster.',
+  },
 
   /* ============================ TV ============================ */
   {

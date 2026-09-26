@@ -3,6 +3,9 @@
  * Catalogue: call `rpc('catalog_page', …)` and `rpc('catalog_search', …)` (supabase/migrations) —
  * they implement the exact order/cursor semantics of src/lib/catalog-order.ts.
  * Map Postgres errors: P0001 'rate_limited' → AppError('rate_limited'), 23505 → conflict/handle_taken.
+ * Row → TitleSummary must include imdb_rating/imdb_votes (numeric → number | null), episode_count and
+ * episode_runtime; `getEntry` also maps tagline, pitch_hook, certification, series_status, keywords and
+ * recommendation_keys into TitleEnrichment (see MemoryCatalogIndex.toSummary/toEnrichment for the shape).
  */
 import type {
   CatalogIndexRepository,
@@ -21,6 +24,7 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
   trending = ni('catalog.trending');
   search = ni('catalog.search');
   get = ni('catalog.get');
+  getEntry = ni('catalog.getEntry');
   getMany = ni('catalog.getMany');
   count = ni('catalog.count');
   lastSyncAt = ni('catalog.lastSyncAt');

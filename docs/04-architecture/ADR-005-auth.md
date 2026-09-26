@@ -25,9 +25,9 @@ Inputs: PRD B1–B3, E5; SYSTEM_DESIGN §7, §8.1
    - Profiles: public read. Owners can update `display_name`, `bio` and `avatar_url` only (column grants; the handle is immutable, B3-AC2).
    - Stubs and reviews: public read (public diaries, PRD B3), owner-only writes.
    - Watchlist: owner-only.
-   - `sync_*` and staging tables: no access for API roles at all.
+   - `sync_runs` and `catalog_staging`: no access for API roles at all. Job RPCs (`catalog_apply_staging`, `catalog_set_enrichment`, `catalog_set_imdb`, `catalog_*_due`, `catalog_purge_stale`, `catalog_rating_disagreements`) are service-role only. There are no third-party token tables (ADR-008).
    - These rules are tested in PGlite (`tests/db/migrations.test.ts`).
-3. **The service role** is server- and job-only: the nightly sync, catalogue cache writes (L2 detail cache, lazy unlisted inserts, rating enrichment), and export. It is never exposed as `NEXT_PUBLIC_*`.
+3. **The service role** is server- and job-only: the nightly sync (discover, enrich, IMDb ratings), catalogue cache writes (L2 detail cache, lazy unlisted inserts), editorial `pitch_hook`s, and export. It is never exposed as `NEXT_PUBLIC_*`.
 4. **CSRF:** mutations need a JSON content type plus a same-origin `Origin` header (`src/server/http.ts`), with SameSite=Lax cookies.
 
 ### Demo mode: local auth (see ADR-006)

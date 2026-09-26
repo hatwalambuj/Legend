@@ -18,7 +18,11 @@ import { slugify, truncate } from '../src/lib/text';
 import type { Palette, TitleKey, TmdbReview } from '../src/lib/types';
 import type { FixtureCatalog, FixtureSeed, FixtureTitle } from '../src/fixtures/schema';
 import { hashPassword } from '../src/server/auth/password';
+import { PITCH } from './fixtures/pitch.source';
 import { MOVIE_GENRES, TITLES, TMDB_REVIEWS, TV_GENRES } from './fixtures/titles.source';
+import { isTitleKey } from '../src/lib/keys';
+import { normalizeKeyword } from '../src/lib/vibes';
+import { HOOK_MAX } from '../src/lib/worth-it';
 import { REVIEWS, STUBS, USERS, WATCHLIST } from './fixtures/seed.source';
 
 const GENERATED_AT = '2026-09-26T00:00:00Z';
@@ -59,6 +63,13 @@ async function buildCatalog(): Promise<FixtureCatalog> {
     if (s.imdbId === null && (s.imdbRating !== null || s.imdbVotes !== null))
       throw new Error(`Fixture ${key} has an imdbRating but no imdbId`);
     const genreMap = s.mediaType === 'movie' ? MOVIE_GENRES : TV_GENRES;
+    const pitch = PITCH[key];
+    if (!pitch) throw new Error(`Missing "Worth it?" data for ${key} in pitch.source.ts`);
+    if (pitch.hook && pitch.hook.length > HOOK_MAX)
+      throw new Error(`Hook for ${key} is ${pitch.hook.length} chars (max ${HOOK_MAX})`);
+    for (const r of pitch.recs)
+      if (!isTitleKey(r) || !TITLES.some((t) => `${t.mediaType}:${t.tmdbId}` === r) || r === key)
+        throw new Error(`Bad recommendation ${r} on ${key}`);
     const [vibrant, base] = s.colors;
     const palette: Palette = {
       vibrant,
@@ -101,6 +112,8 @@ async function buildCatalog(): Promise<FixtureCatalog> {
       overviewShort: truncate(s.overview, 300),
       runtimeMinutes: s.mediaType === 'movie' ? (s.runtime ?? null) : null,
       seasonCount: s.mediaType === 'tv' ? (s.seasons ?? null) : null,
+      episodeCount: s.mediaType === 'tv' ? (s.episodes ?? null) : null,
+      episodeRuntimeMinutes: s.mediaType === 'tv' ? (pitch.epRuntime ?? null) : null,
       overview: s.overview,
       tagline: s.tagline ?? null,
       directors: s.directors,
@@ -108,11 +121,17 @@ async function buildCatalog(): Promise<FixtureCatalog> {
       trailer: s.trailerKey
         ? { site: 'YouTube', key: s.trailerKey, name: 'Official Trailer' }
         : null,
-      episodeCount: s.mediaType === 'tv' ? (s.episodes ?? null) : null,
       tmdbReviews,
+      pitchHook: pitch.hook,
+      certification: pitch.cert,
+      seriesStatus: s.mediaType === 'tv' ? (pitch.status ?? null) : null,
+      keywords: pitch.keywords.map(normalizeKeyword),
+      recommendationKeys: pitch.recs as TitleKey[],
       ...(s.edgeCase ? { edgeCase: s.edgeCase } : {}),
     });
   }
+  const extra = Object.keys(PITCH).filter((k) => !seen.has(k));
+  if (extra.length) throw new Error(`pitch.source.ts has unknown titles: ${extra.join(', ')}`);
   return { generatedAt: GENERATED_AT, titles };
 }
 
