@@ -1,0 +1,19 @@
+.page {
+  display: grid;
+  place-items: center;
+  padding: var(--s-10) var(--gutter);
+}
+.card {
+  width: 100%;
+  max-width: 440px;
+  padding: 24px;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-sheet);
+}
+.err {
+  margin: 0 0 16px;
+  color: var(--danger);
+  font-size: 14px;
+}

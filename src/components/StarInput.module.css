@@ -1,0 +1,57 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+}
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  border-radius: 8px;
+}
+.stars[aria-invalid='true'] {
+  outline: 1px dashed var(--danger);
+  outline-offset: 4px;
+}
+.star {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  color: var(--surface-3);
+}
+.fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--accent);
+  pointer-events: none;
+}
+.fill svg {
+  width: 32px;
+  min-width: 32px;
+}
+.left,
+.right {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 50%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.left {
+  left: 0;
+}
+.right {
+  right: 0;
+}
+.left:focus-visible,
+.right:focus-visible {
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+.val {
+  margin-left: 10px;
+  font: 600 13px/32px var(--font-mono);
+  color: var(--fg-2);
+  min-width: 4ch;
+}

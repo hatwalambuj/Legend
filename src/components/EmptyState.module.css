@@ -1,0 +1,22 @@
+.empty {
+  grid-column: 1 / -1;
+  padding: 56px 20px;
+  text-align: center;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-lg);
+  background: rgba(11, 11, 13, 0.55);
+}
+.empty > svg {
+  margin: 0 auto;
+  opacity: 0.8;
+}
+.title {
+  margin: 14px 0 6px;
+  font: 750 26px/1.1 var(--font-display);
+  letter-spacing: -0.03em;
+}
+.body {
+  margin: 0 auto 18px;
+  max-width: 400px;
+  color: var(--fg-2);
+}

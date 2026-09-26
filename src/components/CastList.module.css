@@ -1,0 +1,45 @@
+.h {
+  margin: 26px 0 12px;
+}
+.cast {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 6px 0 10px;
+  margin: 0;
+  list-style: none;
+  scrollbar-width: none;
+}
+.cast li {
+  flex: none;
+  width: 88px;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+.ph {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(140deg, var(--surface-3), var(--surface));
+  border: 1px solid var(--line-2);
+  color: var(--fg);
+  font: 700 16px/1 var(--font-display);
+}
+.ph img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.name {
+  display: block;
+  color: var(--fg);
+}
+.role {
+  display: block;
+  color: var(--fg-2);
+}

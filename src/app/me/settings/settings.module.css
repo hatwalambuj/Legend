@@ -1,0 +1,44 @@
+.grid {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.card {
+  padding: 20px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.card h2 {
+  margin: 0 0 8px;
+  font: 750 22px/1.1 var(--font-display);
+  letter-spacing: -0.03em;
+}
+.card p {
+  margin: 0 0 14px;
+  color: var(--fg-2);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dl {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.dl dt {
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin-bottom: 4px;
+}
+.dl dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.hint {
+  font-size: 14px;
+}

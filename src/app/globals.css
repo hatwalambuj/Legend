@@ -1,4 +1,5 @@
-/* Global base styles. OWNER: Frontend. Tokens live in src/styles/tokens.css (Architect, frozen). */
+/* Global base styles + shared primitives (buttons, chips, segmented, select, fields, tags).
+   OWNER: Frontend. Tokens live in src/styles/tokens.css (Architect, frozen) — never redefined here. */
 @import '../styles/tokens.css';
 
 *,
@@ -32,6 +33,9 @@ textarea {
 button {
   cursor: pointer;
 }
+button:disabled {
+  cursor: not-allowed;
+}
 img,
 svg {
   display: block;
@@ -41,6 +45,11 @@ svg {
   outline-offset: 3px;
   border-radius: 6px;
 }
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
 .sr-only {
   position: absolute !important;
   width: 1px;
@@ -48,6 +57,21 @@ svg {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 200;
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 650;
+  transition: top var(--d-2) var(--ease-out);
+}
+.skip-link:focus {
+  top: 12px;
 }
 .wrap {
   width: 100%;
@@ -58,6 +82,18 @@ svg {
 .mono {
   font-family: var(--font-mono);
 }
+main {
+  display: block;
+  min-height: 60vh;
+  padding-bottom: 96px;
+}
+@media (min-width: 900px) {
+  main {
+    padding-bottom: 0;
+  }
+}
+
+/* ---------- Demo pill ---------- */
 .demo-pill {
   display: inline-flex;
   align-items: center;
@@ -71,6 +107,8 @@ svg {
   color: var(--warn);
   background: rgba(245, 196, 81, 0.1);
   border: 1px solid rgba(245, 196, 81, 0.28);
+  white-space: nowrap;
+  cursor: help;
 }
 .demo-pill::before {
   content: '';
@@ -78,4 +116,372 @@ svg {
   height: 6px;
   border-radius: 50%;
   background: var(--warn);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  background: none;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    transform var(--d-1) var(--ease-out),
+    background var(--d-2),
+    border-color var(--d-2),
+    color var(--d-2);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.55;
+}
+.btn svg {
+  flex: none;
+}
+.btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.btn--primary:hover:not(:disabled) {
+  background: #ff6e50;
+}
+.btn--primary:active:not(:disabled) {
+  background: var(--accent-press);
+}
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--line-2);
+  color: var(--fg);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+.btn--ghost[aria-pressed='true'] {
+  border-color: var(--fg-2);
+}
+.btn--danger {
+  background: var(--danger);
+  color: var(--on-accent);
+}
+.btn--lg {
+  height: 56px;
+  padding: 0 26px;
+  font-size: 17px;
+}
+.btn--icon {
+  width: 44px;
+  padding: 0;
+}
+.btn--lg.btn--icon {
+  width: 56px;
+}
+.btn--sm {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.btn--block {
+  width: 100%;
+}
+.link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-2);
+}
+.link:hover {
+  text-decoration-color: currentColor;
+}
+.text-btn {
+  border: 0;
+  background: none;
+  padding: 6px 2px;
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Chips, tags ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font: 600 10.5px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.imdb-mark {
+  display: inline-grid;
+  place-items: center;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--imdb);
+  color: var(--on-imdb);
+  font: 800 12px/1 var(--font-ui);
+  letter-spacing: -0.02em;
+  border: 1px solid var(--imdb);
+}
+.imdb-mark--xs {
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 9px;
+}
+.eyebrow {
+  font: 500 12px/1.2 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+/* ---------- Segmented control ---------- */
+.seg {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  max-width: 100%;
+}
+.seg > button,
+.seg > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--fg-2);
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  transition:
+    background var(--d-2),
+    color var(--d-2);
+}
+.seg > button:hover,
+.seg > a:hover {
+  color: var(--fg);
+}
+.seg > [aria-pressed='true'],
+.seg > [aria-current='page'],
+.seg > [aria-checked='true'] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ---------- Native select in a pill ---------- */
+.select {
+  position: relative;
+  display: inline-block;
+}
+.select select {
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+}
+.select select option {
+  background: var(--surface);
+}
+.select::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--fg-2);
+  border-bottom: 2px solid var(--fg-2);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* ---------- Form fields ---------- */
+.field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.field > label,
+.field .lbl {
+  font: 500 11px/1.2 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.field input,
+.field textarea,
+.input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
+  background: rgba(0, 0, 0, 0.25);
+  outline: none;
+  transition: border-color var(--d-2);
+}
+.field textarea {
+  height: 96px;
+  padding: 12px 14px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.field input:focus,
+.field textarea:focus,
+.input:focus {
+  border-color: var(--fg-2);
+}
+.field input:focus-visible,
+.field textarea:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.field [aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.field-hint {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--danger);
+}
+.counter {
+  font: 500 12px/1 var(--font-mono);
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Section headers ---------- */
+.sec-h {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: var(--s-10) 0 var(--s-4);
+}
+.sec-h h2 {
+  margin: 0;
+  font: 750 clamp(24px, 3.2vw, 36px)/1 var(--font-display);
+  letter-spacing: -0.035em;
+}
+.sec-h .aside {
+  color: var(--fg-2);
+  font-size: 14px;
+}
+@media (min-width: 1200px) {
+  .sec-h {
+    margin-top: var(--s-14);
+  }
+}
+
+/* ---------- Glass surface ---------- */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* ---------- Page headings ---------- */
+.page-h {
+  margin: var(--s-10) 0 var(--s-6);
+}
+.page-h h1 {
+  margin: 10px 0 8px;
+  font: 800 clamp(36px, 6vw, 72px)/0.9 var(--font-display);
+  letter-spacing: -0.05em;
+}
+.page-h p {
+  margin: 0;
+  color: var(--fg-2);
+  max-width: 60ch;
+}
+
+/* ---------- Grain + shimmer keyframes (shared) ---------- */
+@keyframes shimmer {
+  to {
+    background-position: -300% 0;
+  }
+}
+@keyframes stamp-land {
+  0% {
+    transform: rotate(-24deg) scale(2.1);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--stamp-rot, 4deg)) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: every animation/transition collapses to ~1 ms (DESIGN §2.6). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+main:focus {
+  outline: none;
 }

@@ -1,0 +1,113 @@
+.search {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+  margin-left: auto;
+}
+.search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 40px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.04);
+  outline: none;
+  transition:
+    border-color var(--d-2),
+    background var(--d-2);
+}
+.search input::placeholder {
+  color: var(--fg-2);
+  opacity: 0.8;
+}
+.search input:focus {
+  border-color: var(--fg-2);
+  background: rgba(255, 255, 255, 0.07);
+}
+.search input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-2);
+  pointer-events: none;
+}
+.list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max(100%, 480px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-sheet);
+  z-index: 60;
+}
+.list[hidden] {
+  display: none;
+}
+.opt {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.opt[aria-selected='true'],
+.opt:hover {
+  background: var(--surface-2);
+}
+.opt[aria-selected='true'] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.thumb {
+  width: 32px;
+  border-radius: 4px;
+}
+.meta {
+  min-width: 0;
+}
+.meta b {
+  display: block;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta span {
+  font: 500 11px/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  text-transform: uppercase;
+}
+.score {
+  font: 800 18px/1 var(--font-display);
+  letter-spacing: -0.03em;
+}
+.score small {
+  margin-left: 3px;
+  font: 500 9px/1 var(--font-mono);
+  color: var(--fg-3);
+}
+.all {
+  display: block;
+  font-weight: 600;
+  color: var(--fg);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  margin-top: 4px;
+}
+.miss {
+  padding: 12px 10px;
+  color: var(--fg-3);
+  font-size: 14px;
+}

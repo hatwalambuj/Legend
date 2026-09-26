@@ -1,0 +1,61 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 12px;
+  margin: 0;
+  padding: var(--s-6) 0;
+  list-style: none;
+}
+.grid > li {
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px 18px;
+  }
+}
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px 24px;
+  }
+}
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 32px 24px;
+  }
+}
+@media (min-width: 1380px) {
+  .grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(62vw, 230px);
+  gap: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--gutter);
+  padding: 8px var(--gutter) 28px;
+  margin: 0 calc(var(--gutter) * -1);
+  list-style: none;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
+  scroll-margin: 0 var(--gutter);
+}
+@media (min-width: 1200px) {
+  .rail {
+    grid-auto-columns: 250px;
+    gap: 24px;
+  }
+}

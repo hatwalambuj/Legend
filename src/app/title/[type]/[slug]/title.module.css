@@ -1,0 +1,122 @@
+.detail {
+  padding: var(--s-8) 0 var(--s-10);
+  display: grid;
+  gap: var(--s-8);
+  grid-template-columns: minmax(0, 1fr);
+}
+.ticket {
+  width: min(58vw, 250px);
+  margin: 0 auto;
+}
+.info {
+  min-width: 0;
+}
+@media (min-width: 900px) {
+  .detail {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 24px;
+    padding: var(--s-14) 0;
+    align-items: start;
+  }
+  .ticket {
+    grid-column: 1 / span 4;
+    width: 100%;
+    max-width: 380px;
+    margin: 0;
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+  }
+  .info {
+    grid-column: 6 / span 7;
+  }
+}
+.crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  color: var(--fg-2);
+  font-size: 14px;
+}
+.crumbs li + li::before {
+  content: '/';
+  margin-right: 8px;
+  color: var(--fg-2);
+}
+.crumbs li[aria-current] {
+  color: var(--fg);
+  max-width: 24ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crumbs a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+}
+.crumbs a:hover {
+  color: var(--fg);
+}
+.title {
+  margin: 12px 0 16px;
+  font: 800 clamp(44px, 8vw, 104px) / 0.88 var(--font-display);
+  letter-spacing: -0.05em;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.notice {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(245, 196, 81, 0.28);
+  background: rgba(11, 11, 13, 0.6);
+  color: var(--warn);
+  font-size: 14px;
+}
+.status {
+  margin: 16px 0 0;
+  color: var(--fg-2);
+  font-size: 14px;
+}
+.overview {
+  max-width: 62ch;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--fg);
+  margin: 28px 0 20px;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 18px 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.facts dt {
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin-bottom: 6px;
+}
+.facts dd {
+  margin: 0;
+  font-weight: 550;
+}
+.trailer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+@media (min-width: 640px) {
+  .facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

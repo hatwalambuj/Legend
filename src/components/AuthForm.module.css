@@ -1,0 +1,138 @@
+.form {
+  display: block;
+}
+.title {
+  margin: 0 0 4px;
+  font: 750 26px/1.1 var(--font-display);
+  letter-spacing: -0.03em;
+}
+.sub {
+  margin: 0 0 18px;
+  color: var(--fg-2);
+  font-size: 14px;
+}
+.demo {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(245, 196, 81, 0.28);
+  background: rgba(245, 196, 81, 0.08);
+  color: var(--fg);
+  font-size: 13.5px;
+}
+.demo p {
+  margin: 0;
+  color: var(--warn);
+}
+.demo ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.demo li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  color: var(--fg-2);
+  font-size: 12px;
+}
+.demoAcc {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+  font-size: 13px;
+}
+.pw {
+  position: relative;
+}
+.pw input {
+  padding-right: 52px;
+}
+.eye {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+  border-radius: var(--r-sm);
+}
+.handle {
+  position: relative;
+}
+.handle span {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-2);
+  font-weight: 600;
+}
+.handle input {
+  padding-left: 30px;
+}
+.ok {
+  color: var(--ok);
+}
+.bad {
+  color: var(--danger);
+}
+.formError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+  margin: 0 0 12px;
+  color: var(--danger);
+  font-size: 14px;
+}
+.forgot {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+  font-size: 14px;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--fg-2);
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.or::before,
+.or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-2);
+}
+.magic {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--ok);
+}
+.switch {
+  margin: 18px 0 0;
+  text-align: center;
+  color: var(--fg-2);
+  font-size: 14px;
+}

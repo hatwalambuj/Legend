@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 24" width="96" height="24" role="img" aria-label="TMDB">
+  <!-- PLACEHOLDER: replace with the official TMDB logo from themoviedb.org/about/logos-attribution before launch (DESIGN §8). -->
+  <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#90CEA1"/><stop offset="1" stop-color="#01B4E4"/></linearGradient></defs>
+  <rect width="96" height="24" rx="12" fill="url(#g)"/>
+  <text x="48" y="16.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="12" letter-spacing="1" fill="#0D253F">TMDB</text>
+</svg>

@@ -1,0 +1,57 @@
+.panel {
+  margin-bottom: 8px;
+}
+.form {
+  position: relative;
+}
+.form input {
+  width: 100%;
+  height: 56px;
+  padding: 0 110px 0 48px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgba(11, 11, 13, 0.6);
+  font-size: 17px;
+  outline: none;
+}
+.form input:focus {
+  border-color: var(--fg-2);
+}
+.form input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-2);
+  pointer-events: none;
+}
+.status {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font: 500 12px/1 var(--font-mono);
+  color: var(--fg-2);
+}
+.recent {
+  margin-top: 20px;
+}
+.recent h2 {
+  margin: 0 0 10px;
+}
+.recent ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent .chip,
+.recent a {
+  min-height: 36px;
+}
