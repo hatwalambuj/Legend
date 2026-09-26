@@ -6,7 +6,7 @@
  * QA hooks (PRD §12 / SYSTEM_DESIGN §15.3):
  * - dev has 4 stubs on The Office (tv:2316) and 3 on Interstellar → rewatch counts.
  * - dev has a stub on Twilight (movie:8966, rated 6.4, unlisted) → hysteresis "BELOW 6.5 NOW".
- * - priya's Succession review is a spoiler; priya's Parasite review is marked "Posted on IMDb".
+ * - priya's Succession review is a spoiler.
  * - maya's Dune: Part Two review is linked to her stub #2.
  * - Dune: Part Two has 5 user ratings → the Stubbed community average unlocks.
  * - leo has no stubs/reviews → empty wallet state.
@@ -38,7 +38,6 @@ export interface SourceReview {
   body: string;
   isSpoiler?: boolean;
   stubId?: string;
-  imdbSharedAt?: string;
   createdAt: string;
   editedAt?: string;
 }
@@ -346,7 +345,6 @@ export const REVIEWS: SourceReview[] = [
     title: 'movie:496243',
     rating10: 10,
     body: 'Bong Joon-ho builds the house before he floods it. Every staircase in this film is an argument about class, and the peach scene is the most tense thing I have seen about fruit.',
-    imdbSharedAt: '2026-01-26T09:15:00Z',
     createdAt: '2026-01-25T22:00:00Z',
   },
   {

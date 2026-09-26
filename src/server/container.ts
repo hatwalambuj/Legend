@@ -8,7 +8,6 @@ import type { Container } from './ports';
 import { LocalAuthProvider } from './auth/local';
 import { SupabaseAuthProvider } from './auth/supabase';
 import { FixturesDetailProvider } from './providers/fixtures-detail';
-import { NoRatingEnricher } from './providers/ratings';
 import { TmdbDetailProvider } from './providers/tmdb';
 import { MemoryCatalogIndex } from './repositories/memory/catalog';
 import {
@@ -40,14 +39,12 @@ export function container(): Container {
       e.mode.catalog === 'tmdb' && e.tmdb
         ? new TmdbDetailProvider(e.tmdb)
         : new FixturesDetailProvider(),
-    ratings: new NoRatingEnricher(),
     auth: live ? new SupabaseAuthProvider() : new LocalAuthProvider(),
     profiles: live ? new SupabaseProfiles() : new MemoryProfiles(),
     stubs: live ? new SupabaseStubs() : new MemoryStubs(),
     reviews: live ? new SupabaseReviews() : new MemoryReviews(),
     watchlist: live ? new SupabaseWatchlist() : new MemoryWatchlist(),
     titleStates: live ? new SupabaseTitleStates() : new MemoryTitleStates(),
-    sync: [],
   };
   return instance;
 }

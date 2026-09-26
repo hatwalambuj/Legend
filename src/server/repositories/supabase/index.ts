@@ -43,7 +43,6 @@ export class SupabaseStubs implements StubRepository {
 export class SupabaseReviews implements ReviewRepository {
   upsert = ni('reviews.upsert');
   delete = ni('reviews.delete');
-  setImdbShared = ni('reviews.setImdbShared');
   listForTitle = ni('reviews.listForTitle');
   listForUser = ni('reviews.listForUser');
   countRecent = ni('reviews.countRecent');

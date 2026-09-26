@@ -143,8 +143,6 @@ export const upsertReviewSchema = titleRefSchema.extend({
   stubId: z.uuid().nullish(),
 });
 
-export const imdbSharedSchema = z.object({ shared: z.boolean() });
-
 export const updateProfileSchema = z
   .object({
     displayName: z.string().trim().min(1).max(50).optional(),
@@ -209,9 +207,6 @@ export interface ReviewUpsertResponse {
   created: boolean;
   /** True if the user has no stub for this title → UI offers "Add a stub too?" (D1-AC4). */
   suggestStub: boolean;
-}
-export interface ReviewResponse {
-  review: Review;
 }
 export interface WatchlistResponse {
   watchlisted: boolean;

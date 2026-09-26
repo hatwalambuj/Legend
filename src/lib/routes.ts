@@ -42,4 +42,10 @@ export function safeNext(next: string | null | undefined, fallback = '/'): strin
   return next;
 }
 
-export const IMDB_TITLE_URL = (imdbId: string) => `https://www.imdb.com/title/${imdbId}/reviews/`;
+/**
+ * Read-only link to the IMDb title page (the IMDb chip may link out). We never post to IMDb (ADR-008).
+ * Returns null for a missing or malformed id so callers can hide the link.
+ */
+export function imdbTitleHref(imdbId: string | null | undefined): string | null {
+  return imdbId && /^tt\d{7,10}$/.test(imdbId) ? `https://www.imdb.com/title/${imdbId}/` : null;
+}

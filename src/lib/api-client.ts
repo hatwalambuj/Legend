@@ -14,7 +14,6 @@ import type {
   MagicLinkResponse,
   MeResponse,
   ProfileResponse,
-  ReviewResponse,
   ReviewUpsertResponse,
   SearchResponse,
   SignInInput,
@@ -121,10 +120,6 @@ export const api = {
   upsertReview: (input: UpsertReviewInput) =>
     request<ReviewUpsertResponse>('PUT', '/api/reviews', input),
   deleteReview: (id: string) => request<void>('DELETE', `/api/reviews/${encodeURIComponent(id)}`),
-  setImdbShared: (id: string, shared: boolean) =>
-    request<ReviewResponse>('POST', `/api/reviews/${encodeURIComponent(id)}/imdb-shared`, {
-      shared,
-    }),
 
   /* ---- watchlist ---- */
   addToWatchlist: (mediaType: MediaType, tmdbId: number) =>

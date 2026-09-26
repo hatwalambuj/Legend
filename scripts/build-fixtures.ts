@@ -53,6 +53,11 @@ async function buildCatalog(): Promise<FixtureCatalog> {
     const key = `${s.mediaType}:${s.tmdbId}` as TitleKey;
     if (seen.has(key)) throw new Error(`Duplicate fixture ${key}`);
     seen.add(key);
+    // ADR-008: a title with an IMDb id must carry a real IMDb rating; without an id there is none.
+    if (s.imdbId !== null && (s.imdbRating === null || s.imdbVotes === null))
+      throw new Error(`Fixture ${key} has an imdbId but no imdbRating/imdbVotes`);
+    if (s.imdbId === null && (s.imdbRating !== null || s.imdbVotes !== null))
+      throw new Error(`Fixture ${key} has an imdbRating but no imdbId`);
     const genreMap = s.mediaType === 'movie' ? MOVIE_GENRES : TV_GENRES;
     const [vibrant, base] = s.colors;
     const palette: Palette = {
@@ -75,6 +80,8 @@ async function buildCatalog(): Promise<FixtureCatalog> {
       mediaType: s.mediaType,
       tmdbId: s.tmdbId,
       imdbId: s.imdbId,
+      imdbRating: s.imdbRating,
+      imdbVotes: s.imdbVotes,
       title: s.title,
       originalTitle: s.originalTitle ?? s.title,
       slug: slugify(s.title),
@@ -157,7 +164,6 @@ function buildSeed(catalogKeys: Set<string>): FixtureSeed {
       body: r.body,
       isSpoiler: r.isSpoiler ?? false,
       stubId: r.stubId ?? null,
-      imdbSharedAt: r.imdbSharedAt ?? null,
       createdAt: r.createdAt,
       updatedAt: r.editedAt ?? r.createdAt,
       editedAt: r.editedAt ?? null,

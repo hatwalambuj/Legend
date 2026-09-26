@@ -1,6 +1,8 @@
 -- =============================================================================
--- Stubbed — initial schema (ADR-002/003/004/005). OWNER: Architect.
+-- Stubbed — initial schema (ADR-002/003/004/005/008). OWNER: Architect.
 -- Later changes: add NEW migration files (Backend); never edit an applied migration.
+-- Pre-launch note: this file was revised in place for ADR-008 before it was ever applied to any
+-- environment (no third-party sync tables; IMDb rating cached on catalog_index).
 -- Verified offline by tests/db/migrations.test.ts (PGlite + a Supabase auth shim).
 -- =============================================================================
 
@@ -26,6 +28,10 @@ create table public.catalog_index (
   release_date     date,
   vote_average     numeric(3,1) not null check (vote_average between 0 and 10),
   vote_count       integer not null check (vote_count >= 0),
+  -- IMDb rating via OMDb (ADR-008). Written only by the nightly job (catalog_set_imdb). null = unknown.
+  imdb_rating      numeric(3,1) check (imdb_rating is null or imdb_rating between 1 and 10),
+  imdb_votes       integer check (imdb_votes is null or imdb_votes >= 0),
+  imdb_checked_at  timestamptz,                                -- last OMDb lookup; null = never (refresh first)
   popularity       real not null default 0,
   genre_ids        integer[] not null default '{}',
   genres           jsonb not null default '[]'::jsonb,        -- [{id, name}] denormalised for display
@@ -63,6 +69,8 @@ create index catalog_t_popularity   on public.catalog_index (media_type, popular
 create index catalog_search_trgm    on public.catalog_index using gin (search_text gin_trgm_ops);
 create index catalog_genres         on public.catalog_index using gin (genre_ids);
 create index catalog_needs_palette  on public.catalog_index (id) where needs_palette;
+-- Staggered OMDb refresh (1,000 calls/day): never-checked first, then the oldest check.
+create index catalog_imdb_due       on public.catalog_index (imdb_checked_at nulls first, id) where imdb_id is not null;
 
 -- Staging table for the nightly sync (same shape, no identity/constraints beyond the key).
 create unlogged table public.catalog_staging (
@@ -97,15 +105,6 @@ create table public.title_detail_cache (
   etag        text
 );
 create index title_detail_cache_fetched on public.title_detail_cache (fetched_at);
-
--- Optional IMDb badge via OMDb (P1), TTL 7 days.
-create table public.rating_enrichment (
-  title_id     bigint primary key references public.catalog_index (id) on delete cascade,
-  provider     text not null default 'omdb',
-  imdb_rating  numeric(3,1),
-  imdb_votes   integer,
-  fetched_at   timestamptz not null default now()
-);
 
 -- -----------------------------------------------------------------------------
 -- Users
@@ -168,7 +167,7 @@ create table public.stubs (
   note            text not null default '' check (char_length(note) <= 280),
   season_number   smallint,   -- v1 (episodes)
   episode_number  smallint,   -- v1
-  source          text not null default 'app' check (source in ('app', 'import', 'trakt')),
+  source          text not null default 'app' check (source in ('app', 'import')),  -- import = user's own file (v1)
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
@@ -185,7 +184,6 @@ create table public.reviews (
   body            text not null default '' check (char_length(body) <= 5000),
   is_spoiler      boolean not null default false,
   stub_id         uuid references public.stubs (id) on delete set null,
-  imdb_shared_at  timestamptz,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
   edited_at       timestamptz,
@@ -214,43 +212,18 @@ create table public.title_stats (
 );
 
 -- -----------------------------------------------------------------------------
--- Ops + v1 sync (outbox). Never readable by anon/authenticated.
+-- Ops (nightly job bookkeeping). Never readable by anon/authenticated.
+-- There are deliberately NO third-party sync tables (ADR-008): nothing is ever posted elsewhere.
 -- -----------------------------------------------------------------------------
 create table public.sync_runs (
   id           uuid primary key default gen_random_uuid(),
-  kind         text not null default 'catalog',
+  kind         text not null default 'catalog' check (kind in ('catalog', 'imdb')),
   started_at   timestamptz not null default now(),
   finished_at  timestamptz,
   status       text not null default 'running' check (status in ('running', 'ok', 'aborted', 'failed')),
   counts       jsonb not null default '{}'::jsonb,
   error        text
 );
-
-create table public.sync_accounts (      -- v1: Trakt / TMDB tokens, encrypted at app level (AES-GCM)
-  user_id            uuid not null references public.profiles (id) on delete cascade,
-  provider           text not null check (provider in ('trakt', 'tmdb')),
-  access_token_enc   text not null,
-  refresh_token_enc  text,
-  expires_at         timestamptz,
-  scopes             text,
-  connected_at       timestamptz not null default now(),
-  primary key (user_id, provider)
-);
-
-create table public.sync_jobs (          -- v1: outbox drained by a worker
-  id               uuid primary key default gen_random_uuid(),
-  user_id          uuid not null references public.profiles (id) on delete cascade,
-  provider         text not null,
-  entity           text not null check (entity in ('stub', 'review', 'rating')),
-  entity_id        uuid not null,
-  idempotency_key  text not null unique,
-  status           text not null default 'pending' check (status in ('pending', 'done', 'failed', 'dead')),
-  attempts         integer not null default 0,
-  next_attempt_at  timestamptz not null default now(),
-  last_error       text,
-  created_at       timestamptz not null default now()
-);
-create index sync_jobs_due on public.sync_jobs (next_attempt_at) where status = 'pending';
 
 -- =============================================================================
 -- Triggers: validation, rate limits (PRD E5), edited_at, aggregates
@@ -475,6 +448,10 @@ begin
     from public.catalog_staging s where s.run_id = p_run
   on conflict (media_type, tmdb_id) do update set
     imdb_id = coalesce(excluded.imdb_id, c.imdb_id),
+    -- A changed IMDb id invalidates the cached IMDb rating (re-fetched first by catalog_imdb_due).
+    imdb_rating     = case when coalesce(excluded.imdb_id, c.imdb_id) is distinct from c.imdb_id then null else c.imdb_rating end,
+    imdb_votes      = case when coalesce(excluded.imdb_id, c.imdb_id) is distinct from c.imdb_id then null else c.imdb_votes end,
+    imdb_checked_at = case when coalesce(excluded.imdb_id, c.imdb_id) is distinct from c.imdb_id then null else c.imdb_checked_at end,
     title = excluded.title, original_title = excluded.original_title, slug = excluded.slug,
     overview_short = excluded.overview_short, release_date = excluded.release_date,
     vote_average = excluded.vote_average, vote_count = excluded.vote_count, popularity = excluded.popularity,
@@ -493,6 +470,37 @@ begin
 
   delete from public.catalog_staging where run_id = p_run;
   return jsonb_build_object('upserted', v_upserted, 'unlisted', v_unlisted);
+end $$;
+
+-- IMDb ratings via OMDb (ADR-008), service role only. The job asks for at most its daily budget
+-- (OMDB_DAILY_BUDGET, <= 1,000/day free tier): never-checked titles first (new rows, changed ids), then
+-- listed before unlisted, then the oldest check, skipping anything checked within the TTL (7 days).
+create or replace function public.catalog_imdb_due(p_limit integer, p_ttl_days integer default 7)
+returns table (id bigint, imdb_id text)
+language sql stable security definer set search_path = public as $$
+  select c.id, c.imdb_id from public.catalog_index c
+   where c.imdb_id is not null
+     and (c.imdb_checked_at is null or c.imdb_checked_at < now() - make_interval(days => greatest(p_ttl_days, 1)))
+   order by (c.imdb_checked_at is null) desc, c.is_listed desc, c.imdb_checked_at asc nulls first,
+            c.popularity desc, c.id
+   limit least(greatest(p_limit, 0), 1000)
+$$;
+
+-- p_rows = [{ "id": 1, "rating": 8.5 | null, "votes": 684000 | null }, ...]. A null rating means OMDb had
+-- none ("N/A"); the row is still marked as checked so it is not retried before the TTL.
+create or replace function public.catalog_set_imdb(p_rows jsonb)
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_count integer;
+begin
+  update public.catalog_index c set
+    imdb_rating     = case when r.rating between 1 and 10 then round(r.rating, 1) else null end,
+    imdb_votes      = case when r.rating between 1 and 10 and r.votes >= 0 then r.votes else null end,
+    imdb_checked_at = now()
+  from jsonb_to_recordset(p_rows) as r(id bigint, rating numeric, votes integer)
+  where c.id = r.id;
+  get diagnostics v_count = row_count;
+  return v_count;
 end $$;
 
 -- Retention (TMDB: cache <= 6 months). Run by the nightly job.
@@ -519,20 +527,16 @@ end $$;
 alter table public.catalog_index      enable row level security;
 alter table public.catalog_staging    enable row level security;
 alter table public.title_detail_cache enable row level security;
-alter table public.rating_enrichment  enable row level security;
 alter table public.title_stats        enable row level security;
 alter table public.profiles           enable row level security;
 alter table public.stubs              enable row level security;
 alter table public.reviews            enable row level security;
 alter table public.watchlist          enable row level security;
 alter table public.sync_runs          enable row level security;
-alter table public.sync_accounts      enable row level security;
-alter table public.sync_jobs          enable row level security;
 
 -- Public catalogue data: read-only for everyone.
 create policy catalog_read      on public.catalog_index      for select to anon, authenticated using (true);
 create policy detail_read       on public.title_detail_cache for select to anon, authenticated using (true);
-create policy enrichment_read   on public.rating_enrichment  for select to anon, authenticated using (true);
 create policy stats_read        on public.title_stats        for select to anon, authenticated using (true);
 
 -- Profiles: public read; users update their own row (handle is not updatable: column grants below).
@@ -559,17 +563,19 @@ create policy watchlist_read    on public.watchlist for select to authenticated 
 create policy watchlist_insert  on public.watchlist for insert to authenticated with check (user_id = (select auth.uid()));
 create policy watchlist_delete  on public.watchlist for delete to authenticated using (user_id = (select auth.uid()));
 
--- catalog_staging, sync_runs, sync_accounts, sync_jobs: no policies → no access except service_role.
+-- catalog_staging, sync_runs: no policies → no access except service_role.
 
 -- Column-level privileges (defence in depth on top of RLS).
 revoke update on public.profiles from anon, authenticated;
 grant  update (display_name, bio, avatar_url) on public.profiles to authenticated;
-revoke all on public.catalog_staging, public.sync_runs, public.sync_accounts, public.sync_jobs from anon, authenticated;
-revoke insert, update, delete on public.catalog_index, public.title_detail_cache, public.rating_enrichment,
-  public.title_stats from anon, authenticated;
+revoke all on public.catalog_staging, public.sync_runs from anon, authenticated;
+revoke insert, update, delete on public.catalog_index, public.title_detail_cache, public.title_stats
+  from anon, authenticated;
 
 revoke execute on function public.catalog_apply_staging(uuid) from public, anon, authenticated;
 revoke execute on function public.catalog_purge_stale() from public, anon, authenticated;
+revoke execute on function public.catalog_imdb_due(integer, integer) from public, anon, authenticated;
+revoke execute on function public.catalog_set_imdb(jsonb) from public, anon, authenticated;
 revoke execute on function public.title_stats_apply(bigint, int, int, int, int) from public, anon, authenticated;
 grant  execute on function public.handle_available(text) to anon, authenticated;
 grant  execute on function public.catalog_page(text, text, jsonb, integer, integer[]) to anon, authenticated;

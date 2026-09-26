@@ -39,7 +39,10 @@ const rawSchema = z.object({
 
   TMDB_READ_TOKEN: optionalString,
   TMDB_API_KEY: optionalString,
+  /** OMDb key: used ONLY by the nightly job to cache IMDb ratings on catalog_index (ADR-008). */
   OMDB_API_KEY: optionalString,
+  OMDB_DAILY_BUDGET: num(900),
+  OMDB_TTL_DAYS: num(7),
 
   NEXT_PUBLIC_SUPABASE_URL: optionalString,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
@@ -65,12 +68,9 @@ const rawSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => undefined)),
 
-  FEATURE_OMDB_BADGE: bool,
-  FEATURE_TRAKT_SYNC: bool,
-  TRAKT_CLIENT_ID: optionalString,
-  TRAKT_CLIENT_SECRET: optionalString,
-  TRAKT_REDIRECT_URI: optionalString,
-  SYNC_TOKEN_ENC_KEY: optionalString,
+  SYNC_GUARD_MIN: num(5000),
+  SYNC_GUARD_MAX: num(25000),
+  SYNC_GUARD_MAX_DELTA: num(0.2),
 
   VERCEL: optionalString,
 });
@@ -80,7 +80,11 @@ export interface ServerEnv {
   siteUrl: string;
   mode: AppMode;
   tmdb: { readToken?: string; apiKey?: string } | null;
-  omdbApiKey?: string;
+  /**
+   * OMDb (IMDb ratings) for the nightly job only — the request path never calls OMDb (ADR-008).
+   * `dailyBudget` stays under the free tier's 1,000 calls/day; ratings older than `ttlDays` are refreshed.
+   */
+  omdb: { apiKey: string; dailyBudget: number; ttlDays: number } | null;
   supabase: { url: string; anonKey: string; serviceRoleKey?: string } | null;
   revalidateSecret?: string;
   curation: CurationRule;
@@ -93,7 +97,8 @@ export interface ServerEnv {
     /** Fixed "today" for deterministic demos/E2E ('YYYY-MM-DD'), else null (use the clock). */
     today: string | null;
   };
-  trakt: { clientId: string; clientSecret: string; redirectUri?: string; encKey?: string } | null;
+  /** Nightly sync guardrails (ADR-002): listed count per type within [min, max], delta vs last ok run. */
+  syncGuards: { min: number; max: number; maxDelta: number };
 }
 
 /** Well-known demo accounts from src/fixtures/users.json (password shown in the demo pill). */
@@ -143,17 +148,12 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
   }
 
   const isDemo = catalog !== 'tmdb' || data !== 'supabase';
-  const traktEnabled = e.FEATURE_TRAKT_SYNC && Boolean(e.TRAKT_CLIENT_ID && e.TRAKT_CLIENT_SECRET);
 
   const mode: AppMode = {
     catalog,
     data,
     isDemo,
     images: e.IMAGE_MODE,
-    features: {
-      omdbBadge: e.FEATURE_OMDB_BADGE && Boolean(e.OMDB_API_KEY) && catalog === 'tmdb',
-      traktSync: traktEnabled && data === 'supabase',
-    },
     demoAccounts: data === 'local' ? DEMO_ACCOUNTS : [],
   };
 
@@ -179,7 +179,13 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     siteUrl: e.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
     mode,
     tmdb: hasTmdb ? { readToken: e.TMDB_READ_TOKEN, apiKey: e.TMDB_API_KEY } : null,
-    omdbApiKey: e.OMDB_API_KEY,
+    omdb: e.OMDB_API_KEY
+      ? {
+          apiKey: e.OMDB_API_KEY,
+          dailyBudget: Math.max(0, Math.min(1000, Math.floor(e.OMDB_DAILY_BUDGET))),
+          ttlDays: Math.max(1, e.OMDB_TTL_DAYS),
+        }
+      : null,
     supabase:
       hasSupabaseUrl && anonKey
         ? { url: e.NEXT_PUBLIC_SUPABASE_URL!, anonKey, serviceRoleKey: e.SUPABASE_SERVICE_ROLE_KEY }
@@ -196,14 +202,11 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       resetOnBoot: e.DEMO_RESET_ON_BOOT,
       today: e.DEMO_TODAY ?? null,
     },
-    trakt: traktEnabled
-      ? {
-          clientId: e.TRAKT_CLIENT_ID!,
-          clientSecret: e.TRAKT_CLIENT_SECRET!,
-          redirectUri: e.TRAKT_REDIRECT_URI,
-          encKey: e.SYNC_TOKEN_ENC_KEY,
-        }
-      : null,
+    syncGuards: {
+      min: e.SYNC_GUARD_MIN,
+      max: e.SYNC_GUARD_MAX,
+      maxDelta: e.SYNC_GUARD_MAX_DELTA,
+    },
   };
 }
 

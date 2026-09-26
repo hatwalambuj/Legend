@@ -46,7 +46,6 @@ export interface FixtureReview {
   body: string;
   isSpoiler: boolean;
   stubId: string | null;
-  imdbSharedAt: IsoDateTime | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
   editedAt: IsoDateTime | null;

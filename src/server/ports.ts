@@ -4,7 +4,7 @@
  * Backend may ADD methods; removing/renaming requires updating the ADRs.
  *
  * Two implementations of each data port:
- *   live  : Supabase (Postgres + RLS + Auth), TMDB, OMDb, Trakt
+ *   live  : Supabase (Postgres + RLS + Auth), TMDB (detail), OMDb (nightly job only)
  *   demo  : in-memory store persisted to a JSON file (src/server/repositories/memory), fixtures, local auth
  * Selection happens once in src/server/container.ts from env().mode.
  */
@@ -59,10 +59,24 @@ export interface CatalogDetailProvider {
   ): Promise<{ fields: DetailFields; summaryPatch?: Partial<TitleSummary> } | null>;
 }
 
-/** Optional IMDb rating badge (P1). */
-export interface RatingEnricher {
-  readonly name: 'omdb' | 'none';
-  getImdbRating(imdbId: string): Promise<{ rating: number; votes: number } | null>;
+/**
+ * IMDb rating lookup (ADR-008). Used ONLY by the nightly job (scripts/sync-catalog.ts), which caches the
+ * result on catalog_index.imdb_rating / imdb_votes. Never called while serving a request, so it is not
+ * part of the Container. Implementation: src/server/providers/omdb.ts.
+ */
+export interface ImdbRating {
+  /** 1.0–10.0, one decimal; null when OMDb has no rating ("N/A"). */
+  rating: number | null;
+  votes: number | null;
+}
+
+export interface ImdbRatingProvider {
+  readonly name: 'omdb';
+  /**
+   * null = OMDb does not know this id. Throws `OmdbLimitError` when the daily quota is exhausted
+   * (the job stops and resumes tomorrow) and `UpstreamError`-like errors on network/5xx.
+   */
+  getImdbRating(imdbId: string): Promise<ImdbRating | null>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -141,7 +155,6 @@ export interface ReviewRepository {
     stubId: string | null;
   }): Promise<{ review: Review; created: boolean }>;
   delete(userId: string, id: string): Promise<void>;
-  setImdbShared(userId: string, id: string, shared: boolean): Promise<Review>;
   listForTitle(
     titleKey: TitleKey,
     opts: { sort: ReviewSort; cursor?: string | null; limit: number },
@@ -167,26 +180,18 @@ export interface TitleStateRepository {
   stats(titleKey: TitleKey): Promise<TitleStats>;
 }
 
-/* ------------------------------------------------------------------ */
-/* v1: outbound sync (feature-flagged, ADR-004)                        */
-/* ------------------------------------------------------------------ */
-
-export interface SyncAdapter {
-  readonly name: 'trakt' | 'tmdb';
-  pushStub(userId: string, stub: Stub): Promise<void>;
-  pushReview(userId: string, review: Review): Promise<void>;
-}
-
-/** Everything the data-access layer and route handlers need, resolved per request. */
+/**
+ * Everything the data-access layer and route handlers need, resolved once per process.
+ * There is deliberately no outbound sync adapter: nothing is ever posted to IMDb, TMDB, Trakt or
+ * any other third party (ADR-008). User data leaves only via the user's own export (§5.16).
+ */
 export interface Container {
   catalog: CatalogIndexRepository;
   detail: CatalogDetailProvider;
-  ratings: RatingEnricher;
   auth: AuthProvider;
   profiles: ProfileRepository;
   stubs: StubRepository;
   reviews: ReviewRepository;
   watchlist: WatchlistRepository;
   titleStates: TitleStateRepository;
-  sync: SyncAdapter[];
 }

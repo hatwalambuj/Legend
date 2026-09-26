@@ -43,7 +43,10 @@ export interface Genre {
   name: string;
 }
 
-/** Everything a ticket card / list row needs. Comes from catalog_index; never requires a TMDB call. */
+/**
+ * Everything a ticket card / list row needs. Comes from catalog_index; never requires a TMDB or OMDb call.
+ * IMDb fields (ADR-008) are filled by the nightly job from OMDb and cached on the catalogue row.
+ */
 export interface TitleSummary {
   key: TitleKey;
   mediaType: MediaType;
@@ -56,8 +59,16 @@ export interface TitleSummary {
   /** Movie primary release date or TV first-air date. */
   releaseDate: IsoDate;
   year: number;
+  /** TMDB community average, 0–10, one decimal. Always present (curation input). */
   voteAverage: number;
   voteCount: number;
+  /**
+   * IMDb user rating 1.0–10.0 (one decimal) via OMDb, or null when unknown (no imdbId, OMDb "N/A",
+   * or not fetched yet). UI: show the "IMDb x.x" chip only when non-null — never render null as 0.
+   */
+  imdbRating: number | null;
+  /** IMDb vote count via OMDb, or null when unknown. */
+  imdbVotes: number | null;
   popularity: number;
   genres: Genre[];
   posterPath: string | null;
@@ -97,12 +108,33 @@ export interface TmdbReview {
 }
 
 /**
+ * RESERVED for the deterministic "Worth it?" decision block (PRD §4.2 / D14). Every field is optional
+ * until the PM spec is handed over: producers may omit them and the UI must treat "absent" as "unknown"
+ * (hide the line). Everything here is computed from API data, our own mapping tables and templates —
+ * never by an AI/LLM, at runtime or in the nightly job (BRIEF: no AI).
+ */
+export interface TitlePitchFields {
+  /** Our own hand-written, spoiler-free one-liner (<= 120 chars). Not TMDB text. */
+  pitchHook?: string | null;
+  /** Up to 3 mood tags from our versioned genre/keyword mapping (e.g. "Slow burn"). */
+  vibes?: string[];
+  /** Age rating for the configured region, e.g. "PG-13", "TV-MA". */
+  certification?: string | null;
+  /** TV: typical episode length in minutes. */
+  episodeRuntimeMinutes?: number | null;
+  /** TV: TMDB series status, normalised. */
+  seriesStatus?: 'returning' | 'ended' | 'canceled' | 'in_production' | 'planned' | null;
+  /** TMDB recommendations filtered to our catalogue ("If you liked…"). */
+  recommendationKeys?: TitleKey[];
+}
+
+/**
  * Full title page payload. `detailStatus`:
  * - 'fresh'      : fetched live (or cached < 24h)
  * - 'stale'      : TMDB failed, served from the last good copy (show "details may be out of date")
  * - 'index_only' : no detail available; only TitleSummary fields are real (show "More details unavailable")
  */
-export interface TitleDetail extends TitleSummary {
+export interface TitleDetail extends TitleSummary, TitlePitchFields {
   overview: string;
   tagline: string | null;
   /** Movie: directors. TV: creators. */
@@ -176,6 +208,7 @@ export interface WalletItem {
   lastWatchedOn: IsoDate;
 }
 
+/** A Stubbed review. Stored only in our database; never posted to IMDb, TMDB or anyone else (ADR-008). */
 export interface Review {
   id: string;
   titleKey: TitleKey;
@@ -188,8 +221,6 @@ export interface Review {
   stubId: string | null;
   /** The `number` of the linked stub ("STUB #2"), if any. */
   stubNumber: number | null;
-  /** Set only when the user confirms they posted it on IMDb (PRD D3-AC4). */
-  imdbSharedAt: IsoDateTime | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
   /** Non-null if the body/rating changed after creation ("EDITED" tag). */
@@ -230,10 +261,6 @@ export interface AppMode {
   isDemo: boolean;
   /** 'tmdb' = hot-link image.tmdb.org; 'off' = always render generated posters (offline/E2E). */
   images: 'tmdb' | 'off';
-  features: {
-    omdbBadge: boolean;
-    traktSync: boolean;
-  };
   /** Demo credentials shown in the demo pill tooltip / auth sheet (demo mode only). */
   demoAccounts: { handle: string; email: string; password: string }[];
 }

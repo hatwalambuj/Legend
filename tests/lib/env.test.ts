@@ -29,6 +29,18 @@ describe('env / mode resolution (ADR-006)', () => {
   it('explicit CATALOG_MODE=tmdb without a key fails fast', () => {
     expect(() => parseEnv({ CATALOG_MODE: 'tmdb' })).toThrow(EnvError);
   });
+  it('OMDb is job-only config with a budget capped under the free tier', () => {
+    expect(parseEnv({}).omdb).toBeNull();
+    expect(parseEnv({ OMDB_API_KEY: 'k' }).omdb).toEqual({
+      apiKey: 'k',
+      dailyBudget: 900,
+      ttlDays: 7,
+    });
+    expect(parseEnv({ OMDB_API_KEY: 'k', OMDB_DAILY_BUDGET: '5000' }).omdb?.dailyBudget).toBe(1000);
+    // OMDb never changes the app mode (the request path does not call it).
+    expect(parseEnv({ OMDB_API_KEY: 'k' }).mode.isDemo).toBe(true);
+    expect(parseEnv({}).syncGuards).toEqual({ min: 5000, max: 25000, maxDelta: 0.2 });
+  });
   it('reads curation overrides', () => {
     const e = parseEnv({
       CATALOG_MIN_RATING: '7',
@@ -57,11 +69,13 @@ describe('.env.example', () => {
         'TMDB_READ_TOKEN',
         'SUPABASE_SERVICE_ROLE_KEY',
         'OMDB_API_KEY',
-        'TRAKT_CLIENT_ID',
       ]),
     );
+    // ADR-008: no third-party posting → no Trakt / sync / feature-flag variables at all.
+    expect(Object.keys(vars).filter((k) => /TRAKT|SYNC_TOKEN|FEATURE_/.test(k))).toEqual([]);
     const e = parseEnv(vars);
     expect(e.mode.isDemo).toBe(true);
     expect(e.demo.today).toBeNull();
+    expect(e.omdb).toBeNull();
   });
 });

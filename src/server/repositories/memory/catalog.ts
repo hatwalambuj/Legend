@@ -33,6 +33,8 @@ export function toSummary(t: FixtureTitle, listed: boolean): TitleSummary {
     year: t.year,
     voteAverage: t.voteAverage,
     voteCount: t.voteCount,
+    imdbRating: t.imdbRating,
+    imdbVotes: t.imdbVotes,
     popularity: t.popularity,
     genres: t.genres,
     posterPath: t.posterPath,

@@ -88,7 +88,6 @@ export class MemoryStubs implements StubRepository {
 export class MemoryReviews implements ReviewRepository {
   upsert = () => notImplemented('MemoryReviews.upsert');
   delete = () => notImplemented('MemoryReviews.delete');
-  setImdbShared = () => notImplemented('MemoryReviews.setImdbShared');
   listForTitle = async () => empty<never>();
   listForUser = async () => empty<never>();
   countRecent = async () => 0;
