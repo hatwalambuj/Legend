@@ -112,11 +112,7 @@ export function Reviews({
       </div>
       <div className={styles.tabs}>
         <div className="seg" role="group" aria-label="Review source">
-          <button
-            type="button"
-            aria-pressed={src === 'stubbed'}
-            onClick={() => setSrc('stubbed')}
-          >
+          <button type="button" aria-pressed={src === 'stubbed'} onClick={() => setSrc('stubbed')}>
             On Stubbed · {stubbedCount}
           </button>
           <button type="button" aria-pressed={src === 'tmdb'} onClick={() => setSrc('tmdb')}>

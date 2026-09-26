@@ -8,7 +8,12 @@ afterEach(cleanup);
 
 describe('ScoreChips (ADR-008)', () => {
   it('shows TMDB and IMDb with votes, source label and a read-only IMDb link', () => {
-    render(<ScoreChips title={makeTitle()} stats={{ stubCount: 9, reviewCount: 3, ratingAvg10: null, ratingCount: 3 }} />);
+    render(
+      <ScoreChips
+        title={makeTitle()}
+        stats={{ stubCount: 9, reviewCount: 3, ratingAvg10: null, ratingCount: 3 }}
+      />,
+    );
     expect(screen.getByTestId('tmdb-rating').textContent).toContain('6.9k votes');
     const imdb = screen.getByTestId('imdb-rating');
     expect(imdb.textContent).toContain('8.5');

@@ -33,7 +33,10 @@ export default async function SettingsPage() {
           <section className={styles.card} aria-labelledby="set-profile">
             <h2 id="set-profile">Profile</h2>
             <p>
-              {u.displayName} · <Link className="link" href={profileHref(u.handle)}>@{u.handle}</Link>
+              {u.displayName} ·{' '}
+              <Link className="link" href={profileHref(u.handle)}>
+                @{u.handle}
+              </Link>
             </p>
             {profile && <EditProfile profile={profile.profile} />}
           </section>
@@ -55,12 +58,25 @@ export default async function SettingsPage() {
           </section>
           <section className={styles.card} id="export" aria-labelledby="set-export">
             <h2 id="set-export">Export</h2>
-            <p>Your stubs, ratings and reviews are yours. Letterboxd CSV imports straight into Letterboxd.</p>
+            <p>
+              Your stubs, ratings and reviews are yours. Letterboxd CSV imports straight into
+              Letterboxd.
+            </p>
             <div className={styles.row}>
-              <a className="btn btn--ghost" href={api.exportUrl('letterboxd')} download data-testid="export-letterboxd">
+              <a
+                className="btn btn--ghost"
+                href={api.exportUrl('letterboxd')}
+                download
+                data-testid="export-letterboxd"
+              >
                 Letterboxd CSV
               </a>
-              <a className="btn btn--ghost" href={api.exportUrl('json')} download data-testid="export-json">
+              <a
+                className="btn btn--ghost"
+                href={api.exportUrl('json')}
+                download
+                data-testid="export-json"
+              >
                 JSON
               </a>
             </div>

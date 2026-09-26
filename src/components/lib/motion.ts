@@ -100,9 +100,21 @@ export function tearToWallet(stubEl: HTMLElement | null): Promise<void> {
   const anim = fly.animate(
     [
       { transform: 'translate(0,0) rotate(0)', offset: 0, easing: 'cubic-bezier(.2,.8,.2,1)' },
-      { transform: 'translate(2px,4px) rotate(-4deg)', offset: 0.14, easing: 'cubic-bezier(.55,0,.75,.05)' },
-      { transform: 'translate(12px,34px) rotate(8deg) scale(.97)', offset: 0.38, easing: 'cubic-bezier(.5,0,.2,1)' },
-      { transform: `translate(${dx}px,${dy}px) rotate(22deg) scale(.12)`, opacity: 0.35, offset: 1 },
+      {
+        transform: 'translate(2px,4px) rotate(-4deg)',
+        offset: 0.14,
+        easing: 'cubic-bezier(.55,0,.75,.05)',
+      },
+      {
+        transform: 'translate(12px,34px) rotate(8deg) scale(.97)',
+        offset: 0.38,
+        easing: 'cubic-bezier(.5,0,.2,1)',
+      },
+      {
+        transform: `translate(${dx}px,${dy}px) rotate(22deg) scale(.12)`,
+        opacity: 0.35,
+        offset: 1,
+      },
     ],
     { duration: 1000, easing: 'linear' },
   );

@@ -35,7 +35,10 @@ export function ReviewComposer({
     e.preventDefault();
     if (!rating) {
       setError('Pick a star rating first — half stars are fine.');
-      document.getElementById(`${uid}-stars`)?.querySelector<HTMLElement>('[tabindex="0"]')?.focus();
+      document
+        .getElementById(`${uid}-stars`)
+        ?.querySelector<HTMLElement>('[tabindex="0"]')
+        ?.focus();
       return;
     }
     setError(null);

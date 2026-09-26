@@ -83,7 +83,11 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
         {editing && (
           <StubDetailsForm
             target={target}
-            initial={{ watchedOn: entry.watchedOn, watchedWhere: entry.watchedWhere, note: entry.note }}
+            initial={{
+              watchedOn: entry.watchedOn,
+              watchedWhere: entry.watchedWhere,
+              note: entry.note,
+            }}
             headingId={`edit-${entry.id}`}
             heading="Edit stub"
             submitLabel="Save"

@@ -7,7 +7,11 @@ export function SpoilerBody({ children, className }: { children: string; classNa
   const [open, setOpen] = useState(false);
   return (
     <div className={`${styles.spoiler} ${open ? styles.revealed : ''}`}>
-      <p className={className} aria-hidden={open ? undefined : true} data-spoiler={open ? 'shown' : 'hidden'}>
+      <p
+        className={className}
+        aria-hidden={open ? undefined : true}
+        data-spoiler={open ? 'shown' : 'hidden'}
+      >
         {children}
       </p>
       {!open && (

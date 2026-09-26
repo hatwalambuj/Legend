@@ -35,25 +35,44 @@ export default function AboutPage() {
               rel="noopener noreferrer"
               className={styles.logo}
             >
-              <Image src="/tmdb-logo.svg" alt="The Movie Database (TMDB)" width={120} height={30} unoptimized />
+              <Image
+                src="/tmdb-logo.svg"
+                alt="The Movie Database (TMDB)"
+                width={120}
+                height={30}
+                unoptimized
+              />
             </a>
             <p>
               This product uses the TMDB API but is not endorsed or certified by TMDB. Titles,
               posters, cast, TMDB ratings and TMDB community reviews come from{' '}
-              <a className="link" href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">
+              <a
+                className="link"
+                href="https://www.themoviedb.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 themoviedb.org
               </a>
               .
             </p>
             <p>
               IMDb ratings are provided by{' '}
-              <a className="link" href="https://www.omdbapi.com/" target="_blank" rel="noopener noreferrer">
+              <a
+                className="link"
+                href="https://www.omdbapi.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 OMDb
               </a>{' '}
               and refreshed nightly. Stubbed is not affiliated with IMDb. When a title has no IMDb
               rating, we simply don&apos;t show one.
             </p>
-            <p>The &ldquo;Worth it?&rdquo; summary is built from these ratings, runtimes and our own hand-written notes by fixed rules — no AI.</p>
+            <p>
+              The &ldquo;Worth it?&rdquo; summary is built from these ratings, runtimes and our own
+              hand-written notes by fixed rules — no AI.
+            </p>
           </section>
           <section aria-labelledby="imdb-h" className={styles.card}>
             <h2 id="imdb-h">Why we can&apos;t post to IMDb for you</h2>
@@ -73,11 +92,13 @@ export default function AboutPage() {
           <section id="privacy" aria-labelledby="privacy-h" className={styles.card}>
             <h2 id="privacy-h">Your data &amp; privacy</h2>
             <ul>
-              <li>We store your email, handle, stubs, ratings, reviews and watchlist. That&apos;s it.</li>
+              <li>
+                We store your email, handle, stubs, ratings, reviews and watchlist. That&apos;s it.
+              </li>
               <li>Diaries, wallets and reviews are public; your watchlist is private.</li>
               <li>
-                Posters load straight from TMDB&apos;s image servers, which means TMDB can see your IP
-                address when an image loads.
+                Posters load straight from TMDB&apos;s image servers, which means TMDB can see your
+                IP address when an image loads.
               </li>
               <li>No ads, no trackers, no selling data. Delete a stub or review any time.</li>
             </ul>

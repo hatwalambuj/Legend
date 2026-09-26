@@ -15,7 +15,14 @@ function Face({ person }: { person: CastMember }) {
   return (
     <span className={styles.ph} aria-hidden="true">
       {src && !failed ? (
-        <Image src={src} alt="" width={64} height={64} unoptimized onError={() => setFailed(true)} />
+        <Image
+          src={src}
+          alt=""
+          width={64}
+          height={64}
+          unoptimized
+          onError={() => setFailed(true)}
+        />
       ) : (
         initials(person.name)
       )}

@@ -60,7 +60,9 @@ export default async function ProfilePage({
   const year = today().slice(0, 4);
 
   const [wallet, diary, reviews] = await Promise.all([
-    tab === 'wallet' ? safe(dal.listWallet(profile.handle, { cursor }), EMPTY, 'listWallet') : EMPTY,
+    tab === 'wallet'
+      ? safe(dal.listWallet(profile.handle, { cursor }), EMPTY, 'listWallet')
+      : EMPTY,
     tab === 'diary' ? safe(dal.listDiary(profile.handle, { cursor }), EMPTY, 'listDiary') : EMPTY,
     tab === 'reviews'
       ? safe(dal.listProfileReviews(profile.handle, { cursor }), EMPTY, 'listProfileReviews')
@@ -76,9 +78,16 @@ export default async function ProfilePage({
       {label}
     </Link>
   );
-  const nextHref = (c: string | null) => (c ? `${base}?tab=${tab}&cursor=${encodeURIComponent(c)}` : null);
+  const nextHref = (c: string | null) =>
+    c ? `${base}?tab=${tab}&cursor=${encodeURIComponent(c)}` : null;
   const next =
-    tab === 'wallet' ? nextHref(wallet.nextCursor) : tab === 'diary' ? nextHref(diary.nextCursor) : tab === 'reviews' ? nextHref(reviews.nextCursor) : null;
+    tab === 'wallet'
+      ? nextHref(wallet.nextCursor)
+      : tab === 'diary'
+        ? nextHref(diary.nextCursor)
+        : tab === 'reviews'
+          ? nextHref(reviews.nextCursor)
+          : null;
 
   return (
     <>
@@ -87,7 +96,12 @@ export default async function ProfilePage({
         <header className={styles.prof}>
           <div className={styles.idBlock}>
             <div className={styles.id}>
-              <Avatar handle={profile.handle} name={profile.displayName} size={84} className={styles.avatar} />
+              <Avatar
+                handle={profile.handle}
+                name={profile.displayName}
+                size={84}
+                className={styles.avatar}
+              />
               <div>
                 <h1>{profile.displayName}</h1>
                 <div className={styles.handle}>
@@ -174,9 +188,7 @@ export default async function ProfilePage({
                 <DiaryList entries={diary.items} />
               </>
             ) : (
-              <EmptyState title="No stubs yet">
-                The diary fills up one watch at a time.
-              </EmptyState>
+              <EmptyState title="No stubs yet">The diary fills up one watch at a time.</EmptyState>
             ))}
           {tab === 'reviews' &&
             (reviews.items.length ? (

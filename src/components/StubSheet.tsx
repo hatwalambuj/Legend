@@ -84,7 +84,12 @@ export function StubDetailsForm({
         <span className="lbl" id={`${uid}-where`}>
           Where
         </span>
-        <div className="seg" role="group" aria-labelledby={`${uid}-where`} style={{ flexWrap: 'wrap' }}>
+        <div
+          className="seg"
+          role="group"
+          aria-labelledby={`${uid}-where`}
+          style={{ flexWrap: 'wrap' }}
+        >
           {WHERE_OPTIONS.map((o) => (
             <button
               key={o.value}

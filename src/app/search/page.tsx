@@ -22,7 +22,11 @@ export async function generateMetadata({
   return { title: q ? `“${q}”` : 'Search', robots: { index: false } };
 }
 
-export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const sp = await searchParams;
   const q = (first(sp.q) ?? '').slice(0, 100);
   const t = first(sp.type);
@@ -55,11 +59,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <SearchPanel q={q} type={type} />
         <TypeFilterLinks q={q} type={type} />
         {failed ? (
-          <EmptyState title="The projector jammed">We couldn&apos;t search right now. Try again.</EmptyState>
+          <EmptyState title="The projector jammed">
+            We couldn&apos;t search right now. Try again.
+          </EmptyState>
         ) : res ? (
           res.items.length ? (
             <>
-              <p className="mono" style={{ fontSize: 12, letterSpacing: '.06em', color: 'var(--fg-2)' }} aria-live="polite">
+              <p
+                className="mono"
+                style={{ fontSize: 12, letterSpacing: '.06em', color: 'var(--fg-2)' }}
+                aria-live="polite"
+              >
                 {res.items.length} RESULT{res.items.length === 1 ? '' : 'S'} FOR “{q.toUpperCase()}”
               </p>
               <TicketGrid titles={res.items} label={`Results for ${q}`} />

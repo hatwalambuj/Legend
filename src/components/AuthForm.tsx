@@ -62,7 +62,8 @@ export function AuthForm({
   const [magic, setMagic] = useState<{ sent: boolean; devLink?: string } | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
-  const fields: Field[] = view === 'signup' ? ['email', 'password', 'handle'] : ['email', 'password'];
+  const fields: Field[] =
+    view === 'signup' ? ['email', 'password', 'handle'] : ['email', 'password'];
 
   // Live handle availability (debounced).
   useEffect(() => {

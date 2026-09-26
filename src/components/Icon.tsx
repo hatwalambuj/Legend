@@ -61,7 +61,16 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   wallet: (
     <>
-      <rect x="3" y="6" width="18" height="14" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <rect
+        x="3"
+        y="6"
+        width="18"
+        height="14"
+        rx="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
       <path fill="none" stroke="currentColor" strokeWidth="1.8" d="M7 6V4.5h10V6M16 13h2" />
     </>
   ),
@@ -135,10 +144,17 @@ const PATHS: Record<IconName, React.ReactNode> = {
   alert: (
     <>
       <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M12 7.5v5.5M12 16.5v.01" />
+      <path
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        d="M12 7.5v5.5M12 16.5v.01"
+      />
     </>
   ),
-  close: <path stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" d="M6 6l12 12M18 6 6 18" />,
+  close: (
+    <path stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" d="M6 6l12 12M18 6 6 18" />
+  ),
   grid: (
     <path
       fill="none"

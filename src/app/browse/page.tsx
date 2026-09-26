@@ -16,7 +16,11 @@ export const metadata: Metadata = {
 
 const EMPTY: Page<TitleSummary> = { items: [], nextCursor: null, total: 0 };
 
-export default async function BrowsePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function BrowsePage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const { type, sort, cursor } = parseBrowse(await searchParams);
   const { page, failed } = await dal.listCatalog({ type, sort, cursor, limit: 20 }).then(
     (page) => ({ page, failed: false }),

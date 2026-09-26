@@ -5,14 +5,7 @@
  * The default value is inert so leaf components render (and unit-test) without a provider.
  */
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
-import type {
-  AppMode,
-  MediaType,
-  Session,
-  TitleKey,
-  TitleState,
-  WatchedWhere,
-} from '@/lib/types';
+import type { AppMode, MediaType, Session, TitleKey, TitleState, WatchedWhere } from '@/lib/types';
 
 /** The minimum a component needs to know about a title to stub / watchlist it. */
 export interface StubTarget {

@@ -29,7 +29,9 @@ describe('StarInput (half stars, radiogroup)', () => {
     render(<Harness />);
     fireEvent.click(screen.getByRole('radio', { name: '3.5 stars' }));
     expect(screen.getByTestId('v').textContent).toBe('7');
-    expect(screen.getByRole('radio', { name: '3.5 stars' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('radio', { name: '3.5 stars' }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
     const group = screen.getByRole('radiogroup');
     fireEvent.keyDown(group, { key: 'ArrowRight' });
     expect(screen.getByTestId('v').textContent).toBe('8');

@@ -20,7 +20,9 @@ export default function ErrorPage({
         headingLevel="h1"
         title="The projector jammed"
         action={
-          <span style={{ display: 'inline-flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <span
+            style={{ display: 'inline-flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}
+          >
             <button type="button" className="btn btn--primary" onClick={() => retry()}>
               Try again
             </button>

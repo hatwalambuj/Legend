@@ -23,7 +23,10 @@ function readRecent(): string[] {
 
 function remember(q: string) {
   try {
-    const next = [q, ...readRecent().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 6);
+    const next = [q, ...readRecent().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(
+      0,
+      6,
+    );
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
     /* private mode */

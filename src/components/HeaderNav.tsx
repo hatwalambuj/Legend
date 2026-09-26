@@ -35,7 +35,12 @@ export function HeaderNav() {
       <Link href="/browse" aria-current={pathname.startsWith('/browse') ? 'page' : undefined}>
         Browse
       </Link>
-      <Link href={wallet} aria-current={onWallet ? 'page' : undefined} data-wallet-target="">
+      <Link
+        href={wallet}
+        prefetch={handle ? undefined : false}
+        aria-current={onWallet ? 'page' : undefined}
+        data-wallet-target=""
+      >
         Stub wallet <WalletBadge className={styles.badge} />
       </Link>
     </nav>

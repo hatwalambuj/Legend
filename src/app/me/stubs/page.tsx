@@ -20,7 +20,11 @@ const TYPES: { value: TypeFilter; label: string }[] = [
   { value: 'tv', label: 'Shows' },
 ];
 
-export default async function MyStubsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function MyStubsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const session = await dal.getSession();
   if (!session) redirect('/signin?next=/me/stubs');
   const sp = await searchParams;
@@ -29,10 +33,15 @@ export default async function MyStubsPage({ searchParams }: { searchParams: Prom
   const cursor = first(sp.cursor) ?? null;
   const handle = session.user.handle;
   const [diary, profile] = await Promise.all([
-    safe(dal.listDiary(handle, { type, cursor, limit: 50 }), { items: [], nextCursor: null }, 'listDiary'),
+    safe(
+      dal.listDiary(handle, { type, cursor, limit: 50 }),
+      { items: [], nextCursor: null },
+      'listDiary',
+    ),
     safe(dal.getProfile(handle), null, 'getProfile'),
   ]);
-  const count = type === 'all' && !cursor && profile ? profile.stats.totalStubs : diary.items.length;
+  const count =
+    type === 'all' && !cursor && profile ? profile.stats.totalStubs : diary.items.length;
   const latest = diary.items[0]?.title;
   const palette = latest
     ? paletteOrDefault(
@@ -51,18 +60,37 @@ export default async function MyStubsPage({ searchParams }: { searchParams: Prom
           <h1>My stubs</h1>
           <p>Every watch, newest first. Edit a date or delete a stub from its menu.</p>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 24 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 12,
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
           <nav className="seg" aria-label="Filter by type" data-testid="type-filter">
             {TYPES.map((o) => (
-              <Link key={o.value} href={href(o.value)} aria-current={type === o.value ? 'page' : undefined}>
+              <Link
+                key={o.value}
+                href={href(o.value)}
+                aria-current={type === o.value ? 'page' : undefined}
+              >
                 {o.label}
               </Link>
             ))}
           </nav>
-          <span className="mono" style={{ fontSize: 12, letterSpacing: '.06em', color: 'var(--fg-2)' }}>
+          <span
+            className="mono"
+            style={{ fontSize: 12, letterSpacing: '.06em', color: 'var(--fg-2)' }}
+          >
             {count} STUB{count === 1 ? '' : 'S'}
           </span>
-          <Link href="/me/settings#export" className="link" style={{ marginLeft: 'auto', fontSize: 14 }}>
+          <Link
+            href="/me/settings#export"
+            className="link"
+            style={{ marginLeft: 'auto', fontSize: 14 }}
+          >
             Export my stubs
           </Link>
         </div>

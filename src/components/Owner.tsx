@@ -55,9 +55,7 @@ export function OwnerWatchlist({ handle }: { handle: string }) {
   if (!sessionReady) return <GridSkeleton count={5} />;
   if (!owner)
     return (
-      <EmptyState title="This list is private">
-        Only @{handle} can see their watchlist.
-      </EmptyState>
+      <EmptyState title="This list is private">Only @{handle} can see their watchlist.</EmptyState>
     );
   if (error)
     return (

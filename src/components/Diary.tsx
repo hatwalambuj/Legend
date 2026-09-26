@@ -11,7 +11,13 @@ import { Poster } from './Poster';
 import { tintAttrs } from './Ticket';
 import styles from './Diary.module.css';
 
-export function DiaryRow({ entry: e, editable = false }: { entry: DiaryEntry; editable?: boolean }) {
+export function DiaryRow({
+  entry: e,
+  editable = false,
+}: {
+  entry: DiaryEntry;
+  editable?: boolean;
+}) {
   const t = e.title;
   const where = whereLabel(e.watchedWhere);
   return (
@@ -61,7 +67,13 @@ export function DiaryRow({ entry: e, editable = false }: { entry: DiaryEntry; ed
   );
 }
 
-export function DiaryList({ entries, editable = false }: { entries: DiaryEntry[]; editable?: boolean }) {
+export function DiaryList({
+  entries,
+  editable = false,
+}: {
+  entries: DiaryEntry[];
+  editable?: boolean;
+}) {
   const months = new Map<string, DiaryEntry[]>();
   for (const e of entries) {
     const k = e.watchedOn.slice(0, 7);

@@ -16,7 +16,10 @@ export function TabBar() {
   const youHref = session ? '/me/settings' : '/signin';
   return (
     <nav className={styles.tabbar} aria-label="Primary">
-      <Link href="/" aria-current={pathname === '/' || pathname.startsWith('/browse') ? 'page' : undefined}>
+      <Link
+        href="/"
+        aria-current={pathname === '/' || pathname.startsWith('/browse') ? 'page' : undefined}
+      >
         <Icon name="home" size={22} />
         Discover
       </Link>
@@ -26,6 +29,7 @@ export function TabBar() {
       </Link>
       <Link
         href={walletHref(handle)}
+        prefetch={handle ? undefined : false}
         aria-current={onWallet || pathname.startsWith('/me/stubs') ? 'page' : undefined}
         data-wallet-target=""
       >
@@ -35,7 +39,10 @@ export function TabBar() {
       </Link>
       <Link
         href={youHref}
-        aria-current={pathname.startsWith('/me/settings') || pathname === '/signin' ? 'page' : undefined}
+        prefetch={session ? undefined : false}
+        aria-current={
+          pathname.startsWith('/me/settings') || pathname === '/signin' ? 'page' : undefined
+        }
       >
         <Icon name="user" size={22} />
         You

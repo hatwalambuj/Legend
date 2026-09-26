@@ -44,7 +44,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       description: t.worthIt.metaDescription,
       type: t.mediaType === 'movie' ? 'video.movie' : 'video.tv_show',
       url: titleHref(t),
-      images: og ? [{ url: og, width: 780, height: 1170, alt: `Poster for ${t.title}` }] : undefined,
+      images: og
+        ? [{ url: og, width: 780, height: 1170, alt: `Poster for ${t.title}` }]
+        : undefined,
     },
   };
 }
@@ -52,7 +54,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export async function generateViewport({ params }: { params: Params }): Promise<Viewport> {
   const { type, slug } = await params;
   const t = await load(type, slug);
-  const p = t ? paletteOrDefault(t.palette, t.genres.map((g) => g.id)) : null;
+  const p = t
+    ? paletteOrDefault(
+        t.palette,
+        t.genres.map((g) => g.id),
+      )
+    : null;
   return { themeColor: p?.tint2 ?? '#0B0B0D' };
 }
 
@@ -71,7 +78,11 @@ export default async function TitlePage({ params }: { params: Params }) {
 
   const [stats, reviews] = await Promise.all([
     safe(dal.getTitleStats(t.key), null, 'getTitleStats'),
-    safe(dal.listTitleReviews(t.key, { sort: 'newest', limit: 20 }), { items: [], nextCursor: null }, 'listTitleReviews'),
+    safe(
+      dal.listTitleReviews(t.key, { sort: 'newest', limit: 20 }),
+      { items: [], nextCursor: null },
+      'listTitleReviews',
+    ),
   ]);
   const palette = paletteOrDefault(
     t.palette,
@@ -175,7 +186,12 @@ export default async function TitlePage({ params }: { params: Params }) {
                 <dt>Trailer</dt>
                 <dd>
                   {trailer ? (
-                    <a className={`link ${styles.trailer}`} href={trailer} target="_blank" rel="noopener noreferrer">
+                    <a
+                      className={`link ${styles.trailer}`}
+                      href={trailer}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       Watch on {t.trailer?.site}
                       <span className="sr-only"> (opens in a new tab)</span>
                     </a>

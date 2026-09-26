@@ -13,7 +13,12 @@ export default function Loading() {
           <span className={sk.bar} style={{ width: '30%' }} />
           <span className={sk.bar} style={{ width: '80%', height: 64, marginTop: 16 }} />
           <span className={sk.bar} style={{ width: '60%', marginTop: 16 }} />
-          <button type="button" className="btn btn--primary btn--lg" disabled style={{ marginTop: 24 }}>
+          <button
+            type="button"
+            className="btn btn--primary btn--lg"
+            disabled
+            style={{ marginTop: 24 }}
+          >
             Stub it
           </button>
         </div>

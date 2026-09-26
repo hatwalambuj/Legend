@@ -8,9 +8,25 @@ afterEach(cleanup);
 
 describe('"Worth it?" slip (DESIGN §7.4.1, ADR-009)', () => {
   it('renders every line that has data', () => {
-    renderWithApp(<WorthIt data={makeWorthIt({ likeCandidates: [makeTitle({ key: 'movie:157336', tmdbId: 157336, title: 'Interstellar', slug: 'interstellar', year: 2014 })] })} />);
+    renderWithApp(
+      <WorthIt
+        data={makeWorthIt({
+          likeCandidates: [
+            makeTitle({
+              key: 'movie:157336',
+              tmdbId: 157336,
+              title: 'Interstellar',
+              slug: 'interstellar',
+              year: 2014,
+            }),
+          ],
+        })}
+      />,
+    );
     expect(screen.getByRole('heading', { name: 'Worth it?' })).toBeTruthy();
-    expect(screen.getByTestId('worth-it-hook').textContent).toBe('A desert war epic with sandworms.');
+    expect(screen.getByTestId('worth-it-hook').textContent).toBe(
+      'A desert war epic with sandworms.',
+    );
     expect(screen.getByTestId('worth-it-vibes').querySelectorAll('li')).toHaveLength(2);
     expect(screen.getByTestId('worth-it-time').textContent).toContain('2H 46M · LONG ONE');
     expect(screen.getByTestId('worth-it-cert').textContent).toBe('PG-13');
@@ -23,7 +39,13 @@ describe('"Worth it?" slip (DESIGN §7.4.1, ADR-009)', () => {
     renderWithApp(
       <WorthIt data={makeWorthIt({ hook: null, vibes: [], time: null, certification: null })} />,
     );
-    for (const id of ['worth-it-hook', 'worth-it-vibes', 'worth-it-time', 'worth-it-cert', 'worth-it-like'])
+    for (const id of [
+      'worth-it-hook',
+      'worth-it-vibes',
+      'worth-it-time',
+      'worth-it-cert',
+      'worth-it-like',
+    ])
       expect(screen.queryByTestId(id)).toBeNull();
     expect(screen.getByTestId('worth-it-verdict').textContent).not.toMatch(/\d\.\d/);
   });
@@ -53,7 +75,13 @@ describe('"Worth it?" slip (DESIGN §7.4.1, ADR-009)', () => {
     const b = makeTitle({ key: 'movie:2', tmdbId: 2, title: 'Beta', slug: 'beta' });
     renderWithApp(<WorthIt data={makeWorthIt({ likeCandidates: [a, b] })} />, {
       states: {
-        'movie:2': { stubCount: 1, lastWatchedOn: '2026-01-01', hasStubToday: false, watchlisted: false, myReview: null },
+        'movie:2': {
+          stubCount: 1,
+          lastWatchedOn: '2026-01-01',
+          hasStubToday: false,
+          watchlisted: false,
+          myReview: null,
+        },
       },
     });
     expect(screen.getByTestId('worth-it-like').textContent).toContain('You stubbed');

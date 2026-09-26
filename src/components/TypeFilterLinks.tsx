@@ -13,9 +13,19 @@ function href(q: string, type: TypeFilter) {
 
 export function TypeFilterLinks({ q, type }: { q: string; type: TypeFilter }) {
   return (
-    <nav className="seg" aria-label="Filter by type" data-testid="type-filter" style={{ margin: '16px 0 8px' }}>
+    <nav
+      className="seg"
+      aria-label="Filter by type"
+      data-testid="type-filter"
+      style={{ margin: '16px 0 8px' }}
+    >
       {TYPE_OPTIONS.map((o) => (
-        <Link key={o.value} href={href(q, o.value)} aria-current={type === o.value ? 'page' : undefined} scroll={false}>
+        <Link
+          key={o.value}
+          href={href(q, o.value)}
+          aria-current={type === o.value ? 'page' : undefined}
+          scroll={false}
+        >
           {o.label}
         </Link>
       ))}

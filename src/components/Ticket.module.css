@@ -28,15 +28,15 @@
   overflow: hidden;
   background: var(--paper);
   -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 calc(100% - var(--stub-h)), #0000 97%, #000) left /
-      51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% calc(100% - var(--stub-h)), #0000 97%, #000)
-      right / 51% 100% no-repeat;
+    radial-gradient(circle var(--notch) at 0 calc(100% - var(--stub-h)), #0000 97%, #000) left / 51%
+      100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% calc(100% - var(--stub-h)), #0000 97%, #000) right /
+      51% 100% no-repeat;
   mask:
-    radial-gradient(circle var(--notch) at 0 calc(100% - var(--stub-h)), #0000 97%, #000) left /
-      51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% calc(100% - var(--stub-h)), #0000 97%, #000)
-      right / 51% 100% no-repeat;
+    radial-gradient(circle var(--notch) at 0 calc(100% - var(--stub-h)), #0000 97%, #000) left / 51%
+      100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% calc(100% - var(--stub-h)), #0000 97%, #000) right /
+      51% 100% no-repeat;
 }
 .rail .ticket {
   --stub-h: 144px;

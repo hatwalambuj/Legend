@@ -9,7 +9,14 @@ afterEach(cleanup);
 const review: Review = {
   id: 'r1',
   titleKey: 'tv:76331',
-  author: { id: 'u1', handle: 'priya', displayName: 'Priya', bio: '', avatarUrl: null, createdAt: '2022-01-01T00:00:00Z' },
+  author: {
+    id: 'u1',
+    handle: 'priya',
+    displayName: 'Priya',
+    bio: '',
+    avatarUrl: null,
+    createdAt: '2022-01-01T00:00:00Z',
+  },
   rating10: 9,
   body: 'The finale <b>vote</b> is devastating.',
   isSpoiler: true,
