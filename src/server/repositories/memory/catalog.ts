@@ -165,6 +165,11 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
   }
 }
 
+/** Synchronous lookup (listed or not) for the demo user-data repositories. */
+export function summaryByKey(key: TitleKey): TitleSummary | undefined {
+  return index().byKey.get(key);
+}
+
 /** Tests only. */
 export function resetCatalogIndexCache(): void {
   cache = null;

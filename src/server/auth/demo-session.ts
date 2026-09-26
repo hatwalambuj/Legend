@@ -39,3 +39,49 @@ export function verifySession(
     return null;
   }
 }
+
+/* ---------- Demo magic link token (the "email" is returned as devLink instead of sent) ---------- */
+
+export const MAGIC_TOKEN_TTL_SECONDS = 15 * 60;
+
+/** Separate key derivation so a session token can never be replayed as a magic token (or vice versa). */
+const magicKey = (secret: string) => `${secret}:magic-link`;
+
+export function signMagicToken(email: string, secret: string, now = Date.now()): string {
+  const payload = b64u(
+    Buffer.from(
+      JSON.stringify({
+        p: 'magic',
+        em: email,
+        exp: Math.floor(now / 1000) + MAGIC_TOKEN_TTL_SECONDS,
+      }),
+    ),
+  );
+  const sig = b64u(createHmac('sha256', magicKey(secret)).update(payload).digest());
+  return `${payload}.${sig}`;
+}
+
+/** Returns the email, or null for a bad signature / wrong purpose / expired token. */
+export function verifyMagicToken(
+  token: string | null | undefined,
+  secret: string,
+  now = Date.now(),
+): string | null {
+  if (!token || token.length > 1024) return null;
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return null;
+  const expected = createHmac('sha256', magicKey(secret)).update(payload).digest();
+  const given = Buffer.from(sig, 'base64url');
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
+  try {
+    const { p, em, exp } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+      p?: unknown;
+      em?: unknown;
+      exp?: unknown;
+    };
+    if (p !== 'magic' || typeof em !== 'string' || typeof exp !== 'number') return null;
+    return now / 1000 <= exp ? em : null;
+  } catch {
+    return null;
+  }
+}

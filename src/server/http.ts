@@ -104,6 +104,28 @@ export function assertSameOrigin(req: NextRequest): void {
   }
 }
 
+/**
+ * The origin the client actually used (proxy-aware). `req.nextUrl.origin` can differ from it under
+ * `next start` (e.g. "localhost" for a request to 127.0.0.1), which would move cookies across hosts.
+ */
+export function requestOrigin(req: NextRequest): string {
+  const proto =
+    req.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ||
+    req.nextUrl.protocol.replace(/:$/, '');
+  const host =
+    req.headers.get('x-forwarded-host')?.split(',')[0]?.trim() ||
+    req.headers.get('host') ||
+    req.nextUrl.host;
+  return `${proto === 'https' ? 'https' : 'http'}://${host}`;
+}
+
+/** Same-origin redirect with a relative Location, so the browser stays on the host it used. */
+export function redirectRelative(path: string, status: 302 | 303 = 302): NextResponse {
+  const res = new NextResponse(null, { status, headers: { Location: path } });
+  res.headers.set('Cache-Control', CACHE.private);
+  return res;
+}
+
 export function notImplementedRoute(): NextResponse {
   return errorResponse(new AppError('not_implemented', 'This endpoint is not implemented yet.'));
 }

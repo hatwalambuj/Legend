@@ -1,7 +1,7 @@
 /**
  * Nightly catalogue job (ADR-002, ADR-007, ADR-008). Runs in GitHub Actions (.github/workflows/nightly-sync.yml).
- * OWNER: Backend. Skeleton + reference wiring by Architect — the flow, guardrails and RPC contract below
- * are the spec. Deterministic data processing only: NO AI/LLM calls anywhere (PRD D15).
+ * OWNER: Backend. Pure step logic lives in src/server/jobs/{discover,palettes,enrich,imdb-refresh}.ts
+ * (unit-tested); this file wires it to TMDB + Supabase. Deterministic data processing only: NO AI/LLM (PRD D15).
  *
  *   npm run sync:catalog                      # full nightly run (needs TMDB + Supabase service role)
  *   npm run sync:catalog -- --dry-run         # fetch + transform + guardrails, write nothing
@@ -31,8 +31,11 @@
  * 11. rpc('catalog_purge_stale'); POST {SITE_URL}/api/revalidate {tags:['catalog']} with x-revalidate-secret
  * 12. sync_runs.status='ok', counts = { discover, enrich, imdb, palettes, disagreements, purge }
  */
+import { randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { AppError } from '../src/lib/errors';
 import { DEFAULT_CURATION_RULE, isListed } from '../src/lib/curation';
+import type { MediaType, TitleKey } from '../src/lib/types';
 import { normalizeSearch, sortTitle } from '../src/lib/text';
 import { parseEnv, type ServerEnv } from '../src/server/env';
 import {
@@ -40,7 +43,20 @@ import {
   mapTmdbEnrichment,
   type EnrichmentRow,
 } from '../src/server/jobs/enrich';
+import {
+  checkGuardrails,
+  countListed,
+  createThrottle,
+  discoverAll,
+  genreMap,
+  recheckMissing,
+  withRetry,
+  yearShards,
+  type ListedCounts,
+  type StagingRow,
+} from '../src/server/jobs/discover';
 import { refreshImdbRatings, type ImdbRefreshResult } from '../src/server/jobs/imdb-refresh';
+import { mapConcurrent, paletteFromPoster, type SharpLike } from '../src/server/jobs/palettes';
 import { OmdbRatingProvider } from '../src/server/providers/omdb';
 import { TmdbDetailProvider } from '../src/server/providers/tmdb';
 import catalogJson from '../src/fixtures/catalog.json';
@@ -67,17 +83,7 @@ export function parseArgs(argv: string[]): Args {
   };
 }
 
-/** Year shards keep every discover query under TMDB's 500-page cap. */
-export function yearShards(
-  fromYear = 1900,
-  toYear = new Date().getUTCFullYear(),
-): { gte: string; lte: string }[] {
-  const shards: { gte: string; lte: string }[] = [];
-  for (let y = fromYear; y < 1970; y += 10)
-    shards.push({ gte: `${y}-01-01`, lte: `${Math.min(y + 9, 1969)}-12-31` });
-  for (let y = 1970; y <= toYear; y++) shards.push({ gte: `${y}-01-01`, lte: `${y}-12-31` });
-  return shards;
-}
+export { yearShards };
 
 /** Staging row for one fixture title — the same transform the live path applies to TMDB results. */
 export function fixtureStagingRows(runId: string, today: string) {
@@ -252,6 +258,199 @@ async function imdbStep(
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Steps 1–6: discover → staging → guardrails → apply                  */
+/* ------------------------------------------------------------------ */
+
+/** PostgREST caps responses (default 1,000 rows): page through with range(). */
+export async function selectAll<T>(
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  size = 1000,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += size) {
+    const { data, error } = await page(from, from + size - 1);
+    if (error) throw new Error(`select: ${error.message}`);
+    out.push(...(data ?? []));
+    if (!data || data.length < size) return out;
+  }
+}
+
+/** Listed counts of the last OK catalogue run (for the delta guardrail), or null. */
+export function lastListedCounts(counts: unknown): ListedCounts | null {
+  const listed = (counts as { discover?: { listed?: Partial<ListedCounts> } } | null)?.discover
+    ?.listed;
+  return listed && typeof listed.movie === 'number' && typeof listed.tv === 'number'
+    ? { movie: listed.movie, tv: listed.tv }
+    : null;
+}
+
+function tmdbGetter(env: ServerEnv) {
+  const tmdb = new TmdbDetailProvider(env.tmdb!, { timeoutMs: 10_000 });
+  const throttle = createThrottle(10); // ~10 req/s, well under TMDB's limit
+  return (path: string, params: Record<string, string> = {}) =>
+    withRetry(async () => {
+      await throttle();
+      return tmdb.request<unknown>(path, params);
+    });
+}
+
+async function discoverStep(
+  env: ServerEnv,
+  db: SupabaseClient,
+  runId: string,
+  today: string,
+  dryRun: boolean,
+) {
+  const get = tmdbGetter(env);
+  const shards = yearShards(1900, Number(today.slice(0, 4)));
+  console.log(
+    `[sync] rule: >= ${env.curation.minRating}, votes movie >= ${env.curation.minVotesMovie}, tv >= ${env.curation.minVotesTv}; ${shards.length} shards per type`,
+  );
+  const [movieGenres, tvGenres, prev] = await Promise.all([
+    get('/genre/movie/list', { language: 'en-US' }).then(genreMap),
+    get('/genre/tv/list', { language: 'en-US' }).then(genreMap),
+    selectAll<{ title_key: string }>((from, to) =>
+      db
+        .from('catalog_index')
+        .select('title_key')
+        .eq('is_listed', true)
+        .order('id')
+        .range(from, to),
+    ),
+  ]);
+  const previouslyListed = new Set(prev.map((r) => r.title_key));
+  const ctx = { runId, rule: env.curation, today, previouslyListed };
+  const found = await discoverAll(
+    { get, log: console.warn },
+    { types: ['movie', 'tv'], shards, ctx, genreNames: { movie: movieGenres, tv: tvGenres } },
+  );
+  const missing = [...previouslyListed].filter((k) => !found.rows.has(k as TitleKey)) as TitleKey[];
+  const recheck = await recheckMissing(
+    {
+      detail: async (type: MediaType, id: number) => {
+        try {
+          return await get(`/${type}/${id}`, {
+            append_to_response: 'external_ids',
+            language: 'en-US',
+          });
+        } catch (e) {
+          if (e instanceof AppError && e.code === 'not_found') return null;
+          throw e;
+        }
+      },
+    },
+    missing,
+    { ...ctx, genreNames: new Map() },
+  );
+  const staged = new Map<string, StagingRow>(found.rows);
+  for (const r of recheck.rows) staged.set(`${r.media_type}:${r.tmdb_id}`, r);
+  const listed = countListed(staged.values());
+
+  const { data: lastRun } = await db
+    .from('sync_runs')
+    .select('counts')
+    .eq('kind', 'catalog')
+    .eq('status', 'ok')
+    .order('finished_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const guard = checkGuardrails(listed, lastListedCounts(lastRun?.counts), env.sync);
+  const summary = {
+    pages: found.pages,
+    discovered: found.rows.size,
+    malformed: found.malformed,
+    truncated_shards: found.truncatedShards,
+    rechecked: missing.length,
+    recheck_errors: recheck.errors,
+    gone: recheck.gone.length,
+    listed,
+  };
+  if (!guard.ok) return { ...summary, aborted: guard.reasons };
+  if (dryRun) return { ...summary, dry_run: true };
+
+  for (const batch of chunks([...staged.values()], 500)) {
+    const { error } = await db.from('catalog_staging').upsert(batch);
+    if (error) throw new Error(`staging upsert: ${error.message}`);
+  }
+  const applied = await rpc<unknown>(db, 'catalog_apply_staging', { p_run: runId });
+  for (const batch of chunks(recheck.gone, 200)) {
+    const { error } = await db
+      .from('catalog_index')
+      .update({ source_status: 'gone', is_listed: false })
+      .in('title_key', batch);
+    if (error) throw new Error(`mark gone: ${error.message}`);
+  }
+  return { ...summary, applied };
+}
+
+/* ------------------------------------------------------------------ */
+/* Steps 9–11: palettes, disagreement report, purge + revalidate       */
+/* ------------------------------------------------------------------ */
+
+async function paletteStep(db: SupabaseClient, dryRun: boolean, max = 2000) {
+  const { data, error } = await db
+    .from('catalog_index')
+    .select('id, poster_path')
+    .eq('needs_palette', true)
+    .order('id')
+    .limit(max);
+  if (error) throw new Error(`palette select: ${error.message}`);
+  const rows = (data ?? []) as { id: number; poster_path: string | null }[];
+  if (dryRun || rows.length === 0) return { due: rows.length };
+  const sharp = (await import('sharp')).default as unknown as SharpLike;
+  const result = await mapConcurrent(rows, 30, async (r) => {
+    let palette = null;
+    if (r.poster_path) {
+      const res = await fetch(`https://image.tmdb.org/t/p/w92${r.poster_path}`, {
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) throw new Error(`poster ${res.status}`);
+      palette = await paletteFromPoster(Buffer.from(await res.arrayBuffer()), sharp);
+    }
+    const { error: e } = await db
+      .from('catalog_index')
+      .update({ palette, needs_palette: false })
+      .eq('id', r.id);
+    if (e) throw new Error(e.message);
+  });
+  return { due: rows.length, computed: result.ok.length, failed: result.failed.length };
+}
+
+async function disagreementStep(db: SupabaseClient) {
+  const rows = await rpc<
+    { title_key: string; title: string; vote_average: number; imdb_rating: number }[]
+  >(db, 'catalog_rating_disagreements', {});
+  console.log(`[sync] rating disagreements (PRD §4.1): ${rows.length}`);
+  for (const r of rows.slice(0, 20))
+    console.log(`  ${r.title_key}  TMDB ${r.vote_average}  IMDb ${r.imdb_rating}  ${r.title}`);
+  return rows.length;
+}
+
+/** POST {site}/api/revalidate {tags} with the shared secret (API_CONTRACT §5.19). */
+export async function revalidateSite(
+  siteUrl: string,
+  secret: string | undefined,
+  tags: string[],
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ skipped: string } | { status: number }> {
+  if (!secret) return { skipped: 'no REVALIDATE_SECRET' };
+  const res = await fetchImpl(new URL('/api/revalidate', siteUrl), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-revalidate-secret': secret },
+    body: JSON.stringify({ tags }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  return { status: res.status };
+}
+
+/* ------------------------------------------------------------------ */
+/* Main + sync_runs bookkeeping                                        */
+/* ------------------------------------------------------------------ */
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const env = parseEnv();
@@ -268,25 +467,52 @@ async function main() {
   const db = admin(env);
   const counts: Record<string, unknown> = {};
   const run = (s: Step) => args.only === null || args.only === s;
-
-  if (run('discover')) {
-    if (!env.tmdb) counts.discover = { skipped: 'no TMDB key' };
-    else {
-      const shards = yearShards();
-      console.log(
-        `[sync] rule: >= ${env.curation.minRating}, votes movie >= ${env.curation.minVotesMovie}, tv >= ${env.curation.minVotesTv}; ${shards.length} shards per type`,
-      );
-      // TODO(Backend): steps 1–6 (discover → staging → guardrails → catalog_apply_staging).
-      console.warn(
-        '[sync] TODO(Backend): live TMDB discover not implemented yet; skipping to enrich.',
-      );
-      counts.discover = { todo: 'not implemented' };
-    }
+  const runId = randomUUID();
+  const finish = async (status: 'ok' | 'aborted' | 'failed', error?: string) => {
+    if (args.dryRun) return;
+    const { error: e } = await db
+      .from('sync_runs')
+      .update({ status, counts, error: error ?? null, finished_at: new Date().toISOString() })
+      .eq('id', runId);
+    if (e) console.error('[sync] could not record the run:', e.message);
+  };
+  if (!args.dryRun) {
+    const { error } = await db
+      .from('sync_runs')
+      .insert({ id: runId, kind: 'catalog', status: 'running' });
+    if (error) throw new Error(`sync_runs insert: ${error.message}`);
   }
-  if (run('enrich')) counts.enrich = await enrichStep(env, db, args.dryRun);
-  if (run('imdb')) counts.imdb = await imdbStep(env, db, args.dryRun);
-  // TODO(Backend): steps 9–12 (palettes, disagreement report, purge + revalidate, sync_runs bookkeeping).
-  console.log('[sync] done', JSON.stringify(counts));
+
+  try {
+    if (run('discover')) {
+      if (!env.tmdb) counts.discover = { skipped: 'no TMDB key' };
+      else {
+        const d = await discoverStep(env, db, runId, today, args.dryRun);
+        counts.discover = d;
+        if ('aborted' in d && d.aborted) {
+          console.error('[sync] guardrails failed; index untouched:', d.aborted.join('; '));
+          await finish('aborted', d.aborted.join('; '));
+          process.exitCode = 1;
+          return;
+        }
+      }
+    }
+    if (run('enrich')) counts.enrich = await enrichStep(env, db, args.dryRun);
+    if (run('imdb')) counts.imdb = await imdbStep(env, db, args.dryRun);
+    if (run('discover')) {
+      counts.palettes = await paletteStep(db, args.dryRun);
+      counts.disagreements = await disagreementStep(db);
+      if (!args.dryRun) {
+        counts.purge = await rpc(db, 'catalog_purge_stale', {});
+        counts.revalidate = await revalidateSite(env.siteUrl, env.revalidateSecret, ['catalog']);
+      }
+    }
+    await finish('ok');
+    console.log('[sync] done', JSON.stringify(counts));
+  } catch (e) {
+    await finish('failed', e instanceof Error ? e.message : String(e));
+    throw e;
+  }
 }
 
 // Only run when executed directly (tests may import the helpers).

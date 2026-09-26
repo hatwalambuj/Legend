@@ -1,5 +1,6 @@
 /**
  * Composition root: picks live vs demo implementations once per process from env().mode (ADR-006).
+ * In demo mode no live provider is even constructed, so no server code path can reach the network.
  * OWNER: Backend.
  */
 import 'server-only';
@@ -9,6 +10,7 @@ import { LocalAuthProvider } from './auth/local';
 import { SupabaseAuthProvider } from './auth/supabase';
 import { FixturesDetailProvider } from './providers/fixtures-detail';
 import { TmdbDetailProvider } from './providers/tmdb';
+import { MemoryRateLimiter } from './rate-limit';
 import { MemoryCatalogIndex } from './repositories/memory/catalog';
 import {
   MemoryProfiles,
@@ -20,11 +22,14 @@ import {
 import {
   SupabaseCatalogIndex,
   SupabaseProfiles,
+  SupabaseRateLimiter,
   SupabaseReviews,
   SupabaseStubs,
   SupabaseTitleStates,
   SupabaseWatchlist,
 } from './repositories/supabase';
+import { SupabaseDetailCache } from './repositories/supabase/detail-cache';
+import { supabaseAdmin, supabasePublic } from './supabase/server';
 
 let instance: Container | null = null;
 
@@ -32,12 +37,19 @@ export function container(): Container {
   if (instance) return instance;
   const e = env();
   const live = e.mode.data === 'supabase';
+  const detailCache =
+    live && e.supabase
+      ? new SupabaseDetailCache(
+          () => supabasePublic(),
+          e.supabase.serviceRoleKey ? () => supabaseAdmin() : null,
+        )
+      : null;
   instance = {
     // Index follows DATA_MODE (catalog_index table vs fixtures); detail follows CATALOG_MODE.
     catalog: live ? new SupabaseCatalogIndex() : new MemoryCatalogIndex(),
     detail:
       e.mode.catalog === 'tmdb' && e.tmdb
-        ? new TmdbDetailProvider(e.tmdb)
+        ? new TmdbDetailProvider(e.tmdb, { cache: detailCache })
         : new FixturesDetailProvider(),
     auth: live ? new SupabaseAuthProvider() : new LocalAuthProvider(),
     profiles: live ? new SupabaseProfiles() : new MemoryProfiles(),
@@ -45,11 +57,20 @@ export function container(): Container {
     reviews: live ? new SupabaseReviews() : new MemoryReviews(),
     watchlist: live ? new SupabaseWatchlist() : new MemoryWatchlist(),
     titleStates: live ? new SupabaseTitleStates() : new MemoryTitleStates(),
+    rateLimiter: live ? new SupabaseRateLimiter() : new MemoryRateLimiter(),
   };
   return instance;
+}
+
+/** Per-IP limiter for auth endpoints (best-effort per instance; Supabase Auth has its own limits). */
+let authLimiter: MemoryRateLimiter | null = null;
+export function authRateLimiter(): MemoryRateLimiter {
+  authLimiter ??= new MemoryRateLimiter();
+  return authLimiter;
 }
 
 /** Tests only. */
 export function resetContainer(): void {
   instance = null;
+  authLimiter = null;
 }

@@ -1,8 +1,18 @@
-import { signInSchema } from '@/lib/contracts';
-import { notImplementedRoute, parseBody, route } from '@/server/http';
+import { signInSchema, type AuthResponse } from '@/lib/contracts';
+import { authRateLimiter, container } from '@/server/container';
+import { assertSameOrigin, json, parseBody, route } from '@/server/http';
+import { env } from '@/server/env';
+import { clientIp, enforce, limitFor } from '@/server/rate-limit';
 
-// TODO(Backend): container().auth.signIn → AuthResponse. Generic invalid_credentials on any failure.
+/** POST /api/auth/signin → 200 AuthResponse; any failure is the generic invalid_credentials. */
 export const POST = route(async (req) => {
-  await parseBody(req, signInSchema);
-  return notImplementedRoute();
+  assertSameOrigin(req);
+  const limit = limitFor('signIn', env().mode.data === 'local');
+  enforce(
+    authRateLimiter().consumeSync(`signin:${clientIp(req.headers)}`, limit.max, limit.windowSec),
+    'Too many sign-in attempts. Try again shortly.',
+  );
+  const input = await parseBody(req, signInSchema);
+  const body: AuthResponse = { session: await container().auth.signIn(input) };
+  return json(body);
 });

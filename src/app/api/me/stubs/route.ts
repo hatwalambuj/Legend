@@ -1,12 +1,17 @@
-import { diaryQuerySchema } from '@/lib/contracts';
-import { AppError } from '@/lib/errors';
-import { dal } from '@/server/dal';
-import { notImplementedRoute, parseQuery, route } from '@/server/http';
+import { diaryQuerySchema, type DiaryResponse } from '@/lib/contracts';
+import { container } from '@/server/container';
+import { json, parseQuery, route } from '@/server/http';
+import { requireSession } from '@/server/session';
 
-// TODO(Backend): return DiaryResponse for the signed-in user.
+/** GET /api/me/stubs?type=&cursor=&limit= → the signed-in user's diary, newest first. */
 export const GET = route(async (req) => {
-  parseQuery(req, diaryQuerySchema);
-  if (!(await dal.getSession()))
-    throw new AppError('unauthenticated', 'Sign in to see your stubs.');
-  return notImplementedRoute();
+  const c = container();
+  const session = await requireSession(c);
+  const q = parseQuery(req, diaryQuerySchema);
+  const body: DiaryResponse = await c.stubs.diary(session.user.id, {
+    type: q.type,
+    cursor: q.cursor,
+    limit: q.limit,
+  });
+  return json(body);
 });

@@ -18,9 +18,14 @@ import seedJson from '@/fixtures/seed.json';
 import type { FixtureCatalog, FixtureSeed, FixtureTitle } from '@/fixtures/schema';
 import { env } from '@/server/env';
 
+/** Seed users may get an avatar URL via profile edits, so widen `avatarUrl`. */
+export type DemoUser = Omit<FixtureSeed['users'][number], 'avatarUrl'> & {
+  avatarUrl: string | null;
+};
+
 export interface DemoData {
   version: 1;
-  users: FixtureSeed['users'];
+  users: DemoUser[];
   stubs: FixtureSeed['stubs'];
   reviews: FixtureSeed['reviews'];
   watchlist: FixtureSeed['watchlist'];
@@ -80,15 +85,33 @@ class DemoStore {
   }
 
   private sync(): void {
-    if (!this.file || !existsSync(this.file)) return;
-    const m = statSync(this.file).mtimeMs;
+    if (!this.file) return;
+    let m: number;
+    try {
+      m = statSync(this.file).mtimeMs;
+    } catch {
+      return; // file removed (e.g. `npm run demo:reset` while running): keep the in-memory copy
+    }
     if (m !== this.mtimeMs) this.data = this.readFile(this.file);
   }
 
+  /** A corrupt or foreign file never takes the demo down: fall back to the seed. */
   private readFile(file: string): DemoData {
-    const parsed = JSON.parse(readFileSync(file, 'utf8')) as DemoData;
-    this.mtimeMs = statSync(file).mtimeMs;
-    return parsed.version === 1 ? parsed : freshData();
+    try {
+      const parsed = JSON.parse(readFileSync(file, 'utf8')) as Partial<DemoData>;
+      this.mtimeMs = statSync(file).mtimeMs;
+      if (
+        parsed.version === 1 &&
+        Array.isArray(parsed.users) &&
+        Array.isArray(parsed.stubs) &&
+        Array.isArray(parsed.reviews) &&
+        Array.isArray(parsed.watchlist)
+      )
+        return parsed as DemoData;
+    } catch (e) {
+      console.error('[demo-store] unreadable data file, reseeding', e);
+    }
+    return freshData();
   }
 
   private commit(): void {

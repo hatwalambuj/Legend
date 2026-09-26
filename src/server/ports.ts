@@ -8,6 +8,7 @@
  *   demo  : in-memory store persisted to a JSON file (src/server/repositories/memory), fixtures, local auth
  * Selection happens once in src/server/container.ts from env().mode.
  */
+import type { RateLimiter } from './rate-limit';
 import type {
   CatalogQuery,
   DiaryEntry,
@@ -62,10 +63,25 @@ export type DetailFields = Omit<
 export interface CatalogDetailProvider {
   readonly name: 'tmdb' | 'fixtures';
   /** null = TMDB says the title doesn't exist. Throws UpstreamError on network/5xx/timeout. */
-  getDetail(
-    mediaType: MediaType,
-    tmdbId: number,
-  ): Promise<{ fields: DetailFields; summaryPatch?: Partial<TitleSummary> } | null>;
+  getDetail(mediaType: MediaType, tmdbId: number): Promise<DetailResult | null>;
+}
+
+export interface DetailResult {
+  fields: DetailFields;
+  summaryPatch?: Partial<TitleSummary>;
+  /** True when served from the L2 cache after an upstream failure (→ detailStatus 'stale'). */
+  stale?: boolean;
+  /** When the payload was fetched from the source (ISO). Defaults to now. */
+  fetchedAt?: string;
+}
+
+/**
+ * L2 detail cache (live: `title_detail_cache`, SYSTEM_DESIGN §4.3): last good TMDB payload per title,
+ * served as 'stale' when TMDB is down. `put` is best-effort and may be a no-op without a service role.
+ */
+export interface DetailCacheStore {
+  get(key: TitleKey): Promise<{ result: Omit<DetailResult, 'stale'>; fetchedAt: string } | null>;
+  put(key: TitleKey, result: Omit<DetailResult, 'stale'>, fetchedAt: string): Promise<void>;
 }
 
 /**
@@ -109,6 +125,11 @@ export interface AuthProvider {
   /** Live: emails a magic link. Demo: returns the link instead of sending it. */
   sendMagicLink(input: { email: string; redirectTo: string }): Promise<{ devLink?: string }>;
   isHandleAvailable(handle: string): Promise<boolean>;
+  /**
+   * `/auth/callback`: live = PKCE/magic-link `code` exchange, demo = signed `demoToken` from the dev link.
+   * Sets the session cookie and returns true on success; false for any invalid/expired input.
+   */
+  completeCallback(input: { code?: string | null; demoToken?: string | null }): Promise<boolean>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -203,4 +224,6 @@ export interface Container {
   reviews: ReviewRepository;
   watchlist: WatchlistRepository;
   titleStates: TitleStateRepository;
+  /** Non-write-path limits (export, auth). Stub/review limits live with the writes (DB trigger / repo). */
+  rateLimiter: RateLimiter;
 }

@@ -2,7 +2,11 @@
  * Supabase clients (live mode only). OWNER: Backend.
  * - `supabaseForRequest()` : user-scoped client bound to request cookies → RLS applies. Use for ALL
  *   user reads/writes. Never use the service role in request handling except /api/revalidate + export.
- * - `supabaseAdmin()`      : service-role client. Server-only (sync job, admin tasks).
+ * - `supabasePublic()`     : anon client that never touches cookies — for public reads (profiles,
+ *   diaries, reviews) so public pages never depend on the session (API_CONTRACT §1 rule 1).
+ * - `supabaseCatalog()`    : like `supabasePublic()`, but GET requests go through the Next data cache
+ *   for 1 h with the `catalog` tag (revalidated by the nightly sync), per API_CONTRACT §4.
+ * - `supabaseAdmin()`      : service-role client. Server-only (L2 detail cache writes, jobs).
  */
 import 'server-only';
 import { createServerClient } from '@supabase/ssr';
@@ -11,9 +15,16 @@ import { cookies } from 'next/headers';
 import { AppError } from '@/lib/errors';
 import { env } from '@/server/env';
 
-export async function supabaseForRequest(): Promise<SupabaseClient> {
+function config() {
   const cfg = env().supabase;
   if (!cfg) throw new AppError('internal', 'Supabase is not configured');
+  return cfg;
+}
+
+const NO_SESSION = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
+
+export async function supabaseForRequest(): Promise<SupabaseClient> {
+  const cfg = config();
   const jar = await cookies();
   return createServerClient(cfg.url, cfg.anonKey, {
     cookies: {
@@ -29,11 +40,38 @@ export async function supabaseForRequest(): Promise<SupabaseClient> {
   });
 }
 
-export function supabaseAdmin(): SupabaseClient {
-  const cfg = env().supabase;
-  if (!cfg?.serviceRoleKey)
-    throw new AppError('internal', 'SUPABASE_SERVICE_ROLE_KEY is not configured');
-  return createClient(cfg.url, cfg.serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+let publicClient: SupabaseClient | null = null;
+let catalogClient: SupabaseClient | null = null;
+let adminClient: SupabaseClient | null = null;
+
+export function supabasePublic(): SupabaseClient {
+  const cfg = config();
+  publicClient ??= createClient(cfg.url, cfg.anonKey, { auth: NO_SESSION });
+  return publicClient;
+}
+
+/** fetch that lets idempotent GETs use the Next data cache (tag `catalog`, 1 h). */
+export const catalogFetch: typeof fetch = (input, init) =>
+  (init?.method ?? 'GET').toUpperCase() === 'GET'
+    ? fetch(input, {
+        ...init,
+        next: { revalidate: 3600, tags: ['catalog'] },
+      } as RequestInit)
+    : fetch(input, init);
+
+export function supabaseCatalog(): SupabaseClient {
+  const cfg = config();
+  catalogClient ??= createClient(cfg.url, cfg.anonKey, {
+    auth: NO_SESSION,
+    global: { fetch: catalogFetch },
   });
+  return catalogClient;
+}
+
+export function supabaseAdmin(): SupabaseClient {
+  const cfg = config();
+  if (!cfg.serviceRoleKey)
+    throw new AppError('internal', 'SUPABASE_SERVICE_ROLE_KEY is not configured');
+  adminClient ??= createClient(cfg.url, cfg.serviceRoleKey, { auth: NO_SESSION });
+  return adminClient;
 }

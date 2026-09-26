@@ -1,13 +1,25 @@
-import { NextResponse } from 'next/server';
 import { safeNext } from '@/lib/routes';
-import { route } from '@/server/http';
+import { container } from '@/server/container';
+import { redirectRelative, route } from '@/server/http';
 
 /**
- * Supabase PKCE / magic-link callback (live mode). OWNER: Backend.
- * TODO(Backend): supabase.auth.exchangeCodeForSession(code), then redirect to safeNext(next).
- * Demo mode: the dev magic link points here with ?demo_token=… (Backend decides the format).
+ * GET /auth/callback?code=…|demo_token=…&next=… (API_CONTRACT §5.18).
+ * Live: Supabase PKCE / magic-link code exchange. Demo: the signed token from the dev magic link.
+ * Success → 302 safeNext(next) with the session cookie; anything else → 302 /signin?error=callback.
  */
 export const GET = route(async (req) => {
-  const next = safeNext(req.nextUrl.searchParams.get('next'));
-  return NextResponse.redirect(new URL(next, req.nextUrl.origin));
+  const p = req.nextUrl.searchParams;
+  const next = safeNext(p.get('next'));
+  let ok = false;
+  try {
+    ok = await container().auth.completeCallback({
+      code: p.get('code'),
+      demoToken: p.get('demo_token'),
+    });
+  } catch (e) {
+    console.error('[auth/callback] exchange failed', e);
+  }
+  const target = ok ? next : `/signin?error=callback&next=${encodeURIComponent(next)}`;
+  // safeNext() guarantees a same-origin relative path, so a relative Location is safe.
+  return redirectRelative(target);
 });

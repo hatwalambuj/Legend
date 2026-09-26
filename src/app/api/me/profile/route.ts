@@ -1,8 +1,17 @@
 import { updateProfileSchema } from '@/lib/contracts';
-import { notImplementedRoute, parseBody, route } from '@/server/http';
+import { container } from '@/server/container';
+import { assertSameOrigin, json, parseBody, route } from '@/server/http';
+import { TAGS, revalidateAfterWrite } from '@/server/revalidate';
+import { updateProfile } from '@/server/services/reviews';
+import { requireSession } from '@/server/session';
 
-// TODO(Backend): update own profile (handle is immutable) → ProfileResponse.
+/** PATCH /api/me/profile → 200 ProfileResponse. The handle is immutable. */
 export const PATCH = route(async (req) => {
-  await parseBody(req, updateProfileSchema);
-  return notImplementedRoute();
+  assertSameOrigin(req);
+  const c = container();
+  const session = await requireSession(c);
+  const patch = await parseBody(req, updateProfileSchema);
+  const body = await updateProfile(c, session, patch);
+  revalidateAfterWrite([TAGS.user(session.user.handle)]);
+  return json(body);
 });
