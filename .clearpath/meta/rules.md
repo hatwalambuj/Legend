@@ -25,3 +25,8 @@ confidence: high
 - Demo mode must work with zero env vars and zero network (ADR-006).
 - Branch: `claude/movie-app-multi-agent-d2x9zd`. Orchestrator commits after each phase; agents don't commit.
 - Secrets never in git, chat or `.clearpath/`.
+
+## Standing authorization (founder, 2026-09-27)
+- "These approvals need to be done by the orchestrator itself, the one who is managing the project."
+- Scope: in-repo engineering decisions — assigning fixes to the owning agent, accepting/rejecting review findings and spec deviations, committing/pushing to the feature branch.
+- Not covered (still ask the founder): production deploys, applying migrations to a real database, secrets/credentials, external service writes, paid services, git history rewrite, anything that breaks the $0 / no-AI / no-third-party-posting constraints.

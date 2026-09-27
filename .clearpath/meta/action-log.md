@@ -11,3 +11,4 @@ confidence: high
 
 | date | action | scope | approved-by | rollback | result |
 |---|---|---|---|---|---|
+2026-09-27 · approve stub-count race fix (AppProvider.tsx) · frontend-dev · approved-by: founder "yes" · rollback: git revert of the fix commit · result: pending

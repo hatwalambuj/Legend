@@ -17,4 +17,4 @@ confidence: high
 - [[issues/founder-tasks.md]] · open
 - [[issues/should-later.md]] · open
 - [[issues/where-to-watch.md]] · open
-- [[issues/stub-count-race.md]] · open (founder decision)
+- [[issues/stub-count-race.md]] · in progress

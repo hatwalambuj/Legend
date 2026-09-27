@@ -9,6 +9,6 @@ confidence: high
 ---
 # stub-count-race
 
-status: open — awaiting founder decision (QA edit to src/ was blocked by permission system; not applied)
+status: in progress — founder approved 2026-09-27; frontend-dev applying
 
 After sign-up, AppProvider flush() title-states GET can overwrite a newer stub POST (count 1 → 0). Same pattern for loadWalletCount badge. Repro: e2e/auth.spec.ts:206. Proposed patch in QA §6a.
