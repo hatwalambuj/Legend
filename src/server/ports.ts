@@ -51,7 +51,18 @@ export interface CatalogIndexRepository {
   ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment } | null>;
   getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>>;
   count(): Promise<number>;
+  /** Last FULL catalogue sync (discover applied, status ok; F1). */
   lastSyncAt(): Promise<string | null>;
+  /**
+   * GET /api/health (ADR-011 §3): one uncached round trip (live: rpc `health_probe` on the cookie-less
+   * public client, aborted after `timeoutMs`). Throws when the DB is unreachable.
+   */
+  probe(opts: { timeoutMs: number }): Promise<HealthProbe>;
+}
+
+export interface HealthProbe {
+  catalogCount: number;
+  lastFullSyncAt: string | null;
 }
 
 /** Heavy per-title detail (live: TMDB with L1/L2 cache; demo: fixtures). */
@@ -112,13 +123,17 @@ export interface AuthProvider {
   readonly name: 'supabase' | 'local';
   /** Reads (and, for Supabase, refreshes) the session from request cookies. */
   getSession(): Promise<Session | null>;
-  /** Creates user + profile atomically and signs in (sets cookies). Throws AppError email_taken/handle_taken. */
+  /**
+   * Creates user + profile atomically and signs in (sets cookies). Throws AppError email_taken/handle_taken.
+   * Returns null when the account exists but needs email confirmation first (Supabase "Confirm email"
+   * ON, ADR-010 ID-1): no session, no cookie. The local provider never returns null.
+   */
   signUp(input: {
     email: string;
     password: string;
     handle: string;
     displayName: string;
-  }): Promise<Session>;
+  }): Promise<Session | null>;
   /** Throws AppError('invalid_credentials') with the generic message (B2-AC1). */
   signIn(input: { email: string; password: string }): Promise<Session>;
   signOut(): Promise<void>;
@@ -136,7 +151,16 @@ export interface AuthProvider {
    * store mutation) — then clear the session cookies. The id always comes from the session.
    */
   deleteAccount(userId: string): Promise<void>;
+  /**
+   * PUT /api/auth/password (ADR-010 ID-2): set a new password for the signed-in user. Throws
+   * `unauthenticated` without a session and `reauth_required` when the last sign-in is older than
+   * `REAUTH_WINDOW_MS` (10 min). Other sessions stay valid.
+   */
+  updatePassword(password: string): Promise<void>;
 }
+
+/** ADR-010 ID-2: a password change needs a sign-in (password or magic link) at most this old. */
+export const REAUTH_WINDOW_MS = 10 * 60 * 1000;
 
 /* ------------------------------------------------------------------ */
 /* User data (always scoped to the acting user; live mode enforces RLS)  */

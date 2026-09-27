@@ -6,6 +6,17 @@ import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { z } from 'zod';
 import { AppError, isAppError } from '@/lib/errors';
+import { env, type TrustedProxy } from '@/server/env';
+
+/**
+ * Host the client used. x-forwarded-host is trusted only behind a known edge (TRUSTED_PROXY, ADR-001
+ * §A3); with `none` it is ignored and the Host header is used.
+ */
+function clientHost(req: NextRequest, trust: TrustedProxy): string | null {
+  const fwd =
+    trust === 'none' ? undefined : req.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  return fwd || req.headers.get('host');
+}
 
 export const CACHE = {
   /** Anonymous catalogue JSON. */
@@ -94,12 +105,14 @@ export async function parseBody<S extends z.ZodType>(
 }
 
 /** For body-less mutations (DELETE). Browsers always send Origin on cross-origin/unsafe requests. */
-export function assertSameOrigin(req: NextRequest): void {
+export function assertSameOrigin(
+  req: NextRequest,
+  trust: TrustedProxy = env().trustedProxy,
+): void {
   const origin = req.headers.get('origin');
   if (!origin) return; // same-origin fetches from older browsers / server-to-server; cookies are SameSite=Lax
   // Same host resolution as requestOrigin(): the first hop of a (possibly chained) proxy list.
-  const host =
-    req.headers.get('x-forwarded-host')?.split(',')[0]?.trim() || req.headers.get('host');
+  const host = clientHost(req, trust);
   try {
     if (new URL(origin).host !== host)
       throw new AppError('forbidden', 'Cross-origin request blocked.');
@@ -113,14 +126,14 @@ export function assertSameOrigin(req: NextRequest): void {
  * The origin the client actually used (proxy-aware). `req.nextUrl.origin` can differ from it under
  * `next start` (e.g. "localhost" for a request to 127.0.0.1), which would move cookies across hosts.
  */
-export function requestOrigin(req: NextRequest): string {
+export function requestOrigin(req: NextRequest, trust: TrustedProxy = env().trustedProxy): string {
+  // TRUSTED_PROXY=none: the scheme comes from NEXT_PUBLIC_SITE_URL, never from a client header.
   const proto =
-    req.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ||
-    req.nextUrl.protocol.replace(/:$/, '');
-  const host =
-    req.headers.get('x-forwarded-host')?.split(',')[0]?.trim() ||
-    req.headers.get('host') ||
-    req.nextUrl.host;
+    trust === 'none'
+      ? new URL(env().siteUrl).protocol.replace(/:$/, '')
+      : req.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ||
+        req.nextUrl.protocol.replace(/:$/, '');
+  const host = clientHost(req, trust) || req.nextUrl.host;
   return `${proto === 'https' ? 'https' : 'http'}://${host}`;
 }
 

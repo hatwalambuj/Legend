@@ -18,7 +18,7 @@ import type {
 } from '@/lib/types';
 import type { FixtureTitle } from '@/fixtures/schema';
 import { env, today } from '@/server/env';
-import type { CatalogIndexRepository } from '@/server/ports';
+import type { CatalogIndexRepository, HealthProbe } from '@/server/ports';
 import { fixtureTitles } from './store';
 
 export function toSummary(t: FixtureTitle, listed: boolean): TitleSummary {
@@ -162,6 +162,11 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
 
   async lastSyncAt(): Promise<string | null> {
     return null;
+  }
+
+  /** Demo: the fixture count; there is no sync. */
+  async probe(): Promise<HealthProbe> {
+    return { catalogCount: index().listed.length, lastFullSyncAt: null };
   }
 }
 

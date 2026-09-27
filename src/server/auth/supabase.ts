@@ -5,10 +5,13 @@
  * - signUp: handle pre-check via rpc('handle_available'), then auth.signUp with
  *   options.data = { handle, display_name }; the `on_auth_user_created` trigger creates the profile
  *   atomically (a racing duplicate handle surfaces as "Database error saving new user" → handle_taken).
- *   Project setting "Confirm email" is OFF for the MVP, so the user is signed in immediately (B1-AC3).
+ *   Project setting "Confirm email" is OFF at launch, so the user is signed in immediately (B1-AC3);
+ *   with it ON, signUp returns null (no session yet) and the route answers 202 (ADR-010 ID-1).
  * - signIn: any failure → generic invalid_credentials (B2-AC1); Supabase's own 429 → rate_limited.
  * - sendMagicLink: signInWithOtp (existing users only); never reveals whether the email exists.
  * - completeCallback: PKCE / magic-link code exchange (sets the session cookies).
+ * - updatePassword (ADR-010 ID-2): verified JWT claims (`getClaims`), the newest `amr` timestamp is the
+ *   session's last sign-in; older than 10 min → reauth_required. Then `updateUser({ password })`.
  * - deleteAccount: service-role `auth.admin.deleteUser` (hard delete); the FK chain auth.users →
  *   profiles → stubs / reviews / watchlist / rate_events is `on delete cascade`, and the title_stats
  *   triggers fire for every cascaded row. Then the session cookies are cleared.
@@ -16,7 +19,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { Session } from '@/lib/types';
-import type { AuthProvider } from '@/server/ports';
+import { REAUTH_WINDOW_MS, type AuthProvider } from '@/server/ports';
 
 type ClientFn = () => SupabaseClient | Promise<SupabaseClient>;
 
@@ -66,12 +69,41 @@ export function mapSignUpError(e: AuthErrorLike): AppError {
   return new AppError('internal', 'Something went wrong. Try again.', { cause: e });
 }
 
+/** Maps a Supabase `updateUser({ password })` error to the contract (API_CONTRACT §5.18). */
+export function mapPasswordError(e: AuthErrorLike): AppError {
+  if (e.code === 'same_password')
+    return new AppError('validation_failed', 'Please check the highlighted fields.', {
+      fields: { password: 'Pick a password you have not used here before.' },
+    });
+  if (e.code === 'weak_password')
+    return new AppError('validation_failed', 'Please check the highlighted fields.', {
+      fields: { password: 'Pick a stronger password.' },
+    });
+  if (e.code === 'reauthentication_needed' || e.code === 'session_not_found')
+    return new AppError('reauth_required', ERROR_COPY.reauth_required);
+  if (isRateLimited(e))
+    return new AppError('rate_limited', 'Too many attempts. Try again shortly.', {
+      retryAfter: 60,
+    });
+  return new AppError('internal', 'Something went wrong. Try again.', { cause: e });
+}
+
+/** Newest authentication time of this session (JWT `amr` timestamps, seconds) in ms, or null. */
+export function lastAuthMs(claims: { amr?: unknown } | null | undefined): number | null {
+  const amr = Array.isArray(claims?.amr) ? (claims.amr as unknown[]) : [];
+  const ts = amr
+    .map((a) => (a && typeof a === 'object' ? (a as { timestamp?: unknown }).timestamp : null))
+    .filter((t): t is number => typeof t === 'number' && Number.isFinite(t));
+  return ts.length ? Math.max(...ts) * 1000 : null;
+}
+
 export class SupabaseAuthProvider implements AuthProvider {
   readonly name = 'supabase' as const;
 
   constructor(
     private readonly client: ClientFn = defaultClient,
     private readonly admin: ClientFn = defaultAdmin,
+    private readonly now: () => number = Date.now,
   ) {}
 
   private async sessionFor(db: SupabaseClient, user: User): Promise<Session | null> {
@@ -113,7 +145,7 @@ export class SupabaseAuthProvider implements AuthProvider {
     password: string;
     handle: string;
     displayName: string;
-  }): Promise<Session> {
+  }): Promise<Session | null> {
     const db = await this.client();
     const handle = input.handle.trim().toLowerCase();
     if (!(await this.isHandleAvailable(handle)))
@@ -130,11 +162,9 @@ export class SupabaseAuthProvider implements AuthProvider {
     // With "Confirm email" ON, an existing address comes back as a user without identities.
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0)
       throw mapSignUpError({ code: 'user_already_exists' });
-    if (!data.user || !data.session)
-      throw new AppError(
-        'unauthenticated',
-        'Check your inbox to confirm your email, then sign in.',
-      );
+    if (!data.user) throw mapSignUpError({});
+    // "Confirm email" ON (ADR-010 ID-1): the account exists, the session starts after confirmation.
+    if (!data.session) return null;
     return {
       user: {
         id: data.user.id,
@@ -177,6 +207,19 @@ export class SupabaseAuthProvider implements AuthProvider {
       });
     // Any other error (e.g. unknown email) is swallowed: the response never reveals existence.
     return {};
+  }
+
+  async updatePassword(password: string): Promise<void> {
+    const db = await this.client();
+    const { data, error } = await db.auth.getClaims();
+    if (error || !data?.claims?.sub)
+      throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
+    const at = lastAuthMs(data.claims);
+    // No amr (unknown sign-in time) is treated as too old: re-authenticating is always safe.
+    if (at === null || this.now() - at > REAUTH_WINDOW_MS)
+      throw new AppError('reauth_required', ERROR_COPY.reauth_required);
+    const { error: updateError } = await db.auth.updateUser({ password });
+    if (updateError) throw mapPasswordError(updateError);
   }
 
   async deleteAccount(userId: string): Promise<void> {

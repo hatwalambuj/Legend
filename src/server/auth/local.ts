@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { Session } from '@/lib/types';
 import { DEMO_FALLBACK_SECRET, env, type ServerEnv } from '@/server/env';
-import type { AuthProvider } from '@/server/ports';
+import { REAUTH_WINDOW_MS, type AuthProvider } from '@/server/ports';
 import { demoStore, isSeededDemoUser, type DemoUser } from '@/server/repositories/memory/store';
 import { requestCookieJar, type CookieJar } from './cookies';
 import {
@@ -20,6 +20,7 @@ import {
   signSession,
   verifyMagicToken,
   verifySession,
+  verifySessionClaims,
 } from './demo-session';
 import { hashPassword, verifyPassword } from './password';
 
@@ -164,6 +165,30 @@ export class LocalAuthProvider implements AuthProvider {
     const url = new URL(input.redirectTo);
     url.searchParams.set('demo_token', signMagicToken(email, this.secret()));
     return { devLink: url.toString() };
+  }
+
+  /**
+   * ADR-010 ID-2 (demo): re-hash in the store. The session cookie's `iat` is the sign-in time (it is only
+   * issued at sign-up, sign-in and the magic-link callback). The shared seeded accounts can't change
+   * their password: on a public demo that would lock everyone else out.
+   */
+  async updatePassword(password: string): Promise<void> {
+    const claims = verifySessionClaims((await this.jar()).get(DEMO_SESSION_COOKIE), this.secret());
+    const user = claims && demoStore().get().users.find((x) => x.id === claims.uid);
+    if (!claims || !user) throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
+    if (Date.now() - claims.iat * 1000 > REAUTH_WINDOW_MS)
+      throw new AppError('reauth_required', ERROR_COPY.reauth_required);
+    if (isSeededDemoUser({ id: user.id }))
+      throw new AppError(
+        'forbidden',
+        "Demo accounts can't change their password. Create your own to try it.",
+      );
+    const passwordHash = hashPassword(password); // slow part outside the store mutation
+    demoStore().mutate((d) => {
+      const u = d.users.find((x) => x.id === user.id);
+      if (!u) throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
+      u.passwordHash = passwordHash;
+    });
   }
 
   /**

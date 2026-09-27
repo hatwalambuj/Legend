@@ -50,6 +50,7 @@ describe('env / mode resolution (ADR-006)', () => {
       guardMaxDelta: 0.2,
       enrichMax: 3000,
       enrichTtlDays: 30,
+      recheckMax: 500,
       certificationRegion: 'US',
     });
   });
@@ -90,6 +91,7 @@ describe('env / mode resolution (ADR-006)', () => {
         TMDB_READ_TOKEN: 't',
         NEXT_PUBLIC_SUPABASE_URL: 'https://x.supabase.co',
         NEXT_PUBLIC_SUPABASE_ANON_KEY: 'k',
+        TRUSTED_PROXY: 'vercel', // ADR-001 §A3: live production must name its edge
       }).mode,
     ).toMatchObject({ isDemo: false, demoResets: false });
     const dev = parseEnv({ NODE_ENV: 'development' });

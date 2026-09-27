@@ -24,8 +24,22 @@ describe('http helpers', () => {
           'x-forwarded-host': 'stubbed.app',
           'x-forwarded-proto': 'https',
         }),
+        'vercel',
       ),
     ).toBe('https://stubbed.app');
+  });
+
+  it('ignores x-forwarded-host/-proto under TRUSTED_PROXY=none (ADR-001 §A3)', () => {
+    const spoofed = r('http://internal/x', {
+      host: 'a.test',
+      'x-forwarded-host': 'evil.test',
+      'x-forwarded-proto': 'https',
+      origin: 'http://evil.test',
+    });
+    expect(requestOrigin(spoofed, 'none')).toBe('http://a.test');
+    expect(() => assertSameOrigin(spoofed, 'none')).toThrow(AppError);
+    // Behind a trusting edge the forwarded host is the client's host.
+    expect(() => assertSameOrigin(spoofed, 'vercel')).not.toThrow();
   });
 
   it('redirects relatively and privately', () => {

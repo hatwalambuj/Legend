@@ -482,3 +482,44 @@ describe('IMDb ratings + enrichment (ADR-008, PRD §4.2)', () => {
     expect(rows.map((r) => r.title_key)).not.toContain('movie:19908'); // unlisted
   });
 });
+
+describe('ops health (ADR-011 §3, §9: F1)', () => {
+  type Probe = { health_probe: { catalog_count: number; last_full_sync_at: string | null } };
+  const probe = async () =>
+    (await asUser(null, () => db.query<Probe>('select public.health_probe()'))).rows[0]!
+      .health_probe;
+  const lastSync = async () =>
+    (
+      await asUser(null, () =>
+        db.query<{ t: string | null }>('select public.last_catalog_sync() as t'),
+      )
+    ).rows[0]!.t;
+
+  it('counts only full syncs (discover applied, status ok); anon can probe', async () => {
+    await db.query('delete from public.sync_runs');
+    const listed = Number(
+      (await db.query<{ n: string }>(`select public.catalog_count('all') as n`)).rows[0]!.n,
+    );
+    expect(await probe()).toEqual({ catalog_count: listed, last_full_sync_at: null });
+    expect(await lastSync()).toBeNull();
+
+    const insert = (status: string, counts: unknown, at: string) =>
+      db.query(
+        `insert into public.sync_runs (kind, status, counts, finished_at) values ('catalog', $1, $2::jsonb, $3)`,
+        [status, JSON.stringify(counts), at],
+      );
+    await insert('ok', { discover: { applied: { upserted: 1 } } }, '2026-09-20T03:00:00Z');
+    await insert('ok', { imdb: { rated: 5 } }, '2026-09-21T03:00:00Z'); // --only=imdb
+    await insert('ok', { discover: { dry_run: true } }, '2026-09-22T03:00:00Z'); // dry
+    await insert('aborted', { discover: { applied: {} } }, '2026-09-23T03:00:00Z');
+    await insert('failed', { discover: { applied: {} } }, '2026-09-24T03:00:00Z');
+
+    const p = await probe();
+    expect(new Date(p.last_full_sync_at!).toISOString()).toBe('2026-09-20T03:00:00.000Z');
+    expect(new Date((await lastSync())!).toISOString()).toBe('2026-09-20T03:00:00.000Z');
+    await asUser('00000000-0000-4000-8000-00000000000a', () =>
+      db.query('select public.health_probe()'),
+    );
+    await db.query('delete from public.sync_runs');
+  });
+});

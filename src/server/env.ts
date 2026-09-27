@@ -93,7 +93,27 @@ const rawSchema = z.object({
     .regex(/^[A-Z]{2}$/)
     .default('US'),
 
+  /** ADR-001 §A3: which proxy headers to trust for client IP and forwarded host/proto. */
+  TRUSTED_PROXY: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.trim() !== '' ? v.trim().toLowerCase() : undefined))
+    .pipe(
+      z
+        .string()
+        .regex(
+          /^(vercel|netlify|cloudflare|none|xff-[1-5])$/,
+          'expected vercel | netlify | cloudflare | xff-1..xff-5 | none',
+        )
+        .optional(),
+    ),
+  /** /api/health turns `degraded` when the last full sync is older than this (ADR-011 §3). */
+  HEALTH_MAX_SYNC_AGE_HOURS: num(36),
+  /** Max previously listed titles re-checked per night; more missing aborts apply (ADR-011 §10). */
+  SYNC_RECHECK_MAX: num(500),
+
   VERCEL: optionalString,
+  NETLIFY: optionalString,
   /** Set by `next build` ('phase-production-build'): the production demo opt-in is checked at runtime only. */
   NEXT_PHASE: optionalString,
 });
@@ -101,10 +121,21 @@ const rawSchema = z.object({
 /** Default per-type listed-count floors for the nightly sync (GAP-03): TV is a much smaller catalogue. */
 export const SYNC_GUARD_MIN_DEFAULTS = { movie: 3000, tv: 1000 } as const;
 
+/**
+ * ADR-001 §A3. `vercel`/`netlify`/`cloudflare`: that edge overwrites the client-IP header and
+ * x-forwarded-host/-proto. `xff-N`: the N-th X-Forwarded-For entry from the right (N proxies we control).
+ * `none`: trust no header (all clients share one per-IP key; auth limits get 20× headroom).
+ */
+export type TrustedProxy = 'vercel' | 'netlify' | 'cloudflare' | 'none' | `xff-${1 | 2 | 3 | 4 | 5}`;
+
 export interface ServerEnv {
   nodeEnv: 'development' | 'production' | 'test';
   siteUrl: string;
   mode: AppMode;
+  /** ADR-001 §A3: explicit TRUSTED_PROXY, else auto-detected (VERCEL=1, NETLIFY=true), else `none`. */
+  trustedProxy: TrustedProxy;
+  /** GET /api/health (ADR-011 §3). */
+  health: { maxSyncAgeHours: number };
   tmdb: { readToken?: string; apiKey?: string } | null;
   /**
    * OMDb (IMDb ratings) for the nightly job only — the request path never calls OMDb (ADR-008).
@@ -147,6 +178,8 @@ export interface ServerEnv {
     /** Max TMDB detail calls per night for the enrich step (new rows first, then older than enrichTtlDays). */
     enrichMax: number;
     enrichTtlDays: number;
+    /** Max re-checks of missing previously listed titles; `skipped > 0` aborts apply (ADR-011 §10). */
+    recheckMax: number;
     /** ISO 3166-1 region for certifications ("Worth it?" line 4). Default US. */
     certificationRegion: string;
   };
@@ -213,6 +246,22 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     );
   }
 
+  // ADR-001 §A3: never trust proxy headers by accident. A live production server must know its edge.
+  const trustedProxy: TrustedProxy =
+    (e.TRUSTED_PROXY as TrustedProxy | undefined) ??
+    (e.VERCEL === '1' || e.VERCEL === 'true'
+      ? 'vercel'
+      : e.NETLIFY === 'true'
+        ? 'netlify'
+        : undefined) ??
+    ((): TrustedProxy => {
+      if (production && !isDemo && e.NEXT_PHASE !== 'phase-production-build')
+        throw new EnvError(
+          'Set TRUSTED_PROXY (see ADR-001 §A3): vercel | netlify | cloudflare | xff-1..xff-5 | none.',
+        );
+      return 'none';
+    })();
+
   // Vercel's filesystem is read-only except /tmp (demo data there is per-instance and ephemeral).
   const dataDir =
     e.DEMO_PERSIST === 'memory'
@@ -253,6 +302,8 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     nodeEnv: e.NODE_ENV,
     siteUrl: e.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
     mode,
+    trustedProxy,
+    health: { maxSyncAgeHours: Math.max(1, e.HEALTH_MAX_SYNC_AGE_HOURS) },
     tmdb: hasTmdb ? { readToken: e.TMDB_READ_TOKEN, apiKey: e.TMDB_API_KEY } : null,
     omdb: e.OMDB_API_KEY
       ? {
@@ -294,6 +345,7 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       guardMaxDelta: e.SYNC_GUARD_MAX_DELTA,
       enrichMax: Math.max(0, Math.floor(e.SYNC_ENRICH_MAX)),
       enrichTtlDays: Math.max(1, Math.floor(e.SYNC_ENRICH_TTL_DAYS)),
+      recheckMax: Math.max(0, Math.floor(e.SYNC_RECHECK_MAX)),
       certificationRegion: e.CERTIFICATION_REGION,
     },
   };

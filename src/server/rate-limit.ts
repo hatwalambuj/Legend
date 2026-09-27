@@ -8,7 +8,9 @@
  *   Supabase implementation backed by `public.consume_rate_limit()` (correct across serverless instances).
  * OWNER: Backend.
  */
+import { createHash } from 'node:crypto';
 import { AppError } from '@/lib/errors';
+import type { TrustedProxy } from '@/server/env';
 
 export type RateDecision = { ok: true } | { ok: false; retryAfter: number };
 
@@ -23,18 +25,37 @@ export const LIMITS = {
   signIn: { max: 10, windowSec: 60 },
   signUp: { max: 5, windowSec: 600 },
   magicLink: { max: 5, windowSec: 600 },
+  /** ID-5: per inbox (hashed email), on top of the per-IP limit, so one inbox can't be flooded. */
+  magicLinkEmail: { max: 5, windowSec: 3600 },
+  /** ADR-011 §3: GET/HEAD /api/health per IP. */
+  health: { max: 60, windowSec: 60 },
+  /** ADR-010 ID-2: PUT /api/auth/password per user. */
+  setPassword: { max: 5, windowSec: 600 },
 } as const;
 
+/** Limits keyed by client IP: with TRUSTED_PROXY=none every client shares one key (ADR-001 §A3). */
+const PER_IP: ReadonlySet<keyof typeof LIMITS> = new Set([
+  'signIn',
+  'signUp',
+  'magicLink',
+  'health',
+]);
+
 /**
- * Auth limits are per IP and best-effort. Demo mode (local data, E2E from one IP) gets 10× headroom so
- * test suites never trip them; the export limit is per user and identical in both modes.
+ * Auth limits are best-effort. Demo mode (local data, E2E from one IP) gets 10× headroom so test
+ * suites never trip them; per-IP limits get another 20× under `TRUSTED_PROXY=none`, where every client
+ * shares the key `shared` (ADR-001 §A3). The export and set-password limits are per user and identical
+ * in both modes.
  */
 export function limitFor(
   name: keyof typeof LIMITS,
   demo: boolean,
+  trust: TrustedProxy,
 ): { max: number; windowSec: number } {
   const l = LIMITS[name];
-  return demo && name !== 'export' ? { max: l.max * 10, windowSec: l.windowSec } : l;
+  const perUser = name === 'export' || name === 'setPassword';
+  const factor = (demo && !perUser ? 10 : 1) * (trust === 'none' && PER_IP.has(name) ? 20 : 1);
+  return factor === 1 ? l : { max: l.max * factor, windowSec: l.windowSec };
 }
 
 /**
@@ -111,9 +132,27 @@ export function assertUnderLimit(
     });
 }
 
-/** Client address for per-IP limits (first X-Forwarded-For hop, as set by Vercel), or 'unknown'. */
-export function clientIp(headers: Headers): string {
-  const xff = headers.get('x-forwarded-for');
-  const first = xff?.split(',')[0]?.trim();
-  return first || headers.get('x-real-ip')?.trim() || 'unknown';
+/**
+ * Client address for per-IP limits, from the one header the configured edge overwrites
+ * (TRUSTED_PROXY, ADR-001 §A3). `none` trusts no header: every client shares the key `shared`.
+ * A missing header gives 'unknown' (also one shared key, never a free pass).
+ */
+export function clientIp(headers: Pick<Headers, 'get'>, trust: TrustedProxy): string {
+  const h = (name: string) => headers.get(name)?.trim() || undefined;
+  const xff = (h('x-forwarded-for') ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  let ip: string | undefined;
+  if (trust === 'none') return 'shared';
+  if (trust === 'vercel') ip = h('x-real-ip') ?? xff[0];
+  else if (trust === 'netlify') ip = h('x-nf-client-connection-ip');
+  else if (trust === 'cloudflare') ip = h('cf-connecting-ip');
+  else ip = xff[xff.length - Number(trust.slice(4))];
+  return ip || 'unknown';
+}
+
+/** ID-5: limiter key for an email. SHA-256 of the lower-cased address; the raw email is never kept. */
+export function emailKey(email: string): string {
+  return createHash('sha256').update(email.trim().toLowerCase()).digest('hex');
 }

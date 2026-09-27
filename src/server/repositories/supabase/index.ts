@@ -36,6 +36,7 @@ import type {
 import { decodeKeyset, encodeKeyset } from '@/server/cursor';
 import type {
   CatalogIndexRepository,
+  HealthProbe,
   ProfileRepository,
   ReviewRepository,
   StubRepository,
@@ -246,6 +247,17 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
   async lastSyncAt(): Promise<string | null> {
     const db = await this.db();
     return (unwrap(await db.rpc('last_catalog_sync', {}, { get: true })) as string | null) ?? null;
+  }
+
+  /** Uncached (public client, POST rpc), aborted after `timeoutMs` (ADR-011 §3.2). */
+  async probe({ timeoutMs }: { timeoutMs: number }): Promise<HealthProbe> {
+    const db = await this.clients.public();
+    const res = await db.rpc('health_probe').abortSignal(AbortSignal.timeout(timeoutMs));
+    const row = unwrap(res) as { catalog_count?: unknown; last_full_sync_at?: unknown } | null;
+    return {
+      catalogCount: Number(row?.catalog_count ?? 0),
+      lastFullSyncAt: typeof row?.last_full_sync_at === 'string' ? row.last_full_sync_at : null,
+    };
   }
 }
 

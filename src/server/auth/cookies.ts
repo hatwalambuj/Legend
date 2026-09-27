@@ -5,7 +5,7 @@
  * OWNER: Backend.
  */
 import { cookies, headers } from 'next/headers';
-import { env } from '@/server/env';
+import { env, type TrustedProxy } from '@/server/env';
 
 export interface CookieJar {
   get(name: string): string | undefined;
@@ -13,8 +13,14 @@ export interface CookieJar {
   delete(name: string): void;
 }
 
-export function isSecureRequest(h: Pick<Headers, 'get'>, siteUrl: string): boolean {
-  const proto = h.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
+/** x-forwarded-proto is trusted only behind a known edge (TRUSTED_PROXY, ADR-001 §A3). */
+export function isSecureRequest(
+  h: Pick<Headers, 'get'>,
+  siteUrl: string,
+  trust: TrustedProxy = env().trustedProxy,
+): boolean {
+  const proto =
+    trust === 'none' ? undefined : h.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
   if (proto) return proto === 'https';
   return siteUrl.startsWith('https://');
 }

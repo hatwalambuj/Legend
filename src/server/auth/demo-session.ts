@@ -21,6 +21,15 @@ export function verifySession(
   secret: string,
   now = Date.now(),
 ): string | null {
+  return verifySessionClaims(token, secret, now)?.uid ?? null;
+}
+
+/** The verified payload: user id + sign-in time (`iat`, seconds). A session is only issued at sign-in. */
+export function verifySessionClaims(
+  token: string | undefined,
+  secret: string,
+  now = Date.now(),
+): { uid: string; iat: number } | null {
   if (!token) return null;
   const [payload, sig] = token.split('.');
   if (!payload || !sig) return null;
@@ -34,7 +43,7 @@ export function verifySession(
     };
     if (typeof uid !== 'string' || typeof iat !== 'number') return null;
     if (now / 1000 - iat > DEMO_SESSION_MAX_AGE) return null;
-    return uid;
+    return { uid, iat };
   } catch {
     return null;
   }

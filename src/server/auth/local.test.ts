@@ -81,15 +81,16 @@ describe('LocalAuthProvider', () => {
 });
 
 describe('cookie security flag', () => {
-  it('follows x-forwarded-proto, else the site URL', () => {
-    expect(isSecureRequest(new Headers({ 'x-forwarded-proto': 'https' }), 'http://localhost')).toBe(
-      true,
-    );
+  it('follows x-forwarded-proto behind a trusted edge, else the site URL', () => {
+    const https = new Headers({ 'x-forwarded-proto': 'https' });
+    expect(isSecureRequest(https, 'http://localhost', 'vercel')).toBe(true);
     expect(
-      isSecureRequest(new Headers({ 'x-forwarded-proto': 'http' }), 'https://stubbed.app'),
+      isSecureRequest(new Headers({ 'x-forwarded-proto': 'http' }), 'https://stubbed.app', 'vercel'),
     ).toBe(false);
-    expect(isSecureRequest(new Headers(), 'https://stubbed.app')).toBe(true);
-    expect(isSecureRequest(new Headers(), 'http://127.0.0.1:3100')).toBe(false);
+    expect(isSecureRequest(new Headers(), 'https://stubbed.app', 'vercel')).toBe(true);
+    expect(isSecureRequest(new Headers(), 'http://127.0.0.1:3100', 'vercel')).toBe(false);
+    // TRUSTED_PROXY=none (ADR-001 §A3): the header is ignored.
+    expect(isSecureRequest(https, 'http://localhost', 'none')).toBe(false);
   });
 });
 
