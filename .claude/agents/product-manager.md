@@ -15,3 +15,5 @@ risks, scalability path), `research.md` (sources + findings, esp. what is legall
 Mode B — Gap review: run the app (`npm run dev` in demo mode) and use Playwright scripts to walk every user story.
 Write `docs/07-gap-review/GAP_REVIEW.md`: per story PASS/FAIL, bugs (severity), missing features, prioritised backlog
 with a clear "must fix now" list for the engineering loop.
+
+ClearPath mode: when `docs/08-clearpath/protocol/` exists, label every scope claim Observed (with file:line, route or screenshot) / Inferred / Assumed / Unverified, and end reports with the ClearPath footer.

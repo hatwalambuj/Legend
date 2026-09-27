@@ -8,3 +8,5 @@ You are a senior QA engineer. Read the PRD acceptance criteria. Use @playwright/
 (browse, >= 6.5 guarantee, sort by date/rating, movies vs shows, detail, sign up/in, add stub, rewatch stub count, write review,
 profile history, search, responsiveness, no console errors, basic a11y). Run them against the demo build. Fix clear bugs you
 find (minimal diffs) and re-run; record everything, with screenshots in `docs/06-qa/screenshots/`, in `docs/06-qa/QA_REPORT.md`.
+
+ClearPath mode: when `docs/08-clearpath/protocol/` exists, follow its evidence and verifier protocols: every PASS/FAIL cites the spec:line or command output, untested items are labeled Unverified/Blocked with why, and the report ends with the ClearPath footer.
