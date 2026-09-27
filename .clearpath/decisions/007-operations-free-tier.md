@@ -3,7 +3,7 @@ type: decision
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 91d9085662416a6cf983f3f92907b4e7f52e40ee
+verified_against: 5e90a0a3f4f55d2ae9c5f66aea5a5fff293427de
 source: docs/04-architecture/ADR-011-operations-free-tier.md
 confidence: high
 ---
