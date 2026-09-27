@@ -16,7 +16,9 @@ import type {
   TitleKey,
   TitleState,
   TitleSummary,
+  TitleWatch,
 } from './types';
+import { normalizeRegionCode } from './regions';
 
 /* ---------------- primitives ---------------- */
 
@@ -114,6 +116,19 @@ export const exportQuerySchema = z.object({
   format: z.enum(['letterboxd', 'json']),
 });
 
+/**
+ * v1.5 (ADR-012 §5): a region code in the API: 2 letters, upper-cased, `UK→GB`. Support is checked by
+ * the handler against `WATCH_REGIONS` (config, not contract).
+ */
+export const regionCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z]{2}$/, 'Use a two-letter country code')
+  .transform((s) => normalizeRegionCode(s)!);
+
+/** GET /api/titles/{type}/{id}/watch?region= (§5.21): `region` is required and the ONLY region input. */
+export const watchQuerySchema = z.object({ region: regionCodeSchema });
+
 /* ---------------- body schemas (mutations) ---------------- */
 
 export const titleRefSchema = z.object({
@@ -176,6 +191,9 @@ export const deleteAccountSchema = z.object({ confirm: z.literal('DELETE') });
 
 export const handleAvailableQuerySchema = z.object({ handle: z.string().max(40) });
 
+/** PUT /api/me/watch-region (§5.22): null = automatic (clears the saved region). */
+export const setWatchRegionSchema = z.object({ region: regionCodeSchema.nullable() });
+
 export const revalidateSchema = z.object({
   tags: z.array(z.string().min(1).max(256)).min(1).max(50),
 });
@@ -191,6 +209,7 @@ export type SignInInput = z.input<typeof signInSchema>;
 export type MagicLinkInput = z.input<typeof magicLinkSchema>;
 export type SetPasswordInput = z.input<typeof setPasswordSchema>;
 export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;
+export type SetWatchRegionInput = z.input<typeof setWatchRegionSchema>;
 
 /* ---------------- response types ---------------- */
 
@@ -260,4 +279,13 @@ export interface HealthResponse {
     sync: 'ok' | 'stale' | 'never' | 'unknown' | 'skipped';
   };
   reasons: HealthReason[];
+}
+
+/** GET /api/titles/{type}/{id}/watch (§5.21). `watch: null` = hide the block (same rules as §1b). */
+export interface TitleWatchResponse {
+  watch: TitleWatch | null;
+}
+/** PUT /api/me/watch-region (§5.22): the saved region, null = automatic. */
+export interface SetWatchRegionResponse {
+  region: string | null;
 }

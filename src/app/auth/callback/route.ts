@@ -1,6 +1,8 @@
 import { safeNext } from '@/lib/routes';
+import { requestCookieJar } from '@/server/auth/cookies';
 import { container } from '@/server/container';
 import { redirectRelative, route } from '@/server/http';
+import { writeRegionCookie } from '@/server/region';
 
 /**
  * GET /auth/callback?code=…|demo_token=…&next=… (API_CONTRACT §5.18).
@@ -18,6 +20,16 @@ export const GET = route(async (req) => {
     });
   } catch (e) {
     console.error('[auth/callback] exchange failed', e);
+  }
+  if (ok) {
+    // ADR-012 §7: re-set the region cookie from the saved setting. Best effort: if the new session is
+    // not readable yet, the client island heals the cookie from `/api/me` (`watchRegion`).
+    try {
+      const region = (await container().auth.getSession())?.user.watchRegion;
+      if (region) writeRegionCookie(await requestCookieJar(), region);
+    } catch (e) {
+      console.warn('[auth/callback] region cookie skipped', e instanceof Error ? e.name : 'error');
+    }
   }
   const target = ok ? next : `/signin?error=callback&next=${encodeURIComponent(next)}`;
   // safeNext() guarantees a same-origin relative path, so a relative Location is safe.

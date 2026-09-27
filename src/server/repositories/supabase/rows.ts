@@ -16,7 +16,9 @@ import type {
   TitleKey,
   TitleSummary,
   WatchedWhere,
+  WatchStore,
 } from '@/lib/types';
+import type { StoredWatch } from '@/server/watch';
 
 /** A `public.catalog_index` row as returned by PostgREST / to_jsonb(). */
 export interface CatalogRow {
@@ -49,6 +51,9 @@ export interface CatalogRow {
   series_status?: SeriesStatus | null;
   keywords?: string[] | null;
   recommendation_keys?: string[] | null;
+  /** v1.5 (ADR-012 §3). Absent before the where-to-watch migration → treated as never fetched. */
+  watch?: unknown;
+  watch_checked_at?: string | null;
 }
 
 const numOrNull = (v: unknown): number | null => {
@@ -99,6 +104,15 @@ export function rowToEnrichment(r: CatalogRow): TitleEnrichment {
     seriesStatus: r.series_status ?? null,
     keywords: Array.isArray(r.keywords) ? r.keywords : [],
     recommendationKeys: (r.recommendation_keys ?? []).filter(isTitleKey) as TitleKey[],
+  };
+}
+
+/** Stored availability of a row; a non-object `watch` (or a missing column) is "never fetched". */
+export function rowToWatch(r: CatalogRow): StoredWatch {
+  const w = r.watch;
+  return {
+    store: w && typeof w === 'object' && !Array.isArray(w) ? (w as WatchStore) : null,
+    checkedAt: typeof r.watch_checked_at === 'string' ? r.watch_checked_at : null,
   };
 }
 

@@ -1,6 +1,9 @@
 /**
  * Demo catalogue index over the bundled fixtures. Same semantics as `public.catalog_page()` in SQL:
  * curation via isListed(), order + keyset cursor via src/lib/catalog-order.ts.
+ * v1.5: demo "Where to watch" availability from src/fixtures/watch.json (ADR-012 §8, W6): 20 titles ×
+ * US/GB/IN; `watch_checked_at = now − ageDays` on every read, so the stale fixture stays stale and the
+ * others stay fresh forever. A title not in the file has no availability (block hidden). No network.
  * OWNER: Backend (reference implementation by Architect).
  */
 import { paginate } from '@/lib/catalog-order';
@@ -16,10 +19,38 @@ import type {
   TitleSummary,
   TypeFilter,
 } from '@/lib/types';
-import type { FixtureTitle } from '@/fixtures/schema';
+import watchJson from '@/fixtures/watch.json';
+import type { FixtureTitle, FixtureWatch } from '@/fixtures/schema';
 import { env, today } from '@/server/env';
-import type { CatalogIndexRepository, HealthProbe } from '@/server/ports';
+import type { CatalogIndexRepository, HealthProbe, WatchProviderRepository } from '@/server/ports';
+import type { ProviderDirectory, StoredWatch } from '@/server/watch';
 import { fixtureTitles } from './store';
+
+const watchFixtures = watchJson as unknown as FixtureWatch;
+const watchByKey: ReadonlyMap<TitleKey, FixtureWatch['titles'][number]> = new Map(
+  watchFixtures.titles.map((t) => [t.key, t]),
+);
+
+/** Demo availability of one title (ADR-012 §8), or undefined when the title has none. */
+export function fixtureWatch(key: TitleKey, now: number = Date.now()): StoredWatch | undefined {
+  const w = watchByKey.get(key);
+  if (!w) return undefined;
+  return { store: w.watch, checkedAt: new Date(now - w.ageDays * 86_400_000).toISOString() };
+}
+
+/** Demo provider names + monogram tiles; logos are always null (nothing fetched, W6-AC3). */
+export class MemoryWatchProviders implements WatchProviderRepository {
+  private static readonly map: ProviderDirectory = new Map(
+    watchFixtures.providers.map((p) => [
+      p.id,
+      { name: p.name, logoPath: null, monogram: p.monogram, tile: p.tile },
+    ]),
+  );
+
+  async all(): Promise<ProviderDirectory> {
+    return MemoryWatchProviders.map;
+  }
+}
 
 export function toSummary(t: FixtureTitle, listed: boolean): TitleSummary {
   return {
@@ -144,7 +175,7 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
     const key = toTitleKey(mediaType, tmdbId);
     const summary = index().byKey.get(key);
     const enrichment = index().enrichment.get(key);
-    return summary && enrichment ? { summary, enrichment } : null;
+    return summary && enrichment ? { summary, enrichment, watch: fixtureWatch(key) } : null;
   }
 
   async getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>> {

@@ -25,6 +25,21 @@ export function tmdbImage(
   return `${TMDB_IMAGE_BASE}/${size}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+/** TMDB provider logo paths we accept (ADR-012 §2); anything else is treated as "no logo". */
+export const PROVIDER_LOGO_PATH_RE = /^\/[A-Za-z0-9_-]+\.(png|jpg|jpeg|svg)$/;
+
+/**
+ * "Where to watch" logo (ADR-012 §6.4, W8-AC3): TMDB `w92`, rendered at 44×44. null (no path, a path that
+ * fails the shape check, or `images === 'off'`) → the monogram tile. Same host as posters, so CSP is unchanged.
+ */
+export function providerLogoUrl(
+  path: string | null | undefined,
+  images: AppMode['images'],
+): string | null {
+  if (!path || !PROVIDER_LOGO_PATH_RE.test(path)) return null;
+  return tmdbImage(path, 'w92', images);
+}
+
 /** Grid srcset per SYSTEM_DESIGN §10.1: w185 1x / w342 2x. */
 export function posterSrcSet(path: string | null, images: AppMode['images']): string | undefined {
   const a = tmdbImage(path, 'w185', images);

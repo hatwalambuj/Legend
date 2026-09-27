@@ -12,6 +12,7 @@ import type { Session } from '@/lib/types';
 import { DEMO_FALLBACK_SECRET, env, type ServerEnv } from '@/server/env';
 import { REAUTH_WINDOW_MS, type AuthProvider } from '@/server/ports';
 import { demoStore, isSeededDemoUser, type DemoUser } from '@/server/repositories/memory/store';
+import { demoWatchRegion } from '@/server/repositories/memory/user-data';
 import { requestCookieJar, type CookieJar } from './cookies';
 import {
   DEMO_SESSION_COOKIE,
@@ -32,6 +33,7 @@ function toSession(u: DemoUser): Session {
       handle: u.handle,
       displayName: u.displayName,
       avatarUrl: u.avatarUrl,
+      watchRegion: demoWatchRegion(demoStore().get(), u.id),
     },
   };
 }
@@ -196,7 +198,7 @@ export class LocalAuthProvider implements AuthProvider {
   }
 
   /**
-   * GAP-06: erase the user and everything they own (stubs, reviews, watchlist, profile) in one store
+   * GAP-06: erase the user and everything they own (stubs, reviews, watchlist, settings, profile) in one store
    * mutation — the demo mirror of the `on delete cascade` chain from auth.users — then sign out.
    * The shared seeded demo accounts can't be deleted (everyone signs in with them).
    */
@@ -208,6 +210,7 @@ export class LocalAuthProvider implements AuthProvider {
       d.stubs = d.stubs.filter((s) => s.userId !== userId);
       d.reviews = d.reviews.filter((r) => r.userId !== userId);
       d.watchlist = d.watchlist.filter((w) => w.userId !== userId);
+      d.settings = (d.settings ?? []).filter((x) => x.userId !== userId);
     });
     await this.signOut();
   }

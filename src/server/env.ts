@@ -10,6 +10,13 @@
  */
 import { z } from 'zod';
 import { DEFAULT_CURATION_RULE, type CurationRule } from '@/lib/curation';
+import {
+  DEFAULT_WATCH_REGION,
+  DEFAULT_WATCH_REGIONS,
+  isKnownRegion,
+  normalizeRegionCode,
+  regionName,
+} from '@/lib/regions';
 import type { AppMode } from '@/lib/types';
 
 const bool = z
@@ -93,6 +100,15 @@ const rawSchema = z.object({
     .regex(/^[A-Z]{2}$/)
     .default('US'),
 
+  /** Where to watch (ADR-012 §4): max standalone watch/providers calls per night, re-check ages in days. */
+  SYNC_WATCH_MAX: num(3000),
+  SYNC_WATCH_TTL_DAYS: num(7),
+  SYNC_WATCH_HOT_DAYS: num(1),
+  /** Where to watch (ADR-012 §5): default + supported regions, optional trusted geo header name. */
+  WATCH_REGION_DEFAULT: optionalString,
+  WATCH_REGIONS: optionalString,
+  WATCH_GEO_HEADER: optionalString,
+
   /** ADR-001 §A3: which proxy headers to trust for client IP and forwarded host/proto. */
   TRUSTED_PROXY: z
     .string()
@@ -137,6 +153,18 @@ export interface ServerEnv {
   trustedProxy: TrustedProxy;
   /** GET /api/health (ADR-011 §3). */
   health: { maxSyncAgeHours: number };
+  /**
+   * Where to watch (ADR-012 §5). `regions` = WATCH_REGIONS (each in src/lib/regions.ts, contains
+   * `defaultRegion`). `geoHeader` = lower-cased WATCH_GEO_HEADER, only honoured when `trustedProxy` is
+   * not `none` (see `watchRegionConfig`).
+   */
+  watch: {
+    defaultRegion: string;
+    regions: string[];
+    geoHeader: string | null;
+    /** Nightly watch step (ADR-012 §4): standalone calls per night, re-check ages in days. */
+    sync: { max: number; ttlDays: number; hotDays: number };
+  };
   tmdb: { readToken?: string; apiKey?: string } | null;
   /**
    * OMDb (IMDb ratings) for the nightly job only — the request path never calls OMDb (ADR-008).
@@ -263,6 +291,15 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       return 'none';
     })();
 
+  const watch: ServerEnv['watch'] = {
+    ...parseWatchConfig(e.WATCH_REGION_DEFAULT, e.WATCH_REGIONS, e.WATCH_GEO_HEADER),
+    sync: {
+      max: Math.max(0, Math.floor(e.SYNC_WATCH_MAX)),
+      ttlDays: Math.max(1, Math.floor(e.SYNC_WATCH_TTL_DAYS)),
+      hotDays: Math.max(0, Math.floor(e.SYNC_WATCH_HOT_DAYS)),
+    },
+  };
+
   // Vercel's filesystem is read-only except /tmp (demo data there is per-instance and ephemeral).
   const dataDir =
     e.DEMO_PERSIST === 'memory'
@@ -278,6 +315,7 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     // Local demo data is not durable on a production server (cold starts, instances, resets).
     demoResets:
       data === 'local' && (production || e.DEMO_RESET_ON_BOOT || dataDir === null || !!e.VERCEL),
+    watchRegions: watch.regions.map((code) => ({ code, name: regionName(code)! })),
   };
 
   const keep = e.CATALOG_KEEP_RATING ? Number(e.CATALOG_KEEP_RATING) : e.CATALOG_MIN_RATING;
@@ -305,6 +343,7 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
     mode,
     trustedProxy,
     health: { maxSyncAgeHours: Math.max(1, e.HEALTH_MAX_SYNC_AGE_HOURS) },
+    watch,
     tmdb: hasTmdb ? { readToken: e.TMDB_READ_TOKEN, apiKey: e.TMDB_API_KEY } : null,
     omdb: e.OMDB_API_KEY
       ? {
@@ -350,6 +389,53 @@ export function parseEnv(source: Record<string, string | undefined> = process.en
       certificationRegion: e.CERTIFICATION_REGION,
     },
   };
+}
+
+/**
+ * ADR-012 §5 boot validation: every WATCH_REGIONS code must be in src/lib/regions.ts and the default
+ * must be one of them; a bad value fails the boot with a clear message (never a silent fallback).
+ */
+export function parseWatchConfig(
+  rawDefault: string | undefined,
+  rawRegions: string | undefined,
+  rawGeoHeader: string | undefined,
+): Omit<ServerEnv['watch'], 'sync'> {
+  const code = (v: string, name: string) => {
+    const c = normalizeRegionCode(v);
+    if (!c || !isKnownRegion(c))
+      throw new EnvError(
+        `${name}: "${v}" is not a supported region code (see src/lib/regions.ts), e.g. US,GB,IN.`,
+      );
+    return c;
+  };
+  const regions = rawRegions
+    ? [
+        ...new Set(
+          rawRegions
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((v) => code(v, 'WATCH_REGIONS')),
+        ),
+      ]
+    : [...DEFAULT_WATCH_REGIONS];
+  if (regions.length === 0) throw new EnvError('WATCH_REGIONS: list at least one region code.');
+  const defaultRegion = rawDefault
+    ? code(rawDefault, 'WATCH_REGION_DEFAULT')
+    : DEFAULT_WATCH_REGION;
+  if (!regions.includes(defaultRegion))
+    throw new EnvError(
+      `WATCH_REGION_DEFAULT=${defaultRegion} must be one of WATCH_REGIONS (${regions.join(',')}).`,
+    );
+  let geoHeader: string | null = null;
+  if (rawGeoHeader) {
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(rawGeoHeader))
+      throw new EnvError(
+        `WATCH_GEO_HEADER: "${rawGeoHeader}" is not a header name (e.g. x-vercel-ip-country, cf-ipcountry).`,
+      );
+    geoHeader = rawGeoHeader.toLowerCase();
+  }
+  return { defaultRegion, regions, geoHeader };
 }
 
 let cached: ServerEnv | null = null;

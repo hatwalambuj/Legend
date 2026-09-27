@@ -107,11 +107,14 @@ export class SupabaseAuthProvider implements AuthProvider {
   ) {}
 
   private async sessionFor(db: SupabaseClient, user: User): Promise<Session | null> {
-    const { data, error } = await db
-      .from('profiles')
-      .select('handle, display_name, avatar_url')
-      .eq('id', user.id)
-      .maybeSingle();
+    const [{ data, error }, watchRegion] = await Promise.all([
+      db
+        .from('profiles')
+        .select('handle, display_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle(),
+      this.watchRegionOf(db, user.id),
+    ]);
     if (error) throw new AppError('internal', 'Something went wrong. Try again.', { cause: error });
     if (!data) return null;
     const p = data as { handle: string; display_name: string; avatar_url: string | null };
@@ -122,8 +125,31 @@ export class SupabaseAuthProvider implements AuthProvider {
         handle: String(p.handle),
         displayName: p.display_name,
         avatarUrl: p.avatar_url ?? null,
+        watchRegion,
       },
     };
+  }
+
+  /**
+   * ADR-012 §7: the owner-only saved region (`user_settings`, RLS). Best effort: a failure (e.g. the
+   * migration not applied yet) must never break sign-in, so it reads as "automatic".
+   */
+  private async watchRegionOf(db: SupabaseClient, userId: string): Promise<string | null> {
+    try {
+      const { data, error } = await db
+        .from('user_settings')
+        .select('watch_region')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) {
+        console.warn('[auth] user_settings read failed', error.code ?? 'error');
+        return null;
+      }
+      const r = (data as { watch_region?: unknown } | null)?.watch_region;
+      return typeof r === 'string' && /^[A-Z]{2}$/.test(r) ? r : null;
+    } catch {
+      return null;
+    }
   }
 
   async getSession(): Promise<Session | null> {
@@ -172,6 +198,7 @@ export class SupabaseAuthProvider implements AuthProvider {
         handle,
         displayName,
         avatarUrl: null,
+        watchRegion: null,
       },
     };
   }

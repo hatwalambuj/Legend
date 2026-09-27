@@ -7,6 +7,7 @@
  *   diaries, reviews) so public pages never depend on the session (API_CONTRACT §1 rule 1).
  * - `supabaseCatalog()`    : like `supabasePublic()`, but GET requests go through the Next data cache
  *   for 1 h with the `catalog` tag (revalidated by the nightly sync), per API_CONTRACT §4.
+ * - `supabaseWatchProvidersClient()`: like `supabaseCatalog()`, tag `watch-providers` (ADR-012 §6.1).
  * - `supabaseAdmin()`      : service-role client. Server-only (L2 detail cache writes, jobs).
  */
 import 'server-only';
@@ -78,6 +79,27 @@ export function supabaseCatalog(): SupabaseClient {
     global: { fetch: catalogFetch },
   });
   return catalogClient;
+}
+
+/** Like `catalogFetch`, tagged `watch-providers` (revalidated after the weekly provider-list sync). */
+export const watchProvidersFetch: typeof fetch = (input, init) =>
+  (init?.method ?? 'GET').toUpperCase() === 'GET'
+    ? fetch(input, {
+        ...init,
+        next: { revalidate: 3600, tags: ['watch-providers'] },
+      } as RequestInit)
+    : fetch(input, init);
+
+let watchProvidersClient: SupabaseClient | null = null;
+
+/** Cookie-less anon client for `watch_provider` reads (ADR-012 §6.1, data-cache tag `watch-providers`). */
+export function supabaseWatchProvidersClient(): SupabaseClient {
+  const cfg = config();
+  watchProvidersClient ??= createClient(cfg.url, cfg.anonKey, {
+    auth: NO_SESSION,
+    global: { fetch: watchProvidersFetch },
+  });
+  return watchProvidersClient;
 }
 
 export function supabaseAdmin(): SupabaseClient {

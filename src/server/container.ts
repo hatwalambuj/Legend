@@ -11,10 +11,11 @@ import { SupabaseAuthProvider } from './auth/supabase';
 import { FixturesDetailProvider } from './providers/fixtures-detail';
 import { TmdbDetailProvider } from './providers/tmdb';
 import { MemoryRateLimiter } from './rate-limit';
-import { MemoryCatalogIndex } from './repositories/memory/catalog';
+import { MemoryCatalogIndex, MemoryWatchProviders } from './repositories/memory/catalog';
 import {
   MemoryProfiles,
   MemoryReviews,
+  MemorySettings,
   MemoryStubs,
   MemoryTitleStates,
   MemoryWatchlist,
@@ -24,8 +25,10 @@ import {
   SupabaseProfiles,
   SupabaseRateLimiter,
   SupabaseReviews,
+  SupabaseSettings,
   SupabaseStubs,
   SupabaseTitleStates,
+  SupabaseWatchProviders,
   SupabaseWatchlist,
 } from './repositories/supabase';
 import { SupabaseDetailCache } from './repositories/supabase/detail-cache';
@@ -57,6 +60,9 @@ export function container(): Container {
     reviews: live ? new SupabaseReviews() : new MemoryReviews(),
     watchlist: live ? new SupabaseWatchlist() : new MemoryWatchlist(),
     titleStates: live ? new SupabaseTitleStates() : new MemoryTitleStates(),
+    // Where to watch (ADR-012): provider names follow the index (DATA_MODE), like the watch data itself.
+    watchProviders: live ? new SupabaseWatchProviders() : new MemoryWatchProviders(),
+    settings: live ? new SupabaseSettings() : new MemorySettings(),
     rateLimiter: live ? new SupabaseRateLimiter() : new MemoryRateLimiter(),
   };
   return instance;

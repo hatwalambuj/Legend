@@ -10,7 +10,7 @@
  * Not `server-only`: tsx imports it. OWNER: Backend.
  */
 
-export type SyncStep = 'discover' | 'enrich' | 'imdb';
+export type SyncStep = 'discover' | 'enrich' | 'watch' | 'imdb';
 export type RunStatus = 'ok' | 'aborted' | 'failed';
 
 export interface StepResult {
@@ -18,6 +18,8 @@ export interface StepResult {
   counts: unknown;
   /** Rows written (0 in a dry run). Any > 0 triggers revalidation. */
   wrote: number;
+  /** Extra cache tags to revalidate with `catalog` (e.g. `watch-providers`, ADR-012 §6.2). */
+  tags?: string[];
 }
 
 export interface DiscoverResult extends StepResult {
@@ -30,6 +32,8 @@ export interface SyncSteps {
   finishRun(status: RunStatus, counts: Record<string, unknown>, error?: string): Promise<void>;
   discover(opts: { dryRun: boolean }): Promise<DiscoverResult>;
   enrich(opts: { dryRun: boolean }): Promise<StepResult>;
+  /** ADR-012 §4: availability refresh + weekly provider list (after enrich, before imdb). */
+  watch(opts: { dryRun: boolean }): Promise<StepResult>;
   imdb(opts: { dryRun: boolean }): Promise<StepResult>;
   palettes(opts: { dryRun: boolean }): Promise<StepResult>;
   disagreements(): Promise<unknown>;
@@ -46,9 +50,11 @@ export async function runSync(
   const counts: Record<string, unknown> = {};
   let reasons: string[] = [];
   let wrote = 0;
+  const tags = new Set<string>(['catalog']);
   const record = (name: string, r: StepResult) => {
     counts[name] = r.counts;
     wrote += r.wrote;
+    for (const t of r.tags ?? []) tags.add(t);
   };
 
   if (!dryRun) await steps.startRun();
@@ -59,14 +65,15 @@ export async function runSync(
       reasons = d.aborted ?? [];
     }
     if (run('enrich')) record('enrich', await steps.enrich({ dryRun }));
+    if (run('watch')) record('watch', await steps.watch({ dryRun }));
     if (run('imdb')) record('imdb', await steps.imdb({ dryRun }));
-    // Palettes, the report and the purge belong to full runs (not --only=enrich|imdb).
+    // Palettes, the report and the purge belong to full runs (not --only=enrich|watch|imdb).
     if (run('discover')) {
       record('palettes', await steps.palettes({ dryRun }));
       counts.disagreements = await steps.disagreements();
       if (!dryRun) counts.purge = await steps.purge();
     }
-    if (!dryRun && wrote > 0) counts.revalidate = await steps.revalidate(['catalog']);
+    if (!dryRun && wrote > 0) counts.revalidate = await steps.revalidate([...tags]);
     const status = reasons.length ? 'aborted' : 'ok';
     if (!dryRun)
       await steps.finishRun(status, counts, reasons.length ? reasons.join('; ') : undefined);

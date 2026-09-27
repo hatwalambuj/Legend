@@ -23,12 +23,21 @@ export type DemoUser = Omit<FixtureSeed['users'][number], 'avatarUrl'> & {
   avatarUrl: string | null;
 };
 
+/** Owner-only per-user settings (mirror of `public.user_settings`, ADR-012 §3). */
+export interface DemoSetting {
+  userId: string;
+  watchRegion: string | null;
+  updatedAt: string;
+}
+
 export interface DemoData {
   version: 1;
   users: DemoUser[];
   stubs: FixtureSeed['stubs'];
   reviews: FixtureSeed['reviews'];
   watchlist: FixtureSeed['watchlist'];
+  /** v1.5. Optional so data files written before it still load (treated as []). Seeded accounts have none. */
+  settings?: DemoSetting[];
 }
 
 const catalog = catalogJson as unknown as FixtureCatalog;
@@ -57,6 +66,7 @@ function freshData(): DemoData {
     stubs: seed.stubs,
     reviews: seed.reviews,
     watchlist: seed.watchlist,
+    settings: [] as DemoSetting[],
   });
 }
 

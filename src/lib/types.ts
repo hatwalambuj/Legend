@@ -138,9 +138,93 @@ export interface TitleDetail extends TitleSummary {
    * (`src/fixtures/schema.ts`, an Omit of TitleDetail) needs no edit. Treat undefined as null.
    */
   degraded?: TitleDegraded;
+  /**
+   * v1.5 (ADR-012, API_CONTRACT §1b): "Where to watch" for ONE region, built per request by the server
+   * (all `href`s included). null = do not render the block: never fetched, checked more than 30 days
+   * ago, `degraded === 'catalog'`, or the title has no stored availability.
+   */
+  watch: TitleWatch | null;
 }
 
 export type TitleDegraded = null | 'community' | 'catalog';
+
+/* ------------------------------------------------------------------ */
+/* Where to watch (ADR-012, API_CONTRACT v1.5 §1b). Data: TMDB          */
+/* watch/providers (JustWatch), fetched only by the nightly job.        */
+/* ------------------------------------------------------------------ */
+
+/** TMDB offer types: flatrate → stream, free, ads, rent, buy. */
+export type WatchOfferType = 'stream' | 'free' | 'ads' | 'rent' | 'buy';
+/** `rent_buy` = every rent provider in the region is also a buy provider (one "Rent · Buy" group). */
+export type WatchGroupType = WatchOfferType | 'rent_buy';
+/** How a tile's link was built: the service's search for the title, its homepage, or the TMDB watch page. */
+export type WatchLinkKind = 'search' | 'home' | 'tmdb';
+/** Which input decided the region (ADR-012 §5). `setting` = the `stubbed_region` cookie. */
+export type WatchRegionSource = 'query' | 'setting' | 'geo' | 'accept_language' | 'default';
+
+export interface WatchRegionInfo {
+  /** ISO 3166-1 alpha-2, always one of `AppMode.watchRegions`. */
+  region: string;
+  /** "United States" (src/lib/regions.ts). */
+  regionName: string;
+  /** What the winning source asked for (may be unsupported); null when nothing asked (source 'default'). */
+  requested: string | null;
+  /** True → the requested region is unsupported; the UI shows "Showing: United States · Change" (W3-AC4). */
+  fallback: boolean;
+  source: WatchRegionSource;
+}
+
+export interface WatchProviderItem {
+  /** TMDB provider id. */
+  providerId: number;
+  /** "Netflix". */
+  name: string;
+  /** TMDB logo path → `providerLogoUrl()` (w92). null → monogram tile (always null in demo). */
+  logoPath: string | null;
+  /** <= 2 chars, always present. */
+  monogram: string;
+  /** Monogram tile background ('#rrggbb'), or null → `--surface-2`. */
+  tile: string | null;
+  /** https only, allowlisted host, no tracking params (src/lib/provider-links.ts). Built on the server. */
+  href: string;
+  linkKind: WatchLinkKind;
+  /** Only inside a 'rent' group: this provider also sells it (sub-caption "RENT · BUY"). */
+  alsoBuy?: true;
+}
+
+export interface WatchGroup {
+  type: WatchGroupType;
+  /** Full list, sorted by TMDB display priority. The UI caps at 6 and renders "+N" (W1-AC3). */
+  providers: WatchProviderItem[];
+}
+
+export interface TitleWatch extends WatchRegionInfo {
+  /** 'none' → "Not streaming in {Region} right now" (groups = []). */
+  status: 'available' | 'none';
+  /** Fixed order stream, free, ads, rent | rent_buy, buy; empty groups omitted. */
+  groups: WatchGroup[];
+  /** https://www.themoviedb.org/{type}/{id}/watch?locale={region} (ours, never the upstream `link`). */
+  allOptionsHref: string;
+  /** ISO-8601 UTC of the last successful fetch → "CHECKED SEP 27, 2026". */
+  checkedAt: IsoDateTime;
+}
+
+/** Stored offer lists of one region: TMDB provider ids, sorted by display priority. Missing = empty. */
+export interface WatchRegionStore {
+  /** flatrate (stream) */
+  s?: number[];
+  f?: number[];
+  a?: number[];
+  r?: number[];
+  b?: number[];
+}
+
+/**
+ * Region-agnostic availability stored on the catalogue row (`catalog_index.watch`, ADR-012 §3):
+ * `{ "US": { "s": [8, 337], "r": [2, 3], "b": [2, 3, 10] }, "GB": { … } }`. A supported region that is
+ * absent after a successful fetch means "none in that region".
+ */
+export type WatchStore = Partial<Record<string, WatchRegionStore>>;
 
 /* ------------------------------------------------------------------ */
 /* "Worth it?" (PRD §4.2, Epic F). Deterministic: stored data + rules  */
@@ -347,6 +431,12 @@ export interface SessionUser {
   handle: string;
   displayName: string;
   avatarUrl: string | null;
+  /**
+   * v1.5 (ADR-012 §7): the saved "Where to watch" region (`user_settings.watch_region`), null = automatic.
+   * Always set by the server; optional in the type only so existing client literals need no edit.
+   * Treat undefined as null.
+   */
+  watchRegion?: string | null;
 }
 
 export interface Session {
@@ -368,6 +458,12 @@ export interface AppMode {
    * Vercel /tmp store) → the pill reads "Demo: data resets" (GAP-04). Absent/false otherwise.
    */
   demoResets?: boolean;
+  /**
+   * v1.5 (ADR-012): supported "Where to watch" regions (`WATCH_REGIONS`) for the region `<select>`.
+   * Always set by the server; optional in the type only so existing client literals need no edit.
+   * Treat undefined as [].
+   */
+  watchRegions?: { code: string; name: string }[];
 }
 
 /** Keyset-paginated list. `nextCursor` is opaque; pass it back unchanged. */

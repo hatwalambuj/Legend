@@ -8,10 +8,13 @@ import { toTitleKey } from '@/lib/keys';
 import { slugify, truncate } from '@/lib/text';
 import type { MediaType, TitleEnrichment, TitleKey, TitleSummary } from '@/lib/types';
 import type { DetailResult } from './ports';
+import type { StoredWatch } from './watch';
 
 export interface CatalogEntry {
   summary: TitleSummary;
   enrichment: TitleEnrichment;
+  /** Stored availability (ADR-012). Ignored when degraded to 'catalog' (the block is hidden). */
+  watch?: StoredWatch;
 }
 
 export const EMPTY_ENRICHMENT: TitleEnrichment = {

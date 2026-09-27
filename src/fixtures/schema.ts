@@ -9,15 +9,17 @@ import type {
   TitleEnrichment,
   TitleKey,
   WatchedWhere,
+  WatchStore,
 } from '@/lib/types';
 
 /**
  * A catalogue row: TitleDetail minus fields computed at runtime (isListed, detailStatus, fetchedAt,
- * worthIt), plus the stored "Worth it?" inputs (TitleEnrichment; `tagline` is shared with TitleDetail).
+ * worthIt, watch), plus the stored "Worth it?" inputs (TitleEnrichment; `tagline` is shared with TitleDetail).
+ * Demo availability lives in watch.json (FixtureWatch), not on the catalogue row.
  */
 export type FixtureTitle = Omit<
   TitleDetail,
-  'isListed' | 'detailStatus' | 'fetchedAt' | 'worthIt'
+  'isListed' | 'detailStatus' | 'fetchedAt' | 'worthIt' | 'watch'
 > &
   Omit<TitleEnrichment, 'tagline'> & {
     /** Why this row exists, for curation edge cases (documentation only). */
@@ -77,4 +79,46 @@ export interface FixtureSeed {
   stubs: FixtureStub[];
   reviews: FixtureReview[];
   watchlist: FixtureWatchlistItem[];
+}
+
+/* ---------------- Where to watch demo data (watch.json, ADR-012 §8, PRD W6) ---------------- */
+
+/** QA reads fixture keys by scenario (W6-AC2); each tag is used at least once. */
+export type WatchScenario =
+  | 'subscription'
+  | 'free_or_ads'
+  | 'rent_buy_only'
+  | 'many'
+  | 'none_us'
+  | 'stale'
+  | 'differs_us_in'
+  | 'tv';
+
+export interface FixtureWatchProvider {
+  /** TMDB provider id. */
+  id: number;
+  name: string;
+  /** <= 2 chars (demo tiles are monograms: no logo is ever fetched, W6-AC3). */
+  monogram: string;
+  tile: `#${string}`;
+}
+
+export interface FixtureWatchTitle {
+  /** Must exist in catalog.json. */
+  key: TitleKey;
+  scenario: WatchScenario[];
+  /**
+   * Age of the data in days, NOT a date: the demo sets `watch_checked_at = now − ageDays` on read, so
+   * the stale fixture stays stale and the others stay fresh forever.
+   */
+  ageDays: number;
+  /** Regions US, GB, IN only. An absent region = "none in that region". */
+  watch: WatchStore;
+}
+
+export interface FixtureWatch {
+  asOf: string;
+  note: string;
+  providers: FixtureWatchProvider[];
+  titles: FixtureWatchTitle[];
 }

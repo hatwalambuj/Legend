@@ -1,0 +1,750 @@
+{
+  "asOf": "2026-09",
+  "note": "Illustrative demo data, not live. Real mode uses TMDB watch/providers (JustWatch data).",
+  "providers": [
+    {
+      "id": 8,
+      "name": "Netflix",
+      "monogram": "N",
+      "tile": "#b20710"
+    },
+    {
+      "id": 9,
+      "name": "Amazon Prime Video",
+      "monogram": "pv",
+      "tile": "#0f79af"
+    },
+    {
+      "id": 119,
+      "name": "Amazon Prime Video",
+      "monogram": "pv",
+      "tile": "#0f79af"
+    },
+    {
+      "id": 10,
+      "name": "Amazon Video",
+      "monogram": "a",
+      "tile": "#232f3e"
+    },
+    {
+      "id": 337,
+      "name": "Disney Plus",
+      "monogram": "D+",
+      "tile": "#113ccf"
+    },
+    {
+      "id": 1899,
+      "name": "Max",
+      "monogram": "M",
+      "tile": "#002be7"
+    },
+    {
+      "id": 15,
+      "name": "Hulu",
+      "monogram": "h",
+      "tile": "#0b7a47"
+    },
+    {
+      "id": 350,
+      "name": "Apple TV+",
+      "monogram": "tv",
+      "tile": "#1c1c1e"
+    },
+    {
+      "id": 2,
+      "name": "Apple TV",
+      "monogram": "tv",
+      "tile": "#1c1c1e"
+    },
+    {
+      "id": 3,
+      "name": "Google Play Movies",
+      "monogram": "G",
+      "tile": "#01875f"
+    },
+    {
+      "id": 531,
+      "name": "Paramount Plus",
+      "monogram": "P+",
+      "tile": "#0064ff"
+    },
+    {
+      "id": 386,
+      "name": "Peacock",
+      "monogram": "P",
+      "tile": "#2b2b2b"
+    },
+    {
+      "id": 73,
+      "name": "Tubi",
+      "monogram": "T",
+      "tile": "#5a1ec8"
+    },
+    {
+      "id": 300,
+      "name": "Pluto TV",
+      "monogram": "PL",
+      "tile": "#3b3b3b"
+    },
+    {
+      "id": 38,
+      "name": "BBC iPlayer",
+      "monogram": "iP",
+      "tile": "#b0004d"
+    },
+    {
+      "id": 39,
+      "name": "NOW",
+      "monogram": "NW",
+      "tile": "#00717a"
+    },
+    {
+      "id": 2336,
+      "name": "JioHotstar",
+      "monogram": "JH",
+      "tile": "#1f2a6b"
+    },
+    {
+      "id": 192,
+      "name": "YouTube",
+      "monogram": "YT",
+      "tile": "#b00000"
+    },
+    {
+      "id": 7,
+      "name": "Fandango at Home",
+      "monogram": "FH",
+      "tile": "#2563a8"
+    },
+    {
+      "id": 68,
+      "name": "Microsoft Store",
+      "monogram": "MS",
+      "tile": "#0067b8"
+    },
+    {
+      "id": 358,
+      "name": "DIRECTV",
+      "monogram": "DT",
+      "tile": "#0d4ea6"
+    }
+  ],
+  "titles": [
+    {
+      "key": "tv:1396",
+      "scenario": [
+        "subscription",
+        "tv"
+      ],
+      "ageDays": 1,
+      "watch": {
+        "US": {
+          "s": [
+            8
+          ]
+        },
+        "GB": {
+          "s": [
+            8
+          ]
+        },
+        "IN": {
+          "s": [
+            8
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:66732",
+      "scenario": [
+        "subscription",
+        "tv"
+      ],
+      "ageDays": 0,
+      "watch": {
+        "US": {
+          "s": [
+            8
+          ]
+        },
+        "GB": {
+          "s": [
+            8
+          ]
+        },
+        "IN": {
+          "s": [
+            8
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:95396",
+      "scenario": [
+        "subscription",
+        "tv"
+      ],
+      "ageDays": 2,
+      "watch": {
+        "US": {
+          "s": [
+            350
+          ]
+        },
+        "GB": {
+          "s": [
+            350
+          ]
+        },
+        "IN": {
+          "s": [
+            350
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:1399",
+      "scenario": [
+        "subscription",
+        "tv",
+        "differs_us_in"
+      ],
+      "ageDays": 1,
+      "watch": {
+        "US": {
+          "s": [
+            1899
+          ],
+          "b": [
+            2,
+            10,
+            3
+          ]
+        },
+        "GB": {
+          "s": [
+            39
+          ],
+          "b": [
+            2,
+            10
+          ]
+        },
+        "IN": {
+          "s": [
+            2336
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:693134",
+      "scenario": [
+        "subscription",
+        "differs_us_in"
+      ],
+      "ageDays": 3,
+      "watch": {
+        "US": {
+          "s": [
+            1899
+          ],
+          "r": [
+            2,
+            10,
+            3
+          ],
+          "b": [
+            2,
+            10,
+            3
+          ]
+        },
+        "GB": {
+          "s": [
+            39
+          ],
+          "r": [
+            2,
+            10
+          ],
+          "b": [
+            2,
+            10
+          ]
+        },
+        "IN": {
+          "s": [
+            119
+          ],
+          "r": [
+            2,
+            3
+          ],
+          "b": [
+            2,
+            3
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:354912",
+      "scenario": [
+        "subscription"
+      ],
+      "ageDays": 2,
+      "watch": {
+        "US": {
+          "s": [
+            337
+          ],
+          "b": [
+            2,
+            10
+          ]
+        },
+        "GB": {
+          "s": [
+            337
+          ]
+        },
+        "IN": {
+          "s": [
+            337
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:136315",
+      "scenario": [
+        "subscription",
+        "tv",
+        "differs_us_in"
+      ],
+      "ageDays": 4,
+      "watch": {
+        "US": {
+          "s": [
+            15
+          ]
+        },
+        "GB": {
+          "s": [
+            337
+          ]
+        },
+        "IN": {
+          "s": [
+            2336
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:872585",
+      "scenario": [
+        "subscription",
+        "differs_us_in"
+      ],
+      "ageDays": 1,
+      "watch": {
+        "US": {
+          "s": [
+            386
+          ],
+          "r": [
+            2,
+            10,
+            3
+          ],
+          "b": [
+            2,
+            10,
+            3
+          ]
+        },
+        "GB": {
+          "s": [
+            9
+          ]
+        },
+        "IN": {
+          "s": [
+            2336
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:2316",
+      "scenario": [
+        "subscription",
+        "tv"
+      ],
+      "ageDays": 5,
+      "watch": {
+        "US": {
+          "s": [
+            386
+          ]
+        },
+        "GB": {
+          "s": [
+            9
+          ]
+        },
+        "IN": {
+          "s": [
+            119
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:27205",
+      "scenario": [
+        "subscription"
+      ],
+      "ageDays": 2,
+      "watch": {
+        "US": {
+          "s": [
+            8
+          ],
+          "r": [
+            2,
+            10,
+            3
+          ],
+          "b": [
+            2,
+            10,
+            3
+          ]
+        },
+        "GB": {
+          "s": [
+            8
+          ]
+        },
+        "IN": {
+          "s": [
+            119
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:289",
+      "scenario": [
+        "free_or_ads"
+      ],
+      "ageDays": 3,
+      "watch": {
+        "US": {
+          "a": [
+            73,
+            300
+          ],
+          "r": [
+            2,
+            10
+          ],
+          "b": [
+            2,
+            10,
+            3
+          ]
+        },
+        "GB": {
+          "a": [
+            300
+          ],
+          "b": [
+            2
+          ]
+        },
+        "IN": {
+          "r": [
+            2
+          ],
+          "b": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:346",
+      "scenario": [
+        "free_or_ads"
+      ],
+      "ageDays": 6,
+      "watch": {
+        "US": {
+          "a": [
+            73
+          ]
+        },
+        "GB": {
+          "f": [
+            38
+          ]
+        },
+        "IN": {
+          "r": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:1858",
+      "scenario": [
+        "free_or_ads"
+      ],
+      "ageDays": 2,
+      "watch": {
+        "US": {
+          "s": [
+            531
+          ],
+          "a": [
+            300
+          ]
+        },
+        "GB": {
+          "s": [
+            531
+          ]
+        },
+        "IN": {
+          "s": [
+            119
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:965150",
+      "scenario": [
+        "rent_buy_only"
+      ],
+      "ageDays": 1,
+      "watch": {
+        "US": {
+          "r": [
+            2,
+            3
+          ],
+          "b": [
+            2,
+            3,
+            10
+          ]
+        },
+        "GB": {
+          "r": [
+            2,
+            10
+          ],
+          "b": [
+            2,
+            10
+          ]
+        },
+        "IN": {
+          "r": [
+            2
+          ],
+          "b": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:666277",
+      "scenario": [
+        "rent_buy_only"
+      ],
+      "ageDays": 4,
+      "watch": {
+        "US": {
+          "r": [
+            2,
+            10,
+            3
+          ],
+          "b": [
+            2,
+            3
+          ]
+        },
+        "GB": {
+          "r": [
+            2,
+            10
+          ],
+          "b": [
+            2
+          ]
+        },
+        "IN": {
+          "b": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:157336",
+      "scenario": [
+        "many",
+        "subscription"
+      ],
+      "ageDays": 0,
+      "watch": {
+        "US": {
+          "s": [
+            9,
+            531
+          ],
+          "b": [
+            2,
+            10,
+            3,
+            192,
+            7,
+            68,
+            358
+          ]
+        },
+        "GB": {
+          "s": [
+            9
+          ]
+        },
+        "IN": {
+          "s": [
+            119
+          ],
+          "b": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:67070",
+      "scenario": [
+        "none_us",
+        "tv"
+      ],
+      "ageDays": 2,
+      "watch": {
+        "GB": {
+          "s": [
+            9
+          ],
+          "f": [
+            38
+          ]
+        },
+        "IN": {
+          "s": [
+            119
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:496243",
+      "scenario": [
+        "stale"
+      ],
+      "ageDays": 45,
+      "watch": {
+        "US": {
+          "s": [
+            15
+          ],
+          "r": [
+            2,
+            10,
+            3
+          ],
+          "b": [
+            2,
+            10,
+            3
+          ]
+        },
+        "GB": {
+          "s": [
+            8
+          ]
+        },
+        "IN": {
+          "s": [
+            8
+          ]
+        }
+      }
+    },
+    {
+      "key": "movie:129",
+      "scenario": [
+        "subscription"
+      ],
+      "ageDays": 3,
+      "watch": {
+        "US": {
+          "s": [
+            1899
+          ]
+        },
+        "GB": {
+          "s": [
+            8
+          ]
+        },
+        "IN": {
+          "s": [
+            8
+          ]
+        }
+      }
+    },
+    {
+      "key": "tv:97546",
+      "scenario": [
+        "subscription",
+        "tv"
+      ],
+      "ageDays": 1,
+      "watch": {
+        "US": {
+          "s": [
+            350
+          ]
+        },
+        "GB": {
+          "s": [
+            350
+          ]
+        },
+        "IN": {
+          "s": [
+            350
+          ]
+        }
+      }
+    }
+  ]
+}

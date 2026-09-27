@@ -23,6 +23,8 @@ const WRITE_RPCS = new Set([
   'catalog_set_enrichment',
   'catalog_set_imdb',
   'catalog_purge_stale',
+  'catalog_set_watch',
+  'watch_provider_set_priorities',
 ]);
 const WRITE_OPS = new Set(['insert', 'update', 'upsert', 'delete']);
 
@@ -101,6 +103,11 @@ const currentRow = (key: string) => {
 function dbHandler(q: Query): unknown {
   if (q.kind === 'rpc') {
     if (q.name === 'catalog_enrich_due') return [{ id: 1, media_type: 'movie', tmdb_id: 11 }];
+    if (q.name === 'catalog_watch_due')
+      return [
+        { id: 1, media_type: 'movie', tmdb_id: 11 },
+        { id: 2, media_type: 'tv', tmdb_id: 22 },
+      ];
     if (q.name === 'catalog_imdb_due') return [{ id: 1, imdb_id: 'tt0000001' }];
     if (q.name === 'catalog_rating_disagreements') return [];
     if (q.name === 'catalog_apply_staging') return { upserted: 1 };
@@ -152,7 +159,46 @@ beforeEach(() => {
         const base = (d[1] === 'movie' ? 1 : 5) * 100_000 + year * 10;
         return json({ page: 1, total_pages: 1, results: [movie(base + 1), movie(base + 2)] });
       }
-      if (/\/3\/(movie|tv)\/\d+$/.test(url.pathname)) return json({}, detailStatus);
+      if (/\/3\/(movie|tv)\/\d+\/watch\/providers$/.test(url.pathname))
+        return json({
+          id: 22,
+          results: {
+            US: {
+              link: 'https://www.themoviedb.org/tv/22/watch?locale=US',
+              flatrate: [
+                {
+                  provider_id: 8,
+                  provider_name: 'Netflix',
+                  logo_path: '/n.jpg',
+                  display_priority: 1,
+                },
+              ],
+            },
+          },
+        });
+      if (/\/3\/watch\/providers\/(movie|tv)$/.test(url.pathname))
+        return json({
+          results: [
+            {
+              provider_id: 8,
+              provider_name: 'Netflix',
+              logo_path: '/n.jpg',
+              display_priorities: { [url.searchParams.get('watch_region') ?? 'US']: 2 },
+            },
+          ],
+        });
+      if (/\/3\/(movie|tv)\/\d+$/.test(url.pathname)) {
+        // Enrich calls carry append_to_response; re-checks don't.
+        if (url.searchParams.get('append_to_response')?.includes('watch/providers'))
+          return json({
+            id: 11,
+            'watch/providers': {
+              id: 11,
+              results: { GB: { flatrate: [{ provider_id: 38, provider_name: 'BBC iPlayer' }] } },
+            },
+          });
+        return json({}, detailStatus);
+      }
       return json({}, 500);
     }),
   );
@@ -202,6 +248,12 @@ describe('--dry-run spends no budget and writes nothing (ADR-011 §1)', () => {
       recheck_skipped: 3,
     });
     expect(result.counts.enrich).toEqual({ due: 1, dry_run: true });
+    expect(result.counts.watch).toEqual({
+      due: 2,
+      dry_run: true,
+      providers: { due: true, dry_run: true },
+    });
+    expect(fetched.filter((u) => u.includes('/watch/providers'))).toEqual([]);
     expect(result.counts.imdb).toEqual({ due: 1, dry_run: true });
     expect(result.counts.palettes).toEqual({ due: 1 });
     // Read-only RPCs only; no sync_runs bookkeeping.
@@ -210,12 +262,15 @@ describe('--dry-run spends no budget and writes nothing (ADR-011 §1)', () => {
     expect(logs).toContain('[sync] GUARD: pass');
   });
 
-  it.each(['discover', 'enrich', 'imdb'] as const)('--only=%s: same rules', async (only) => {
-    const { writes } = await sync({ dryRun: true, only });
-    expect(writes).toEqual([]);
-    expect(fetched.filter((u) => isDetail(u) || isOmdb(u) || isImage(u))).toEqual([]);
-    if (only !== 'discover') expect(fetched).toEqual([]);
-  });
+  it.each(['discover', 'enrich', 'watch', 'imdb'] as const)(
+    '--only=%s: same rules',
+    async (only) => {
+      const { writes } = await sync({ dryRun: true, only });
+      expect(writes).toEqual([]);
+      expect(fetched.filter((u) => isDetail(u) || isOmdb(u) || isImage(u))).toEqual([]);
+      if (only !== 'discover') expect(fetched).toEqual([]);
+    },
+  );
 
   it('guard failure in a dry run → aborted (exit 1), still nothing written', async () => {
     const { writes, result } = await sync(
@@ -263,5 +318,57 @@ describe('F2 recheck cap + carry-forward (ADR-011 §10)', () => {
     const { writes } = await sync({ dryRun: false, only: 'discover' });
     const gone = writes.find((w) => w.name === 'catalog_index' && has(w, 'update'));
     expect(gone?.ops.find(([m]) => m === 'in')?.[1][1]).toEqual(PREVIOUSLY_LISTED);
+  });
+});
+
+describe('where to watch wiring (ADR-012 §1, §4)', () => {
+  const rpcRows = (writes: Query[], name: string) =>
+    writes
+      .filter((w) => w.kind === 'rpc' && w.name === name)
+      .flatMap((w) => (w.ops[0]![1][0] as { p_rows: unknown[] }).p_rows);
+
+  it('--only=watch: due list → watch/providers per title → catalog_set_watch; weekly provider list', async () => {
+    const { writes, result } = await sync(
+      { dryRun: false, only: 'watch' },
+      env({ WATCH_REGIONS: 'US,GB' }),
+    );
+    expect(fetched.filter((u) => /\/3\/(movie|tv)\/\d+\/watch\/providers/.test(u))).toHaveLength(2);
+    expect(
+      fetched.filter((u) => /\/3\/watch\/providers\/(movie|tv)\?watch_region=/.test(u)),
+    ).toHaveLength(4);
+    expect(rpcRows(writes, 'catalog_set_watch')).toEqual([
+      {
+        id: 1,
+        watch: { US: { s: [8] } },
+        providers: [{ provider_id: 8, name: 'Netflix', logo_path: '/n.jpg' }],
+      },
+      {
+        id: 2,
+        watch: { US: { s: [8] } },
+        providers: [{ provider_id: 8, name: 'Netflix', logo_path: '/n.jpg' }],
+      },
+    ]);
+    expect(rpcRows(writes, 'watch_provider_set_priorities')).toEqual([
+      { provider_id: 8, name: 'Netflix', logo_path: '/n.jpg', priorities: { US: 2, GB: 2 } },
+    ]);
+    expect(result.counts.watch).toMatchObject({ due: 2, fetched: 2, failed: 0, regionsNone: 2 });
+    // The provider list wrote → the `watch-providers` tag is revalidated with `catalog`.
+    const reval = fetched.find((u) => u.endsWith('/api/revalidate'));
+    expect(reval).toBeDefined();
+  });
+
+  it('full run: enrich stores the appended watch part; the watch step skips that id', async () => {
+    const { writes } = await sync({ dryRun: false, only: null }, env({ WATCH_REGIONS: 'US,GB' }));
+    const enrichCall = fetched.find((u) => /\/3\/movie\/11\?/.test(u))!;
+    expect(new URL(enrichCall).searchParams.get('append_to_response')).toContain('watch/providers');
+    const rows = rpcRows(writes, 'catalog_set_watch') as { id: number; watch: unknown }[];
+    expect(rows[0]).toEqual({
+      id: 1,
+      watch: { GB: { s: [38] } },
+      providers: [{ provider_id: 38, name: 'BBC iPlayer', logo_path: null }],
+    });
+    // id 1 came from enrich → only id 2 is fetched standalone.
+    expect(rows.map((r) => r.id)).toEqual([1, 2]);
+    expect(fetched.filter((u) => /\/3\/movie\/11\/watch\/providers/.test(u))).toEqual([]);
   });
 });

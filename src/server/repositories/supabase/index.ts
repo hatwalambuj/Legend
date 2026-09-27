@@ -41,8 +41,11 @@ import type {
   ReviewRepository,
   StubRepository,
   TitleStateRepository,
+  UserSettingsRepository,
+  WatchProviderRepository,
   WatchlistRepository,
 } from '@/server/ports';
+import type { ProviderDirectory, ProviderInfo, StoredWatch } from '@/server/watch';
 import type { RateDecision, RateLimiter } from '@/server/rate-limit';
 import { averageOrNull, emptyTitleState } from '@/server/stats';
 import {
@@ -52,6 +55,7 @@ import {
   rowToReview,
   rowToStub,
   rowToSummary,
+  rowToWatch,
   unwrap,
   type CatalogRow,
   type ProfileRow,
@@ -221,9 +225,11 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
   async getEntry(
     mediaType: MediaType,
     tmdbId: number,
-  ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment } | null> {
+  ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment; watch: StoredWatch } | null> {
     const r = await this.row(mediaType, tmdbId);
-    return r ? { summary: rowToSummary(r), enrichment: rowToEnrichment(r) } : null;
+    return r
+      ? { summary: rowToSummary(r), enrichment: rowToEnrichment(r), watch: rowToWatch(r) }
+      : null;
   }
 
   async getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>> {
@@ -258,6 +264,85 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
       catalogCount: Number(row?.catalog_count ?? 0),
       lastFullSyncAt: typeof row?.last_full_sync_at === 'string' ? row.last_full_sync_at : null,
     };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Where to watch: provider directory + owner-only settings (ADR-012)  */
+/* ------------------------------------------------------------------ */
+
+const PROVIDER_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * `watch_provider` names/logos as an in-process map, refreshed at most hourly (ADR-012 §6.1). Reads go
+ * through the `watch-providers` data-cache client. A failed refresh keeps serving the last good map;
+ * with none, `all()` throws and the caller hides the block.
+ */
+export class SupabaseWatchProviders implements WatchProviderRepository {
+  private map: ProviderDirectory | null = null;
+  private loadedAt = 0;
+  private inflight: Promise<ProviderDirectory> | null = null;
+  private readonly client: ClientFn;
+
+  constructor(
+    client?: ClientFn,
+    private readonly now: () => number = Date.now,
+  ) {
+    this.client =
+      client ??
+      (async () => (await import('@/server/supabase/server')).supabaseWatchProvidersClient());
+  }
+
+  async all(): Promise<ProviderDirectory> {
+    if (this.map && this.now() - this.loadedAt < PROVIDER_TTL_MS) return this.map;
+    this.inflight ??= this.load().finally(() => {
+      this.inflight = null;
+    });
+    try {
+      return await this.inflight;
+    } catch (e) {
+      if (this.map) return this.map;
+      throw e;
+    }
+  }
+
+  private async load(): Promise<ProviderDirectory> {
+    const db = await this.client();
+    const res = await db.from('watch_provider').select('provider_id, name, logo_path');
+    const rows =
+      (unwrap(res) as { provider_id: number; name: string; logo_path: string | null }[] | null) ??
+      [];
+    const map = new Map<number, ProviderInfo>();
+    for (const r of rows)
+      map.set(Number(r.provider_id), { name: r.name, logoPath: r.logo_path ?? null });
+    this.map = map;
+    this.loadedAt = this.now();
+    return map;
+  }
+}
+
+export class SupabaseSettings implements UserSettingsRepository {
+  private readonly clients: Clients;
+  constructor(clients?: Partial<Clients>) {
+    this.clients = resolveClients(clients);
+  }
+
+  /** RLS: only the caller's own row is visible; anything else reads as "no setting". */
+  async get(userId: string): Promise<{ watchRegion: string | null }> {
+    const db = await this.clients.user();
+    const res = await db
+      .from('user_settings')
+      .select('watch_region')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const row = unwrap(res) as { watch_region: string | null } | null;
+    return { watchRegion: row?.watch_region ?? null };
+  }
+
+  /** Upsert of the caller's own row (security-invoker RPC; the user comes from the JWT). */
+  async setWatchRegion(_userId: string, region: string | null): Promise<void> {
+    const db = await this.clients.user();
+    unwrap(await db.rpc('user_settings_set_watch_region', { p_region: region }));
   }
 }
 

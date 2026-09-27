@@ -17,12 +17,14 @@ import type {
   ReviewUpsertResponse,
   SearchResponse,
   SetPasswordInput,
+  SetWatchRegionResponse,
   SignInInput,
   SignUpInput,
   StubDeleteResponse,
   StubMutationResponse,
   TitleReviewsResponse,
   TitleStatesResponse,
+  TitleWatchResponse,
   UpdateProfileInput,
   UpdateStubInput,
   UpsertReviewInput,
@@ -47,13 +49,19 @@ export class ApiError extends Error {
 
 type Json = Record<string, unknown> | unknown[];
 
-async function request<T>(method: string, path: string, body?: Json): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  body?: Json,
+  opts: { signal?: AbortSignal; cache?: RequestCache } = {},
+): Promise<T> {
   const res = await fetch(path, {
     method,
     credentials: 'same-origin',
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
-    cache: 'no-store',
+    cache: opts.cache ?? 'no-store',
+    signal: opts.signal,
   });
   if (res.status === 204) return undefined as T;
   const data: unknown = await res.json().catch(() => null);
@@ -101,6 +109,21 @@ export const api = {
       `/api/titles/${mediaType}/${tmdbId}/reviews${qs({ sort, cursor })}`,
     ),
 
+  /**
+   * v1.5 "Where to watch" for one region (region switcher, §5.21). Public and CDN-cached per URL; the
+   * region is the only input. Pass `signal` (e.g. `AbortSignal.timeout(1500)`) for the 1.5 s budget;
+   * an abort rejects with the platform's AbortError/TimeoutError, not ApiError.
+   */
+  titleWatch: (key: TitleKey, region: string, opts: { signal?: AbortSignal } = {}) => {
+    const [mediaType, tmdbId] = key.split(':');
+    return request<TitleWatchResponse>(
+      'GET',
+      `/api/titles/${mediaType}/${tmdbId}/watch${qs({ region })}`,
+      undefined,
+      { signal: opts.signal, cache: 'default' },
+    );
+  },
+
   /* ---- personal state (private) ---- */
   titleStates: (keys: TitleKey[]) =>
     request<TitleStatesResponse>('GET', `/api/me/title-states${qs({ keys: keys.join(',') })}`),
@@ -129,6 +152,9 @@ export const api = {
     request<WatchlistResponse>('DELETE', `/api/watchlist/${mediaType}/${tmdbId}`),
 
   /* ---- profile ---- */
+  /** v1.5: save the watch region (cookie; also the profile when signed in). null = automatic. */
+  setWatchRegion: (region: string | null) =>
+    request<SetWatchRegionResponse>('PUT', '/api/me/watch-region', { region }),
   updateProfile: (input: UpdateProfileInput) =>
     request<ProfileResponse>('PATCH', '/api/me/profile', input),
   /** Export is a plain navigation/download: <a href={exportUrl('letterboxd')} download>. */

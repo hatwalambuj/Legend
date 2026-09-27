@@ -1,8 +1,10 @@
 /**
  * Nightly enrich step (tickets + "Worth it?", PRD §4.2): one TMDB detail call per new or stale row,
  *   GET /3/{movie|tv}/{id}?append_to_response=external_ids,keywords,recommendations,similar,
- *       release_dates (movie) | content_ratings (tv)
+ *       release_dates (movie) | content_ratings (tv),watch/providers
  * mapped by the pure `mapTmdbEnrichment()` below and stored with rpc('catalog_set_enrichment').
+ * The appended `watch/providers` part (ADR-012 §1) is mapped by `mapTmdbWatch()` (./watch-map.ts) and
+ * stored with rpc('catalog_set_watch') in the same batch: zero extra TMDB calls.
  * Deterministic field mapping only — no AI/LLM (D15). pitch_hook is ours and never written here.
  * OWNER: Backend (reference mapping by Architect, tests in tests/server/enrich.test.ts).
  */
@@ -138,5 +140,7 @@ export function enrichmentAppends(mediaType: MediaType): string {
     'recommendations',
     'similar',
     mediaType === 'movie' ? 'release_dates' : 'content_ratings',
+    // ADR-012 §1: availability rides on the same call (6 appends, TMDB allows 20).
+    'watch/providers',
   ].join(',');
 }

@@ -38,6 +38,7 @@ import type {
   ReviewRepository,
   StubRepository,
   TitleStateRepository,
+  UserSettingsRepository,
   WatchlistRepository,
 } from '@/server/ports';
 import { assertUnderLimit } from '@/server/rate-limit';
@@ -600,5 +601,37 @@ export class MemoryTitleStates implements TitleStateRepository {
       ratingCount: count,
       ratingAvg10: averageOrNull(sum, count),
     };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Settings (ADR-012 §7): owner-only, mirrors public.user_settings     */
+/* ------------------------------------------------------------------ */
+
+/** The saved watch region of a demo user (null = automatic / none saved). */
+export function demoWatchRegion(d: DemoData, userId: string): string | null {
+  return d.settings?.find((x) => x.userId === userId)?.watchRegion ?? null;
+}
+
+export class MemorySettings implements UserSettingsRepository {
+  async get(userId: string): Promise<{ watchRegion: string | null }> {
+    return { watchRegion: demoWatchRegion(demoStore().get(), userId) };
+  }
+
+  async setWatchRegion(userId: string, region: string | null): Promise<void> {
+    if (region !== null && !/^[A-Z]{2}$/.test(region))
+      throw new AppError('validation_failed', 'Please check the highlighted fields.', {
+        fields: { region: 'Use a two-letter country code' },
+      });
+    demoStore().mutate((d) => {
+      if (!d.users.some((u) => u.id === userId))
+        throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
+      const list = (d.settings ??= []);
+      const row = list.find((x) => x.userId === userId);
+      if (row) {
+        row.watchRegion = region;
+        row.updatedAt = nowIso();
+      } else list.push({ userId, watchRegion: region, updatedAt: nowIso() });
+    });
   }
 }

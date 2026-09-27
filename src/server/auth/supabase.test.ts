@@ -27,7 +27,14 @@ describe('SupabaseAuthProvider', () => {
   it('getSession validates with getUser() and joins the profile', async () => {
     const { provider } = fakeClient();
     expect(await provider.getSession()).toEqual({
-      user: { id: 'u1', email: 'a@b.test', handle: 'alice', displayName: 'Alice', avatarUrl: null },
+      user: {
+        id: 'u1',
+        email: 'a@b.test',
+        handle: 'alice',
+        displayName: 'Alice',
+        avatarUrl: null,
+        watchRegion: null,
+      },
     });
     const anon = fakeClient({
       getUser: async () => ({ data: { user: null }, error: { message: 'no session' } }),
@@ -277,5 +284,46 @@ describe('SupabaseAuthProvider', () => {
       expect(lastAuthMs({ amr: ['password'] })).toBeNull();
       expect(lastAuthMs(null)).toBeNull();
     });
+  });
+});
+
+describe('SupabaseAuthProvider: watchRegion from user_settings (ADR-012 §7)', () => {
+  const session = (settings: { data: unknown; error: unknown } | 'throw') => {
+    const profile = { handle: 'alice', display_name: 'Alice', avatar_url: null };
+    const from = vi.fn((table: string) => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => {
+            if (table === 'profiles') return { data: profile, error: null };
+            if (settings === 'throw') throw new Error('network');
+            return settings;
+          },
+        }),
+      }),
+    }));
+    const client = {
+      auth: { getUser: async () => ({ data: { user }, error: null }) },
+      from,
+    } as unknown as SupabaseClient;
+    return new SupabaseAuthProvider(() => client).getSession();
+  };
+
+  it('carries the saved region', async () => {
+    expect((await session({ data: { watch_region: 'GB' }, error: null }))?.user.watchRegion).toBe(
+      'GB',
+    );
+  });
+
+  it('no row, a bad value, an error or a throw → null (sign-in never breaks)', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect((await session({ data: null, error: null }))?.user.watchRegion).toBeNull();
+    expect(
+      (await session({ data: { watch_region: 'gb' }, error: null }))?.user.watchRegion,
+    ).toBeNull();
+    expect(
+      (await session({ data: null, error: { code: '42P01', message: 'no table' } }))?.user
+        .watchRegion,
+    ).toBeNull();
+    expect((await session('throw'))?.user.watchRegion).toBeNull();
   });
 });

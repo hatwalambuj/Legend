@@ -9,6 +9,7 @@
  * Selection happens once in src/server/container.ts from env().mode.
  */
 import type { RateLimiter } from './rate-limit';
+import type { ProviderDirectory, StoredWatch } from './watch';
 import type {
   CatalogQuery,
   DiaryEntry,
@@ -45,11 +46,14 @@ export interface CatalogIndexRepository {
   search(normalizedQuery: string, type: TypeFilter, limit: number): Promise<TitleSummary[]>;
   /** Listed OR unlisted row (hysteresis). */
   get(mediaType: MediaType, tmdbId: number): Promise<TitleSummary | null>;
-  /** Same row plus its stored enrichment (the "Worth it?" inputs). Used by dal.getTitle. */
+  /**
+   * Same row plus its stored enrichment (the "Worth it?" inputs) and, v1.5, its stored availability
+   * (`catalog_index.watch` + `watch_checked_at`, ADR-012 §6.1). Used by dal.getTitle.
+   */
   getEntry(
     mediaType: MediaType,
     tmdbId: number,
-  ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment } | null>;
+  ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment; watch?: StoredWatch } | null>;
   getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>>;
   count(): Promise<number>;
   /** Last FULL catalogue sync (discover applied, status ok; F1). */
@@ -69,7 +73,7 @@ export interface HealthProbe {
 /** Heavy per-title detail (live: TMDB with L1/L2 cache; demo: fixtures). */
 export type DetailFields = Omit<
   TitleDetail,
-  keyof TitleSummary | 'detailStatus' | 'fetchedAt' | 'worthIt' | 'degraded'
+  keyof TitleSummary | 'detailStatus' | 'fetchedAt' | 'worthIt' | 'degraded' | 'watch'
 >;
 
 export interface CatalogDetailProvider {
@@ -263,6 +267,23 @@ export interface TitleStateRepository {
   stats(titleKey: TitleKey): Promise<TitleStats>;
 }
 
+/* ------------------------------------------------------------------ */
+/* Where to watch (ADR-012)                                            */
+/* ------------------------------------------------------------------ */
+
+/** Provider names + logos (live: `watch_provider`, cached ≤ 1 h; demo: src/fixtures/watch.json). */
+export interface WatchProviderRepository {
+  /** Throws when unavailable; the caller then hides the block (never renders unnamed tiles). */
+  all(): Promise<ProviderDirectory>;
+}
+
+/** Owner-only per-user settings (`user_settings`, RLS). Never part of a public payload. */
+export interface UserSettingsRepository {
+  get(userId: string): Promise<{ watchRegion: string | null }>;
+  /** null = automatic (clears the saved region). */
+  setWatchRegion(userId: string, region: string | null): Promise<void>;
+}
+
 /**
  * Everything the data-access layer and route handlers need, resolved once per process.
  * There is deliberately no outbound sync adapter: nothing is ever posted to IMDb, TMDB or
@@ -277,6 +298,8 @@ export interface Container {
   reviews: ReviewRepository;
   watchlist: WatchlistRepository;
   titleStates: TitleStateRepository;
+  watchProviders: WatchProviderRepository;
+  settings: UserSettingsRepository;
   /** Non-write-path limits (export, auth). Stub/review limits live with the writes (DB trigger / repo). */
   rateLimiter: RateLimiter;
 }

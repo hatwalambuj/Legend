@@ -1,0 +1,141 @@
+{
+  "_provenance": "Shape of GET /3/movie/550?append_to_response=external_ids,keywords,recommendations,similar,release_dates,watch/providers, reconstructed from TMDB reference extracts (ADR-012 §1). NOT a live recording: api.themoviedb.org was not reachable when this was written. Replace with a real recording (same file name) once a TMDB key is available; watch-map.test.ts must stay green.",
+  "id": 550,
+  "title": "Fight Club",
+  "imdb_id": "tt0137523",
+  "runtime": 139,
+  "tagline": "Mischief. Mayhem. Soap.",
+  "external_ids": { "imdb_id": "tt0137523" },
+  "keywords": { "keywords": [{ "id": 825, "name": "support group" }] },
+  "recommendations": { "page": 1, "results": [] },
+  "similar": { "page": 1, "results": [] },
+  "release_dates": {
+    "results": [{ "iso_3166_1": "US", "release_dates": [{ "certification": "R", "type": 3 }] }]
+  },
+  "watch/providers": {
+    "id": 550,
+    "results": {
+      "US": {
+        "link": "https://www.themoviedb.org/movie/550/watch?locale=US",
+        "flatrate": [
+          {
+            "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+            "provider_id": 8,
+            "provider_name": "Netflix",
+            "display_priority": 3
+          },
+          {
+            "logo_path": "/97yvRBw1GzX7fXprcF80er19ot.jpg",
+            "provider_id": 337,
+            "provider_name": "Disney Plus",
+            "display_priority": 1
+          },
+          {
+            "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+            "provider_id": 8,
+            "provider_name": "Netflix",
+            "display_priority": 2
+          }
+        ],
+        "rent": [
+          {
+            "logo_path": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 14
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 12
+          },
+          {
+            "logo_path": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 14
+          },
+          {
+            "logo_path": "javascript:alert(1)",
+            "provider_id": 0,
+            "provider_name": "Bad id",
+            "display_priority": 1
+          },
+          {
+            "logo_path": "/x.gif",
+            "provider_id": 7.5,
+            "provider_name": "Float id",
+            "display_priority": 1
+          }
+        ],
+        "ads": [
+          {
+            "logo_path": "https://evil.example/logo.png",
+            "provider_id": 73,
+            "provider_name": "Tubi TV",
+            "display_priority": 20
+          }
+        ],
+        "unknown_future_type": [
+          {
+            "logo_path": "/a.jpg",
+            "provider_id": 999,
+            "provider_name": "Should be dropped",
+            "display_priority": 1
+          }
+        ]
+      },
+      "GB": {
+        "link": "https://www.themoviedb.org/movie/550/watch?locale=GB",
+        "flatrate": [
+          {
+            "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+            "provider_id": 8,
+            "provider_name": "Netflix",
+            "display_priority": 1
+          }
+        ],
+        "free": [
+          {
+            "logo_path": "/rOmUuQEZfPlZ5ORwMCf8uZUtJ0u.jpg",
+            "provider_id": 38,
+            "provider_name": "BBC iPlayer",
+            "display_priority": 5
+          }
+        ]
+      },
+      "IN": {
+        "link": "https://www.themoviedb.org/movie/550/watch?locale=IN",
+        "flatrate": [],
+        "rent": [],
+        "buy": []
+      },
+      "DE": {
+        "link": "https://www.themoviedb.org/movie/550/watch?locale=DE",
+        "flatrate": [
+          {
+            "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+            "provider_id": 8,
+            "provider_name": "Netflix",
+            "display_priority": 1
+          }
+        ]
+      }
+    }
+  }
+}

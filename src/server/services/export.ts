@@ -40,13 +40,17 @@ export async function buildExport(
       contentType: 'text/csv; charset=utf-8',
       filename: `stubbed-letterboxd-${today}.csv`,
     };
-  const watchlist = await drain((cursor) => c.watchlist.list(uid, { cursor, limit: 50 }));
+  const [watchlist, settings] = await Promise.all([
+    drain((cursor) => c.watchlist.list(uid, { cursor, limit: 50 })),
+    c.settings.get(uid),
+  ]);
   const data = buildJsonExport({
     exportedAt: now().toISOString(),
     profile,
     stubs,
     reviews,
     watchlist,
+    settings,
   });
   return {
     body: JSON.stringify(data, null, 2),

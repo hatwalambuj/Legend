@@ -23,6 +23,8 @@ export const CACHE = {
   catalog: 'public, s-maxage=3600, stale-while-revalidate=86400',
   search: 'public, s-maxage=300, stale-while-revalidate=3600',
   reviews: 'public, s-maxage=60, stale-while-revalidate=300',
+  /** v1.5 GET /api/titles/{type}/{id}/watch?region= : the URL fully keys it (no cookie, no Accept-Language). */
+  watch: 'public, s-maxage=3600, stale-while-revalidate=86400',
   /** Anything that reads the session cookie or mutates. */
   private: 'private, no-store',
 } as const;

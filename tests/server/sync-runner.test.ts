@@ -15,6 +15,7 @@ function fakeSteps(over: Partial<SyncSteps> = {}) {
     finishRun: vi.fn(async () => void calls.push('finishRun')),
     discover: step('discover'),
     enrich: step('enrich'),
+    watch: step('watch'),
     imdb: step('imdb'),
     palettes: step('palettes'),
     disagreements: vi.fn(async () => (calls.push('disagreements'), 0)),
@@ -34,6 +35,7 @@ describe('runSync', () => {
       'startRun',
       'discover',
       'enrich',
+      'watch',
       'imdb',
       'palettes',
       'disagreements',
@@ -55,7 +57,7 @@ describe('runSync', () => {
     const r = await runSync(steps, { dryRun: false, only: null });
     expect(r.status).toBe('aborted');
     expect(r.reasons).toEqual(['movie: low', 'tv: Δ']);
-    for (const s of ['enrich', 'imdb', 'palettes', 'purge'])
+    for (const s of ['enrich', 'watch', 'imdb', 'palettes', 'purge'])
       expect(calls.filter((c) => c === s)).toHaveLength(1);
     // enrich/imdb/palettes wrote rows → fresh IMDb chips are revalidated even on an aborted night.
     expect(steps.revalidate).toHaveBeenCalledTimes(1);
@@ -83,7 +85,7 @@ describe('runSync', () => {
     const { steps, calls } = fakeSteps();
     const r = await runSync(steps, { dryRun: true, only: null });
     expect(r.status).toBe('ok');
-    expect(calls).toEqual(['discover', 'enrich', 'imdb', 'palettes', 'disagreements']);
+    expect(calls).toEqual(['discover', 'enrich', 'watch', 'imdb', 'palettes', 'disagreements']);
     for (const f of [steps.startRun, steps.finishRun, steps.purge, steps.revalidate])
       expect(f).not.toHaveBeenCalled();
   });
@@ -97,5 +99,18 @@ describe('runSync', () => {
     const enrichOnly = fakeSteps();
     await runSync(enrichOnly.steps, { dryRun: false, only: 'enrich' });
     expect(enrichOnly.calls).toEqual(['startRun', 'enrich', 'revalidate', 'finishRun']);
+  });
+
+  it('--only=watch runs the watch step; its extra tags are revalidated with catalog (ADR-012 §6.2)', async () => {
+    const { steps, calls } = fakeSteps({
+      watch: async () => (
+        calls.push('watch'),
+        { counts: { due: 1 }, wrote: 1, tags: ['watch-providers'] }
+      ),
+    });
+    const r = await runSync(steps, { dryRun: false, only: 'watch' });
+    expect(calls).toEqual(['startRun', 'watch', 'revalidate', 'finishRun']);
+    expect(steps.revalidate).toHaveBeenCalledWith(['catalog', 'watch-providers']);
+    expect(r.counts.watch).toEqual({ due: 1 });
   });
 });

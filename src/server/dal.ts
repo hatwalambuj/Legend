@@ -18,7 +18,9 @@ import type {
   TitleKey,
   TitleStats,
   TitleSummary,
+  TitleWatch,
   TypeFilter,
+  WatchRegionInfo,
 } from '@/lib/types';
 import { buildWorthIt } from '@/lib/worth-it';
 import { container } from './container';
@@ -29,6 +31,8 @@ import {
   type CatalogEntry,
 } from './degraded';
 import { env, today } from './env';
+import { regionInfo, requestWatchRegion, watchRegionConfig } from './region';
+import { buildTitleWatch, type StoredWatch } from './watch';
 
 const safeType = (t: TypeFilter | undefined): TypeFilter =>
   t === 'movie' || t === 'tv' ? t : 'all';
@@ -86,9 +90,14 @@ async function loadEntry(
   }
 }
 
-/** Deduped per request: generateMetadata + the page both call getTitle (TitleDetail incl. worthIt). */
-const getTitle = cache(
-  async (mediaType: MediaType, tmdbId: number): Promise<TitleDetail | null> => {
+type TitleBase = { detail: Omit<TitleDetail, 'watch'>; watch: StoredWatch | undefined };
+
+/**
+ * Deduped per request: generateMetadata + the page both call getTitle (TitleDetail incl. worthIt).
+ * Region-agnostic: the "Where to watch" block is built per call on top of it (ADR-012 §6.1).
+ */
+const getTitleBase = cache(
+  async (mediaType: MediaType, tmdbId: number): Promise<TitleBase | null> => {
     const c = container();
     const loaded = await loadEntry(mediaType, tmdbId);
     if (!loaded) return null;
@@ -114,9 +123,66 @@ const getTitle = cache(
       stats,
       recommended: [...recommended.values()],
     });
-    return { ...base, worthIt, degraded };
+    return { detail: { ...base, worthIt, degraded }, watch: loaded.entry.watch };
   },
 );
+
+/** Provider names/logos, once per request (the live repository also caches in process ≤ 1 h). */
+const providerDirectory = cache(async () => container().watchProviders.all());
+
+/**
+ * `TitleDetail.watch` for one region (ADR-012 §6.1): pure `buildTitleWatch` over the stored data. Any
+ * failure (e.g. provider names unavailable) hides the block; it never fails the page.
+ */
+async function watchBlock(
+  title: { mediaType: MediaType; tmdbId: number; title: string },
+  stored: StoredWatch | undefined,
+  region: WatchRegionInfo,
+  degraded: TitleDegraded | undefined,
+): Promise<TitleWatch | null> {
+  if (!stored || degraded === 'catalog') return null;
+  try {
+    return buildTitleWatch(stored, region, title, new Date(), await providerDirectory(), {
+      degraded,
+    });
+  } catch (e) {
+    console.error('[dal] where-to-watch unavailable, hiding the block', { code: errCode(e) });
+    return null;
+  }
+}
+
+const defaultRegion = () => regionInfo(null, 'default', watchRegionConfig());
+
+async function getTitle(
+  mediaType: MediaType,
+  tmdbId: number,
+  opts: { region?: WatchRegionInfo } = {},
+): Promise<TitleDetail | null> {
+  const base = await getTitleBase(mediaType, tmdbId);
+  if (!base) return null;
+  const watch = await watchBlock(
+    base.detail,
+    base.watch,
+    opts.region ?? defaultRegion(),
+    base.detail.degraded,
+  );
+  return { ...base.detail, watch };
+}
+
+/**
+ * GET /api/titles/{type}/{id}/watch (API_CONTRACT §5.21): the block for an explicit region, from the
+ * catalogue entry only (no TMDB detail call, no cookie). `undefined` = unknown title (404).
+ */
+export async function titleWatchFor(
+  mediaType: MediaType,
+  tmdbId: number,
+  region: WatchRegionInfo,
+): Promise<TitleWatch | null | undefined> {
+  const loaded = await loadEntry(mediaType, tmdbId);
+  if (!loaded) return undefined;
+  const { summary, watch } = loaded.entry;
+  return watchBlock(summary, watch, region, loaded.degraded);
+}
 
 export const dal: DataAccess = {
   getMode: () => env().mode,
@@ -146,6 +212,10 @@ export const dal: DataAccess = {
   },
 
   getTitle,
+
+  // Reads the region cookie + Accept-Language (+ the geo header only behind a trusted proxy), never the
+  // session (ADR-012 §5). The title page is dynamic SSR and private, so this never leaks into a cache.
+  getWatchRegion: () => requestWatchRegion(),
 
   async getTitleStats(key) {
     return container().titleStates.stats(key);
@@ -214,7 +284,7 @@ export const dal: DataAccess = {
   },
 };
 
-type DetailWithoutPitch = Omit<TitleDetail, 'worthIt' | 'degraded'>;
+type DetailWithoutPitch = Omit<TitleDetail, 'worthIt' | 'degraded' | 'watch'>;
 
 async function loadDetail(
   summary: TitleSummary,

@@ -29,6 +29,7 @@ import type {
   TypeFilter,
   WalletItem,
   MediaType,
+  WatchRegionInfo,
 } from './types';
 
 export interface DataAccess {
@@ -48,7 +49,18 @@ export interface DataAccess {
    * Always includes `imdbRating` (null = hide the chip, ADR-008) and a computed `worthIt` block
    * (ADR-009), even when index-only.
    */
-  getTitle(mediaType: MediaType, tmdbId: number): Promise<TitleDetail | null>;
+  getTitle(
+    mediaType: MediaType,
+    tmdbId: number,
+    opts?: { region?: WatchRegionInfo },
+  ): Promise<TitleDetail | null>;
+  /**
+   * v1.5 (ADR-012 §5): the "Where to watch" region for this request — `stubbed_region` cookie → trusted
+   * geo header (only when WATCH_GEO_HEADER and TRUSTED_PROXY≠none) → Accept-Language → WATCH_REGION_DEFAULT.
+   * Never reads the session. Pass the result to `getTitle(…, { region })`; `TitleDetail.watch` is built for
+   * it (the default region when omitted).
+   */
+  getWatchRegion(): Promise<WatchRegionInfo>;
   getTitleStats(key: TitleKey): Promise<TitleStats>;
   /** Stubbed reviews for a title (TMDB reviews are on TitleDetail.tmdbReviews). */
   listTitleReviews(

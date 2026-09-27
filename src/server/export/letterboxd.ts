@@ -110,6 +110,8 @@ export interface JsonExport {
     editedAt: string | null;
   }[];
   watchlist: ReturnType<typeof titleRef>[];
+  /** v1.5 (ADR-012 §3): the owner-only `user_settings` row. */
+  settings: { watchRegion: string | null };
 }
 
 export function buildJsonExport(input: {
@@ -118,6 +120,7 @@ export function buildJsonExport(input: {
   stubs: DiaryEntry[];
   reviews: ReviewWithTitle[];
   watchlist: TitleSummary[];
+  settings?: { watchRegion: string | null };
 }): JsonExport {
   return {
     exportedAt: input.exportedAt,
@@ -145,6 +148,7 @@ export function buildJsonExport(input: {
       editedAt: r.editedAt,
     })),
     watchlist: input.watchlist.map(titleRef),
+    settings: { watchRegion: input.settings?.watchRegion ?? null },
   };
 }
 

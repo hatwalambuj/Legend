@@ -7,7 +7,7 @@
  *   npm run sync:catalog -- --dry-run         # discover pages + DB reads + guardrails; 0 OMDb, 0 TMDB
  *                                             # detail, 0 image fetches, 0 writes (ADR-011 §1)
  *   npm run sync:catalog -- --from-fixtures   # seed a Supabase project from src/fixtures (no TMDB/OMDb needed)
- *   npm run sync:catalog -- --only=imdb       # just the OMDb step (also: --only=enrich, --only=discover)
+ *   npm run sync:catalog -- --only=imdb       # just the OMDb step (also: --only=enrich|watch|discover)
  *
  * Flow (each step is skipped when its credentials are missing; a failed later step never undoes an earlier one)
  *  1. insert sync_runs(kind='catalog', status=running)
@@ -29,6 +29,11 @@
  *     GET /{type}/{id}?append_to_response=<enrichmentAppends()> (10 req/s), mapTmdbEnrichment(),
  *     rpc('catalog_set_enrichment', { p_rows }) in batches of 200. Fills imdb_id, runtime/seasons/episodes,
  *     episode runtime, status, tagline, certification (CERTIFICATION_REGION), keywords, recommendations.
+ *     The same call appends watch/providers (ADR-012 §1): mapTmdbWatch() → rpc('catalog_set_watch').
+ * 7b. WATCH (ADR-012 §4) — rpc('catalog_watch_due', { p_limit: SYNC_WATCH_MAX, p_ttl_days: SYNC_WATCH_TTL_DAYS,
+ *     p_hot_days: SYNC_WATCH_HOT_DAYS }) minus ids enriched this run → GET /{type}/{id}/watch/providers
+ *     (10 req/s) → rpc('catalog_set_watch'). Weekly: GET /watch/providers/{movie|tv}?watch_region=R for
+ *     each WATCH_REGIONS → rpc('watch_provider_set_priorities'); revalidates tag `watch-providers`.
  *  8. IMDB (ADR-008) — refreshImdbRatings(): rpc('catalog_imdb_due', { p_limit: OMDB_DAILY_BUDGET, … tiers })
  *     → OMDb → rpc('catalog_set_imdb'). Stops cleanly at the OMDb daily limit.
  *  9. palettes: rows where needs_palette → fetch w92 poster, sharp().resize(24,36,{fit:'fill'}).removeAlpha().raw()
@@ -36,7 +41,7 @@
  * 10. report: rpc('catalog_rating_disagreements') → log count + top 20 (PRD §4.1, for the monthly PM review)
  * 11. rpc('catalog_purge_stale'); POST {SITE_URL}/api/revalidate {tags:['catalog']} with x-revalidate-secret
  *     when any step wrote rows
- * 12. sync_runs.status='ok' | 'aborted', counts = { discover, enrich, imdb, palettes, disagreements, purge }
+ * 12. sync_runs.status='ok' | 'aborted', counts = { discover, enrich, watch, imdb, palettes, disagreements, purge }
  * Orchestration (order, abort, dry run): src/server/jobs/sync-runner.ts.
  */
 import { randomUUID } from 'node:crypto';
@@ -68,6 +73,15 @@ import {
   type StagingRow,
 } from '../src/server/jobs/discover';
 import { refreshImdbRatings, type ImdbDueRow } from '../src/server/jobs/imdb-refresh';
+import { linkMismatches, mapTmdbWatch, watchProvidersOf } from '../src/server/jobs/watch-map';
+import {
+  refreshWatch,
+  syncProviderLists,
+  type ProviderPriorityRow,
+  type WatchDueRow,
+  type WatchSetRow,
+} from '../src/server/jobs/watch-refresh';
+import { PROVIDER_LINKS } from '../src/lib/provider-links';
 import {
   runSync,
   type DiscoverResult,
@@ -79,9 +93,11 @@ import { mapConcurrent, paletteFromPoster, type SharpLike } from '../src/server/
 import { OmdbRatingProvider } from '../src/server/providers/omdb';
 import { TmdbDetailProvider } from '../src/server/providers/tmdb';
 import catalogJson from '../src/fixtures/catalog.json';
-import type { FixtureCatalog } from '../src/fixtures/schema';
+import watchJson from '../src/fixtures/watch.json';
+import type { FixtureCatalog, FixtureWatch } from '../src/fixtures/schema';
 
 const catalog = catalogJson as unknown as FixtureCatalog;
+const watchFixtures = watchJson as unknown as FixtureWatch;
 
 type Step = SyncStep;
 
@@ -93,8 +109,8 @@ interface Args {
 
 export function parseArgs(argv: string[]): Args {
   const only = argv.find((a) => a.startsWith('--only='))?.slice('--only='.length) ?? null;
-  if (only && !['discover', 'enrich', 'imdb'].includes(only))
-    throw new Error(`Unknown --only=${only} (discover | enrich | imdb)`);
+  if (only && !['discover', 'enrich', 'watch', 'imdb'].includes(only))
+    throw new Error(`Unknown --only=${only} (discover | enrich | watch | imdb)`);
   return {
     dryRun: argv.includes('--dry-run'),
     fromFixtures: argv.includes('--from-fixtures'),
@@ -164,6 +180,30 @@ export function fixtureEnrichmentRows(idByKey: Map<string, number>): EnrichmentR
   });
 }
 
+/**
+ * `--from-fixtures` availability (ADR-012 §8): catalog_set_watch rows for the demo titles plus the
+ * `watch_checked_at` backdate per title (`ageDays`), so the stale fixture is stale in a live project too.
+ */
+export function fixtureWatchRows(idByKey: Map<string, number>): {
+  rows: WatchSetRow[];
+  ages: { id: number; ageDays: number }[];
+} {
+  const providers = watchFixtures.providers.map((p) => ({
+    provider_id: p.id,
+    name: p.name,
+    logo_path: null,
+  }));
+  const rows: WatchSetRow[] = [];
+  const ages: { id: number; ageDays: number }[] = [];
+  for (const t of watchFixtures.titles) {
+    const id = idByKey.get(t.key);
+    if (id === undefined) continue;
+    rows.push({ id, watch: t.watch, providers });
+    if (t.ageDays > 0) ages.push({ id, ageDays: t.ageDays });
+  }
+  return { rows, ages };
+}
+
 function admin(env: ServerEnv): SupabaseClient {
   if (!env.supabase?.serviceRoleKey)
     throw new Error('Needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
@@ -219,13 +259,26 @@ async function seedFromFixtures(env: ServerEnv, today: string, dryRun: boolean):
       .eq('title_key', t.key);
     if (error) throw new Error(`palette/hook ${t.key}: ${error.message}`);
   }
-  console.log('[sync] fixtures seeded (catalogue, enrichment, IMDb ratings, palettes, hooks)');
+  const watch = fixtureWatchRows(ids);
+  await rpc(db, 'catalog_set_watch', { p_rows: watch.rows });
+  for (const a of watch.ages) {
+    const at = new Date(Date.now() - a.ageDays * 86_400_000).toISOString();
+    const { error } = await db
+      .from('catalog_index')
+      .update({ watch_checked_at: at })
+      .eq('id', a.id);
+    if (error) throw new Error(`watch age ${a.id}: ${error.message}`);
+  }
+  console.log(
+    '[sync] fixtures seeded (catalogue, enrichment, IMDb ratings, palettes, hooks, where to watch)',
+  );
 }
 
 async function enrichStep(
   env: ServerEnv,
   db: SupabaseClient,
   dryRun: boolean,
+  enrichedIds: Set<number> = new Set(),
 ): Promise<StepResult> {
   if (!env.tmdb) return { counts: { skipped: 'no TMDB key' }, wrote: 0 };
   const due = await rpc<{ id: number; media_type: 'movie' | 'tv'; tmdb_id: number }[]>(
@@ -236,8 +289,12 @@ async function enrichStep(
   // ADR-011 §1: a dry run spends no enrich budget (no TMDB detail call) and writes nothing.
   if (dryRun) return { counts: { due: due.length, dry_run: true }, wrote: 0 };
   const tmdb = new TmdbDetailProvider(env.tmdb);
+  const regions = env.watch.regions;
   const out: EnrichmentRow[] = [];
+  const watchRows: WatchSetRow[] = [];
   let errors = 0;
+  let watchMissing = 0;
+  let linkMismatch = 0;
   for (const r of due) {
     try {
       const body = await tmdb.request<unknown>(`/${r.media_type}/${r.tmdb_id}`, {
@@ -246,13 +303,97 @@ async function enrichStep(
       out.push(
         mapTmdbEnrichment(r.id, r.media_type, r.tmdb_id, body, env.sync.certificationRegion),
       );
+      // ADR-012 §1–2: the appended availability. Missing = not fetched (stored data untouched, and
+      // the title stays due for the watch step); counted so a renamed append key shows in sync_runs.
+      const watch = mapTmdbWatch(body, regions);
+      if (watch) {
+        watchRows.push({ id: r.id, watch: watch.watch, providers: watch.providers });
+        enrichedIds.add(r.id);
+        linkMismatch += linkMismatches(watchProvidersOf(body), r.media_type, r.tmdb_id, regions);
+      } else watchMissing++;
     } catch {
       errors++; // stays due; retried next night
     }
     await new Promise((res) => setTimeout(res, 100)); // ~10 req/s, well under TMDB's limit
   }
   for (const batch of chunks(out, 200)) await rpc(db, 'catalog_set_enrichment', { p_rows: batch });
-  return { counts: { due: due.length, enriched: out.length, errors }, wrote: out.length };
+  for (const batch of chunks(watchRows, 200)) await rpc(db, 'catalog_set_watch', { p_rows: batch });
+  if (linkMismatch > 0)
+    console.warn(`[sync] watch: ${linkMismatch} upstream links differ from tmdbWatchHref()`);
+  return {
+    counts: {
+      due: due.length,
+      enriched: out.length,
+      errors,
+      watch: watchRows.length,
+      watch_missing: watchMissing,
+      watch_link_mismatch: linkMismatch,
+    },
+    wrote: out.length,
+  };
+}
+
+/** ADR-012 §4: availability refresh for due titles + the weekly provider list. */
+async function watchStep(
+  env: ServerEnv,
+  db: SupabaseClient,
+  dryRun: boolean,
+  enrichedIds: ReadonlySet<number>,
+  rps = 10,
+): Promise<StepResult> {
+  if (!env.tmdb) return { counts: { skipped: 'no TMDB key' }, wrote: 0 };
+  const regions = env.watch.regions;
+  // Dry run: the due list and the provider-list age only (read-only); the TMDB client is never built.
+  const get = dryRun ? null : tmdbGetter(env, rps);
+  const noCalls = () => Promise.reject(new Error('dry run: no TMDB calls'));
+  const counts = await refreshWatch(
+    {
+      due: async (limit) =>
+        (await rpc<WatchDueRow[] | null>(db, 'catalog_watch_due', {
+          p_limit: limit,
+          p_ttl_days: env.watch.sync.ttlDays,
+          p_hot_days: env.watch.sync.hotDays,
+        })) ?? [],
+      fetch: get ? (r) => get(`/${r.media_type}/${r.tmdb_id}/watch/providers`) : noCalls,
+      save: async (rows) => {
+        await rpc(db, 'catalog_set_watch', { p_rows: rows });
+      },
+    },
+    { max: env.watch.sync.max, regions, skipIds: enrichedIds, dryRun },
+  );
+  const providers = await syncProviderLists(
+    {
+      lastSyncedAt: async () => {
+        const { data, error } = await db
+          .from('watch_provider')
+          .select('priorities_at')
+          .not('priorities_at', 'is', null)
+          .order('priorities_at', { ascending: false })
+          .limit(1);
+        if (error) throw new Error(`select watch_provider: ${error.message}`);
+        return ((data ?? []) as { priorities_at: string | null }[])[0]?.priorities_at ?? null;
+      },
+      fetchList: get
+        ? (type, region) => get(`/watch/providers/${type}`, { watch_region: region })
+        : noCalls,
+      save: async (rows: ProviderPriorityRow[]) => {
+        await rpc(db, 'watch_provider_set_priorities', { p_rows: rows });
+      },
+    },
+    { regions, configIds: Object.keys(PROVIDER_LINKS).map(Number), dryRun },
+  );
+  if (providers.unknownConfigIds?.length)
+    console.warn(
+      `[sync] provider-links ids TMDB did not return: ${providers.unknownConfigIds.join(', ')}`,
+    );
+  if (dryRun) console.log(`[sync] watch due: ${counts.due}; provider list due: ${providers.due}`);
+  const fetched = 'fetched' in counts ? counts.fetched : 0;
+  const listWrote = providers.providers ?? 0;
+  return {
+    counts: { ...counts, providers },
+    wrote: fetched + listWrote,
+    ...(listWrote > 0 ? { tags: ['watch-providers'] } : {}),
+  };
 }
 
 async function imdbStep(env: ServerEnv, db: SupabaseClient, dryRun: boolean): Promise<StepResult> {
@@ -548,6 +689,8 @@ export function buildSteps(
   opts: { runId: string; today: string; tmdbRps?: number },
 ): SyncSteps {
   const { runId, today } = opts;
+  // Ids whose availability the enrich step refreshed this run: the watch step skips them (ADR-012 §4).
+  const enrichedIds = new Set<number>();
   return {
     startRun: async () => {
       const { error } = await db
@@ -563,7 +706,8 @@ export function buildSteps(
       if (e) console.error('[sync] could not record the run:', e.message);
     },
     discover: ({ dryRun }) => discoverStep(env, db, runId, today, dryRun, opts.tmdbRps),
-    enrich: ({ dryRun }) => enrichStep(env, db, dryRun),
+    enrich: ({ dryRun }) => enrichStep(env, db, dryRun, enrichedIds),
+    watch: ({ dryRun }) => watchStep(env, db, dryRun, enrichedIds, opts.tmdbRps),
     imdb: ({ dryRun }) => imdbStep(env, db, dryRun),
     palettes: ({ dryRun }) => paletteStep(db, dryRun),
     disagreements: () => disagreementStep(db),
@@ -596,7 +740,9 @@ async function main() {
   }
   console.log('[sync] done', JSON.stringify(result.counts));
   if (args.dryRun)
-    console.log('[sync] dry run: nothing was written; no OMDb, enrich or image budget was spent');
+    console.log(
+      '[sync] dry run: nothing was written; no OMDb, enrich, watch or image budget was spent',
+    );
 }
 
 // Only run when executed directly (tests may import the helpers).

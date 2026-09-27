@@ -31,6 +31,8 @@ export const LIMITS = {
   health: { max: 60, windowSec: 60 },
   /** ADR-010 ID-2: PUT /api/auth/password per user. */
   setPassword: { max: 5, windowSec: 600 },
+  /** ADR-012 §7: PUT /api/me/watch-region per IP. */
+  watchRegion: { max: 30, windowSec: 60 },
 } as const;
 
 /** Limits keyed by client IP: with TRUSTED_PROXY=none every client shares one key (ADR-001 §A3). */
@@ -39,6 +41,7 @@ const PER_IP: ReadonlySet<keyof typeof LIMITS> = new Set([
   'signUp',
   'magicLink',
   'health',
+  'watchRegion',
 ]);
 
 /**
