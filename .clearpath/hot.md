@@ -15,7 +15,7 @@ Close M1 launch-hardening items via the agent pipeline under ClearPath, keeping 
 ## Active Context
 - M1 launch hardening DONE: backend + frontend implemented, ClearPath code review SHIP (338 unit, 169 E2E green).
 - Open: stub-count race ([[issues/stub-count-race.md]]) awaiting founder decision; founder tasks (TMDB logo, trademark, SMTP, staging smoke M1-17).
-- Where to watch: backend W-00…W-07 implemented (uncommitted, gate green); next frontend W-10…W-12, then code/arch review + QA W-20. Migration 20260928120000 not applied.
+- Where to watch: backend W-00…W-07 merged; frontend W-10…W-12 implemented (uncommitted, full gate + E2E green); next code/arch review (check `?region=` on the title page, ADR-012 §5 deviation) + QA W-20. Migration 20260928120000 not applied.
 - Constraints: $0 infra, no AI, no third-party posting ([[meta/rules.md]]).
 
 ## Recent Changes

@@ -37,3 +37,8 @@ confidence: high
 - deviations: `AppMode.watchRegions?` / `SessionUser.watchRegion?` optional (frontend literals untouched, same precedent as `degraded?`); SYNC_WATCH_* live under `env.watch.sync` (frozen tests/lib/env.test.ts); `watch_provider.priorities_at` column added; user_settings writes via invoker RPC `user_settings_set_watch_region`.
 - unverified: TMDB append key "watch/providers" (fixture is reconstructed shape, not a live recording); provider ids/templates (W2-AC5).
 - verification: lint, typecheck, 511 unit, build, format:check green. No commit.
+
+## 2026-09-27 · Where to watch frontend W-10…W-12
+- done: WhereToWatch (+css, test), ProviderTile (tile, logo/monogram fallback, 16px ProviderMark, test), WatchRegionSelect (pill + Settings row, css, test); title page slot (under stubbed line, above Worth it?; hidden when watch null); Settings "Where to watch" region; About JustWatch credit; Ticket optional `hint`/`title.watchHint` → `ticket-providers` (grid/rail only).
+- deviations: title page honours `?region=` (switcher writes it via history.replaceState; ADR-012 §5 says query is API-only) — needs arch-review sign-off; setWatchRegion is called signed out too (cookie, W3-AC3); e2e/title.spec.ts F1 (QA-owned) now skips `where-to-watch` between stub line and slip.
+- verification: lint, typecheck, 531 unit, build, format:check, 169 E2E green. Screenshots docs/02-design/w2w-app-375.png, -1440.png. No commit.

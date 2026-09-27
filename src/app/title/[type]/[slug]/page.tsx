@@ -11,28 +11,54 @@ import { Reviews } from '@/components/Reviews';
 import { ScoreChips } from '@/components/ScoreChips';
 import { stubTarget, Ticket } from '@/components/Ticket';
 import { TitleActions } from '@/components/TitleActions';
+import { WhereToWatch } from '@/components/WhereToWatch';
 import { WorthIt } from '@/components/WorthIt';
 import { paletteOrDefault, tmdbImage } from '@/lib/images';
+import { normalizeRegionCode } from '@/lib/regions';
 import { isMediaType, parseTitleSlug, titleHref } from '@/lib/routes';
-import type { TitleDetail } from '@/lib/types';
+import type { TitleDetail, WatchRegionInfo } from '@/lib/types';
 import { formatRuntime } from '@/lib/worth-it';
 import { dal } from '@/server/dal';
+import { regionInfo, watchRegionConfig } from '@/server/region';
 import styles from './title.module.css';
 
-// OWNER: Frontend. Title detail (DESIGN §7.4, §7.4.1, §7.5).
+// OWNER: Frontend. Title detail (DESIGN §7.4, §7.4.1, §7.4.2, §7.5).
 export const dynamic = 'force-dynamic';
 
 type Params = Promise<{ type: string; slug: string }>;
+type Search = Promise<{ region?: string | string[] }>;
 
-const load = cache(async (type: string, slug: string): Promise<TitleDetail | null> => {
-  const parsed = parseTitleSlug(slug);
-  if (!isMediaType(type) || !parsed) return null;
-  return dal.getTitle(type, parsed.tmdbId);
-});
+/**
+ * "Where to watch" region (ADR-012 §5): `?region=GB` (written by the block's switcher, so a shared or
+ * reloaded URL shows what the user picked) wins, else the cookie → geo → Accept-Language → default.
+ * The page is dynamic and private, so reading the query and cookie never leaks into a shared cache.
+ */
+async function pageRegion(region: string | undefined): Promise<WatchRegionInfo> {
+  const q = normalizeRegionCode(region);
+  return q ? regionInfo(q, 'query', watchRegionConfig()) : dal.getWatchRegion();
+}
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { type, slug } = await params;
-  const t = await load(type, slug);
+const load = cache(
+  async (type: string, slug: string, region?: string): Promise<TitleDetail | null> => {
+    const parsed = parseTitleSlug(slug);
+    if (!isMediaType(type) || !parsed) return null;
+    return dal.getTitle(type, parsed.tmdbId, { region: await pageRegion(region) });
+  },
+);
+
+function firstParam(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: Search;
+}): Promise<Metadata> {
+  const [{ type, slug }, sp] = await Promise.all([params, searchParams]);
+  const t = await load(type, slug, firstParam(sp.region));
   if (!t) return { title: "This ticket doesn't exist" };
   const og = tmdbImage(t.posterPath, 'w780', dal.getMode().images);
   const title = `${t.title} (${t.year})`;
@@ -52,9 +78,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-export async function generateViewport({ params }: { params: Params }): Promise<Viewport> {
-  const { type, slug } = await params;
-  const t = await load(type, slug);
+export async function generateViewport({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: Search;
+}): Promise<Viewport> {
+  const [{ type, slug }, sp] = await Promise.all([params, searchParams]);
+  const t = await load(type, slug, firstParam(sp.region));
   const p = t
     ? paletteOrDefault(
         t.palette,
@@ -71,9 +103,15 @@ function trailerHref(t: TitleDetail): string | null {
     : `https://vimeo.com/${encodeURIComponent(t.trailer.key)}`;
 }
 
-export default async function TitlePage({ params }: { params: Params }) {
-  const { type, slug } = await params;
-  const t = await load(type, slug);
+export default async function TitlePage({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: Search;
+}) {
+  const [{ type, slug }, sp] = await Promise.all([params, searchParams]);
+  const t = await load(type, slug, firstParam(sp.region));
   if (!t) notFound();
   if (parseTitleSlug(slug)?.slug !== t.slug) permanentRedirect(titleHref(t));
 
@@ -152,6 +190,8 @@ export default async function TitlePage({ params }: { params: Params }) {
           <div className={styles.info}>
             <ScoreChips title={t} stats={stats} />
             <TitleActions target={target} paused={paused} />
+            {/* DESIGN §7.4.2: under the stubbed line, above Worth it?. null → not rendered (SSR, no CLS). */}
+            {t.watch && <WhereToWatch initial={t.watch} target={target} paused={paused} />}
             <WorthIt data={t.worthIt} />
             {t.detailStatus !== 'fresh' && (
               <p className={styles.status}>

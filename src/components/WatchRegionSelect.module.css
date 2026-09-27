@@ -1,0 +1,69 @@
+/* Region pill (DESIGN §7.4.2): ghost pill 32px with a 44px hit area; native <select> overlaid. */
+.pill {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 26px 0 12px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line-2);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--fg);
+}
+.pill::before {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+.pill::after {
+  content: '';
+  position: absolute;
+  right: 11px;
+  top: 12px;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.pill select {
+  position: absolute;
+  inset: -6px 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px; /* no iOS zoom on focus */
+}
+.pill select option {
+  background: var(--surface);
+  color: var(--fg);
+}
+.pill select:focus-visible {
+  outline: none;
+}
+.pill:has(select:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Settings row */
+.setting {
+  display: grid;
+  gap: 8px;
+}
+.label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.setting :global(.select) {
+  max-width: 340px;
+}
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fg-2);
+}

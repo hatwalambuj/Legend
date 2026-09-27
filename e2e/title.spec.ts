@@ -173,7 +173,9 @@ test.describe('F "Worth it?"', () => {
     // Directly under the action row (the stub line is the last element of that row).
     const prevIsActionRow = await slip.evaluate((el) => {
       let p = el.previousElementSibling;
-      while (p && p.matches('[data-testid="my-rating"]')) p = p.previousElementSibling;
+      // DESIGN §7.4.2: "Where to watch" sits between the stubbed line and the slip.
+      while (p && p.matches('[data-testid="my-rating"], [data-testid="where-to-watch"]'))
+        p = p.previousElementSibling;
       return p?.getAttribute('data-testid') === 'stub-count';
     });
     expect(prevIsActionRow).toBe(true);

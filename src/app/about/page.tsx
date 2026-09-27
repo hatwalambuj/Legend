@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
 import { CONTACT_EMAIL, contactHref } from '@/lib/contact';
 import { NEUTRAL_PALETTE } from '@/lib/images';
+import { JUSTWATCH_ATTRIBUTION } from '@/lib/provider-links';
 import styles from './about.module.css';
 
-// OWNER: Frontend. About / Credits (DESIGN §7.9, §8): mission, TMDB notice + logo, OMDb credit,
+// OWNER: Frontend. About / Credits (DESIGN §7.9, §8): mission, TMDB notice + logo, OMDb + JustWatch credits,
 // why we can't post to IMDb, data & privacy summary.
 export const metadata: Metadata = {
   title: 'About & credits',
@@ -69,6 +70,19 @@ export default function AboutPage() {
               </a>{' '}
               and refreshed nightly. Stubbed is not affiliated with IMDb. When a title has no IMDb
               rating, we simply don&apos;t show one.
+            </p>
+            <p>
+              &ldquo;Where to watch&rdquo; data is provided by{' '}
+              <a
+                className="link"
+                href={JUSTWATCH_ATTRIBUTION.href}
+                target="_blank"
+                rel={JUSTWATCH_ATTRIBUTION.rel}
+              >
+                JustWatch
+              </a>{' '}
+              through TMDB. Availability changes often, so each title shows when we last checked,
+              and a link opens the service in a new tab. We never add affiliate or tracking codes.
             </p>
             <p>
               The &ldquo;Worth it?&rdquo; summary is built from these ratings, runtimes and our own

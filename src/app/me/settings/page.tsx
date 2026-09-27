@@ -7,13 +7,14 @@ import { EditProfile } from '@/components/Owner';
 import { safe } from '@/components/lib/safe';
 import { SetPasswordForm } from '@/components/SetPasswordForm';
 import { SignOutButton } from '@/components/SignOutButton';
+import { WatchRegionSetting } from '@/components/WatchRegionSelect';
 import { api } from '@/lib/api-client';
 import { NEUTRAL_PALETTE } from '@/lib/images';
 import { profileHref } from '@/lib/routes';
 import { dal } from '@/server/dal';
 import styles from './settings.module.css';
 
-// OWNER: Frontend. Settings (DESIGN §7.9): profile, account, export, sign out. Private.
+// OWNER: Frontend. Settings (DESIGN §7.9): profile, account, watch region, export, sign out. Private.
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Settings', robots: { index: false } };
 
@@ -59,6 +60,10 @@ export default async function SettingsPage() {
               one here.
             </p>
             <SetPasswordForm />
+          </section>
+          <section className={styles.card} id="region" aria-labelledby="set-region">
+            <h2 id="set-region">Where to watch</h2>
+            <WatchRegionSetting initial={u.watchRegion ?? null} />
           </section>
           <section className={styles.card} id="export" aria-labelledby="set-export">
             <h2 id="set-export">Export</h2>
