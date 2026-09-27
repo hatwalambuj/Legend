@@ -24,7 +24,7 @@ Status legend: active · stale · superseded — verify stale pages against live
 - [[components/_index.md]]
 
 ## Issues
-- [[issues/_index.md]] — 7 open · active
+- [[issues/_index.md]] — 8 open · active
 
 ## Sources
 - [[sources/_index.md]]

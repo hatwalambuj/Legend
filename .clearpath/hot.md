@@ -17,6 +17,8 @@ Close M1 launch-hardening items via the agent pipeline under ClearPath, keeping 
 - Identity = Supabase Auth + profiles ([[decisions/003-identity-supabase-auth.md]]).
 - Open must-before-launch: L-3, L-4, L-5, L-6, L-7 ([[issues/_index.md]]).
 - Founder constraint added 2026-09-27: DB/server must be free of cost ([[meta/rules.md]]).
+- New scope 2026-09-27: Where to watch (OTT icons, clickable) — PM ∥ UX scoping ([[issues/where-to-watch.md]]).
+- Running: architect (ADR-010 identity, ADR-001 free alternates, ADR-011 ops), QA (flake root cause).
 
 ## Recent Changes
 - ClearPath protocol + memory initialised; code-reviewer and arch-reviewer agents added.
