@@ -1,6 +1,6 @@
 # Stubbed — Product Requirements Document (PRD)
 
-Author: Product Manager · Date: 2026-09-26 · Status: **v1.1 — updated for the founder scope change (ADR-008)**
+Author: Product Manager · Date: 2026-09-26 · Status: **v1.2 — adds "Where to watch" (founder scope 2026-09-27, §13) on top of the ADR-008 scope change**
 Inputs: `docs/00-orchestrator/BRIEF.md` · `docs/04-architecture/ADR-008-scope-change-no-third-party-posting.md` · Evidence: `docs/01-product/research.md` · Name: `docs/01-product/naming.md`
 
 ---
@@ -57,6 +57,7 @@ Positioning line: *"Proof you watched."*
 | D13 | **Commercial status**: the MVP is **non-commercial** (no ads, no paid tier). | Keeps us inside the TMDB free tier, OMDb CC BY-NC and Vercel Hobby. Monetisation triggers TMDB commercial (about $149/month) and a hosting upgrade (see §10). |
 | D14 | **"Worth it?" decision summary** on every title (full spec in §4.2). It is **deterministic**: assembled by rules and templates from TMDB fields, the IMDb rating and our own community data, with hand-written hooks in demo fixtures. | Founder request (J7). Deterministic output is free, testable, offline-safe and licence-clean. |
 | D15 | **Hard constraint: no AI/LLM anywhere.** The app runs on its own server with no AI or LLM access, not at runtime and not in the nightly job. Every feature, including "Worth it?", must be built from stored data plus rules and templates. | Founder constraint, 2026-09-26. |
+| D16 | **Where to watch (M2)**: every title page shows the services it is on in the user's region, as logo icons grouped by Stream, Free, Free with ads, Rent and Buy. Data comes from TMDB `watch/providers` (JustWatch data, credited on the block). A tap on an icon opens that service (its search for the title, or its homepage) in a new tab or the installed app. "All options" opens the TMDB watch page, which has exact-title links. No affiliate links, no tracking parameters. Full spec in §13. | Founder request, 2026-09-27. TMDB is $0 and covered by our key; JustWatch's own API is contract-only; exact-title deep links need a third-party enricher (research §14). |
 
 ### 4.1 Ratings we show (answers the founder's "What kind of rating are we showing and why?")
 
@@ -161,12 +162,19 @@ Positioning line: *"Proof you watched."*
 - **Demo mode**: when API keys are absent, the app automatically uses bundled seed data (at least 60 titles, a mix of movies and shows across genres, years and ratings, including some near the 6.5 threshold, plus a few sample users with stubs and reviews) and local auth and storage. Fixtures carry **real IMDb ids and IMDb ratings** and a full "Worth it?" data set per title (§4.2).
 - **Nightly job**: TMDB catalogue refresh, OMDb IMDb-rating refresh (staggered, ADR-008), "Worth it?" fields (keywords → vibes, certification, episode data, recommendations), and the rating disagreement report (§4.1). No AI/LLM calls (D15).
 
+### M2 addition — Where to watch (founder scope 2026-09-27; spec and stories in §13)
+- Title detail page: a "Where to watch" block for the user's region, with provider logos grouped as Stream, Free, Free with ads, Rent and Buy. Each logo is a link that opens the service. An "All options" link goes to the TMDB watch page. It carries "Data by JustWatch" attribution.
+- Region comes from the user's setting, then a trusted geo header, then `Accept-Language`, then `WATCH_REGION_DEFAULT` (US). It can be changed on the block and in Settings.
+- Data is fetched in the nightly enrich call we already make (no extra TMDB calls) and is dated on screen. When there is no data, the block shows "Not streaming in {region} right now" and offers Watchlist.
+- Demo mode: about 20 fixture titles carry realistic providers for US, GB and IN, with offline logo tiles.
+- P1, planned for the same milestone if capacity allows (otherwise M3): one "On {service}" logo on the ticket stub, and "On Netflix"-style filter chips in browse.
+
 ### v1 (next 1–2 cycles after MVP)
 - **TV depth**: seasons and episodes. Stub an episode, auto-progress "next episode", and show a progress bar per show.
 - **Share ticket images**: generate a story-sized (1080×1920) and square PNG of a stub or review ticket, with the poster-tinted design and handle. Use the Web Share API with a download fallback. Each image carries a watermark and a short link.
 - **Social follow**: follow users, a friends activity feed, "friends who stubbed this" on the title page, and review likes.
 - **Lists**: custom ordered lists (public or private) and a "Top 4" profile showcase.
-- **Where to watch**: TMDB watch/providers per region (JustWatch data, attributed on each item). Region is auto-detected and can be overridden.
+- **Where to watch**: pulled forward to M2 (§13). v1 keeps any P1 items that did not ship in M2 (the stub logo, browse chips) and adds "My services" (P2).
 - **Weekly streaks**: "stubbed something N weeks in a row" with 1 free "intermission" (freeze) a month. There are no daily streaks.
 - **Imports (file upload only, no account connections)**: IMDb ratings CSV, Letterboxd export ZIP or CSV, and **TV Time export** (to capture displaced users).
 - **"Worth it?" quick-peek sheet** from a card's `⋯` menu, per-user region for certification, and a "Where to watch" line in the block.
@@ -177,7 +185,7 @@ Positioning line: *"Proof you watched."*
 - **Stubbed Recap** (a Wrapped-style yearly recap, published early December; avoid the word "Wrapped", which is Spotify's brand): total stubs, hours watched, top genres, most-rewatched title, "your cinema age", a first and last stub of the year, and a story carousel of shareable cards. A monthly mini-recap follows later.
 - **Recommendations**: "because you stubbed X" (content-based on genres, keywords and cast from the cached catalogue), then collaborative filtering once there is enough data. Everything stays inside the ≥6.5 catalogue.
 - **i18n**: UI strings externalised from MVP day 1. Launch with en, then es, pt-BR, hi and de. Use TMDB `language` for localised titles and overviews, and region-aware release dates.
-- Watchmode deeplinks if needed.
+- Exact-title deep links through an optional, env-gated enricher (Watchmode or Streaming Availability free tier, on view, cached; §13.4). Only if free and the licence has been checked.
 - "Worth it?" v2: community content notes ("what to know before watching") and a "Comfort rewatch" vibe derived from our rewatch data. Rules only (D15).
 - Badges and achievements (for example "Criterion Kid", "Anime Arc").
 - Moderation tooling (report review, shadow-hide, rate limits), and verified critics.
@@ -337,8 +345,10 @@ IDs are stable. The PM gap review (Mode B) will mark each one PASS or FAIL. "Giv
 | Share rate (v1) | Share-image generations per WAS | ≥ 0.3 a week |
 | K-factor (v1) | New sign-ups from shared links per active user | ≥ 0.2 |
 | Quality | Crash-free sessions; p75 LCP | ≥ 99.5%; < 2.5 s |
+| Where-to-watch CTR (M2) | Title views with the block visible that end in ≥1 `provider_clicked` | ≥ 8% (baseline) |
+| Not-streaming save rate (M2) | "Not streaming" views that end in `watchlist_added` | Tracked |
 
-Instrumentation: privacy-friendly analytics with no third-party ad trackers. Events: `stub_created`, `stub_again`, `review_saved`, `worth_it_viewed` (block at least 50% visible for 1 s), `watchlist_added`, `export_downloaded`, `share_generated`, `signup_completed`.
+Instrumentation: privacy-friendly analytics with no third-party ad trackers. Events: `stub_created`, `stub_again`, `review_saved`, `worth_it_viewed` (block at least 50% visible for 1 s), `watchlist_added`, `export_downloaded`, `share_generated`, `signup_completed`, `provider_clicked` (M2: `provider_id`, `type`, `region`, `link_kind`; no user id and no URL).
 
 ## 8. Growth loops
 1. **Ticket share loop (v1, designed for in MVP)**: stub, then a gorgeous ticket card, then an IG or TikTok Story, then friends tap the short link and land on the public title page (logged-out friendly), then "Stub it", then sign up. The MVP must already make public title and profile pages beautiful and OG-unfurlable.
@@ -361,6 +371,9 @@ Instrumentation: privacy-friendly analytics with no third-party ad trackers. Eve
 | Name conflict ("AMC Stubs") | Medium / High | Trademark search before public launch. Fallback name "Punched" (naming.md). |
 | Review spam or abuse | Medium / Medium | Rate limits, report button (v1), and email verification before a user's first public review in real mode. |
 | Demo-mode drift (app works only with fixtures) | Medium / High | QA runs demo mode. Provider contract tests with recorded TMDB fixtures. Same code paths behind an interface. |
+| Where-to-watch data is stale or wrong (the catalogue changes daily; JustWatch through TMDB) | High / Medium | Show a "Checked {date}" line and "Availability can change". Refresh trending and new titles daily and everything else weekly. Hide the block when data is older than 30 days. "All options" always links to the live TMDB page (§13). |
+| Provider link templates break or land on a login wall | Medium / Low | Keep the provider links as versioned config with a fallback to the homepage, then to the TMDB page. QA checks the top 15 links by hand each release. The label says "Open in Netflix", never "Play". |
+| Commercial launch changes where-to-watch terms (JustWatch data through TMDB) | Medium / High | Covered by D13 (non-commercial). Before any monetisation, re-check TMDB commercial terms and whether JustWatch needs its own agreement (Unverified). |
 | Poster-adaptive backgrounds hurt readability | Medium / Medium | Enforce a 4.5:1 contrast check, and add a dark scrim over blurred posters. |
 
 ## 10. Scalability path
@@ -391,3 +404,74 @@ Instrumentation: privacy-friendly analytics with no third-party ad trackers. Eve
   - "Worth it?" (§4.2): store its fields on the title row, own the vibe mapping table as versioned config, compute the verdict on read, and extend the nightly job. No AI/LLM calls anywhere (D15).
 - **Design**: add the IMDb chip to every ticket stub and the "Worth it?" block to the detail page (DESIGN.md §7.4.1); remove the IMDb assist.
 - **QA**: seed data must include the threshold edge cases from A1-AC2, a fixture with TMDB 6.4 and IMDb 7.5 (A7-AC5), a title with more than 1 stub, a spoiler review, a title without an IMDb rating (A7-AC3), a title with 5 or more Stubbed ratings (A8-AC1), one title per verdict (F3-AC4), a show with unknown episode length (F2-AC1), and a title with no tagline (F1-AC2).
+
+## 13. Where to watch (founder scope 2026-09-27, M2)
+
+Founder ask: "If a title is available on any OTT/streaming service, show it there, with icons, and make them clickable so they open the service automatically." Evidence: research.md §14. Labels: **Observed** (source extract or repo file:line), **Inferred**, **Assumed**, **Unverified**.
+
+### 13.1 Source decision
+- **M2 source: TMDB `watch/providers` (JustWatch data).** It costs $0, uses the TMDB key we already have and falls under the same non-commercial terms (D2, D13). It gives provider lists per region with logos, `display_priority`, and one `link` per title and region (Observed, research §14).
+- **No extra API calls.** The nightly enrich already makes one TMDB detail call per title with `append_to_response` (Observed: `src/server/jobs/enrich.ts:1-4`). We add `watch/providers` to that call (Inferred: TMDB supports it as an append; the architect must confirm). The provider list (names, logos, priority) comes from TMDB's provider-list endpoints once a week.
+- **Rejected for M2**: the JustWatch API (contract only, partners only; Observed). Scraping JustWatch GraphQL (against the no-scraping rule). Watchmode and Streaming Availability are free but capped at about 2.5–3k calls a month against a catalogue of about 10–15k titles, and their caching and affiliate terms are Unverified. They stay optional exact-title enrichers (§13.4).
+- **Attribution (hard requirement)**: TMDB expects a JustWatch reference or logo on each media item that shows this data (Observed). The block carries "Data by JustWatch" with the JustWatch logo or wordmark on every title page, and the About/Credits page lists it too.
+
+### 13.2 What "opens the service automatically" means (honest version)
+Each provider icon resolves its link in this order:
+1. **Exact-title deep link** (v2, only when an enricher is on): opens the title itself. On phones, an `https://` deep link opens the installed app when the service registers it as a Universal Link / App Link (Inferred; Unverified per service).
+2. **Provider link template** (M2 default): from a curated, versioned `provider-links` config keyed by TMDB `provider_id`. It holds the service's **search URL with the title filled in** where one is known (for example Netflix `https://www.netflix.com/search?q={title}`, Unverified), and **otherwise the service's homepage**. It opens in a new tab on desktop. On mobile, the app opens if the service claims that URL (Unverified per service). The user may land on a login or profile picker first.
+3. **TMDB watch page** (`link`, the fallback for unknown providers): the correct title and region, with JustWatch's exact-title links, so it is one tap more (Observed: this is how TMDB describes the link).
+
+A separate "All options" text link on the block always goes to (3). Copy says **"Open in {Service}"**, never "Play" or "Watch now", because we cannot promise playback. No custom URL schemes (`nflx://`), because they fail silently when the app is missing. No affiliate or UTM parameters. Links use `rel="noopener noreferrer"`, so no referrer is sent.
+
+**Honest summary for the founder:** in M2, tapping the Netflix icon opens Netflix (the app on a phone where Netflix supports it) at a search for the title, or at its homepage. Landing on the exact title page in one tap needs a deep-link enricher (v2, optional, free-tier capped). Until then, "All options" gets there in two taps.
+
+### 13.3 Rules
+- **Region** (in this order): the user's saved setting (profile, or a cookie when signed out) → a trusted geo header, only when our reverse proxy sets it (for example `CF-IPCountry` behind the optional Cloudflare proxy; the header name is config and is off by default, because the own-server profile is not settled; see NEXT_PHASE_PLAN L-7) → the region subtag of `Accept-Language` (`en-GB` → GB; a bare `en` gives no region) → `WATCH_REGION_DEFAULT` = US. We never store IPs. Supported regions are config (`WATCH_REGIONS`, proposed `US,GB,IN,CA,AU,DE,FR,ES,BR,MX`). An unsupported region falls back to the default, with a visible "Showing: United States · Change".
+- **Types and order**: Stream (`flatrate`) → Free (`free`) → Free with ads (`ads`) → Rent → Buy. Inside each type, sort by TMDB `display_priority`. A provider that has both rent and buy shows once, labelled "Rent · Buy". Show at most 6 icons per type, then "+N" (which expands the list).
+- **Freshness**: store only the supported regions, compacted as `{type, provider_id}` lists plus the TMDB link (Inferred: under 1 KB per title, about 15 MB for 15k titles, which fits Supabase Free). Refresh titles on the home rails (trending, new) daily, and every other title in the weekly enrich cycle. Title pages keep their daily revalidation. The block shows "Checked {date} · Availability can change". It is **hidden when the data is older than 30 days or was never fetched**, because showing nothing beats showing something wrong.
+- **Unavailable**: if the region has no providers, the block says "Not streaming in {Region} right now", with Add to Watchlist, a region switcher and the "All options" link. We never show a fake "not available anywhere".
+- **Where it shows**: M2 puts the block **on the detail page only** (and in the "Worth it?" line "Streaming on Netflix" once v1 adds it). P1: **one** logo on the ticket stub, for the top Stream or Free provider in the user's region. It is decorative, not a link, because the stub is one link target and a nested link fails accessibility. P1: "On {Service}" filter chips in browse for the top 6 providers in the region. Design owns the visuals (docs/02-design).
+
+### 13.4 Later (not M2)
+- v1: "My services". Pick your subscriptions; your services come first and browse can filter by them.
+- v2: an optional exact-title deep-link enricher, `DEEPLINK_PROVIDER=none|watchmode|sa` (default `none`). It runs on view, with a 7-day cache and a monthly budget guard under the free cap. It adds that API's required attribution. It ships only after its terms are read on the primary page (caching, affiliate links, non-commercial).
+
+### 13.5 User stories — Epic W (Where to watch)
+**W1. See where to watch.** As a visitor, I want to see which services have this title in my country, so that I can start watching.
+- AC1: Given demo mode and region US, the title page for a fixture with providers shows a "Where to watch" block, with logos grouped under visible text headings Stream / Free / Free with ads / Rent / Buy. Empty groups are hidden.
+- AC2: Groups follow the order in §13.3. Inside a group, providers are sorted by `display_priority`. A provider with both rent and buy shows once, as "Rent · Buy".
+- AC3: More than 6 providers in a group gives "+N", which expands to the full list.
+- AC4: The block shows "Data by JustWatch" (logo or wordmark) and "Checked {date} · Availability can change". The About page lists JustWatch.
+
+**W2. Open the service.** As a viewer, I want to tap a service icon and land in that service.
+- AC1: Every icon is an `<a href>` built from `provider-links` (search URL with the URL-encoded title, or the homepage). A provider missing from the config uses the TMDB watch `link`.
+- AC2: Links have `target="_blank"` and `rel="noopener noreferrer"`. The URL carries no affiliate, UTM or user parameters. It is a plain `https://` URL, never a custom scheme.
+- AC3: A separate "All options" link opens the TMDB watch page for the same title and region.
+- AC4: Clicking fires one `provider_clicked {provider_id, type, region, link_kind: search|home|tmdb}` first-party event, with no user id and no URL, and does not delay navigation.
+- AC5 (manual, real mode, before release): QA opens the top 15 provider links in desktop Chrome and on an iOS and an Android phone, and records for each whether it opens the app, the site, search results or a login. Any broken template falls back to the homepage.
+
+**W3. Right region.** As a user abroad, I want my country's services, not the US list.
+- AC1: With no setting, `Accept-Language: en-GB,en;q=0.8` gives GB, and `hi-IN` gives IN. A bare `en`, or no header, gives `WATCH_REGION_DEFAULT` (US).
+- AC2: A trusted geo header is read only when `WATCH_GEO_HEADER` is set. A client-sent header with that name is ignored when the setting is off.
+- AC3: The region switcher on the block (and in Settings) changes the list without a full page reload. It persists in the profile when signed in, or in a cookie when signed out, and survives a reload.
+- AC4: An unsupported region shows the default region's list with "Showing: United States · Change".
+
+**W4. Not streaming.** AC1: A fixture with no providers in the region shows "Not streaming in {Region} right now", with Add to Watchlist, the region switcher and "All options". AC2: A fixture whose data is older than 30 days, or that has none, hides the block completely, and there is no layout shift (CLS < 0.1).
+
+**W5. Accessible.** AC1: Each icon's accessible name is "Open {Service} ({type}) — opens in a new tab". Logos have `alt=""` because the name is in text. AC2: Targets are at least 44×44 px, keyboard-reachable in visual order, and have a visible focus ring. AC3: Type is shown by text headings, not colour alone. AC4: Axe finds no serious or critical issues on the block.
+
+**W6. Demo fixtures (offline).** AC1: With no env keys and no network, **20 fixture titles** carry providers for US, GB and IN. The data is realistic but illustrative, dated `2026-09`, and labelled as demo data (Assumed, not live). AC2: The set includes: 8 or more titles on a major subscription service (Netflix, Prime Video, Disney+, Max, Apple TV+, Hulu, JioHotstar); 2 or more free or ad-supported titles (for example Tubi, Pluto TV); 2 or more rent/buy-only titles (Apple TV, Google Play, Amazon Video); 1 title with more than 6 providers in one group; 1 title with no US providers (W4-AC1); 1 title with stale data (W4-AC2); 1 title that differs between US and IN; 5 or more shows. AC3: Logos are bundled local tiles (a monogram on the brand colour) so nothing is fetched from `image.tmdb.org` in demo. Real mode uses TMDB `logo_path`. AC4: Clicking a demo link goes to the configured real URL (not intercepted); QA asserts `href` only.
+
+**W7. Stub logo and browse chips (P1).** AC1: The ticket stub shows at most one logo, for the top Stream or Free provider in the region. It is not a link, and its label is "On {Service}". AC2: Browse shows "On {Service}" chips for the top 6 providers in the region. Selecting one filters the grid with the ≥ 6.5 rule still applied, and combines with sort and type. AC3: No chip for a provider with 0 titles.
+
+**W8. Guardrails.** AC1: No new env var is required in demo mode. `TMDB_*` alone turns on real data. AC2: A unit or guard test makes sure provider URLs have no `utm_`, `tag=`, `affid` or `ref=` parameters. AC3: The title page p75 LCP stays under 2.5 s. Logos are lazy-loaded at `w92` or smaller (Inferred as a TMDB logo size).
+
+### 13.6 Success metric and risks
+- Primary: **Where-to-watch CTR ≥ 8%** of title views where the block is visible (§7). Secondary: the Watchlist save rate from "Not streaming", and the share of titles whose data is under 7 days old (≥ 95%). Guardrail: under 1% of clicks come from `link_kind=tmdb` because of missing templates for the top providers.
+- Risks: see §9 (stale data, broken templates, commercial terms). Also, logos are trademarks, so we use only TMDB-supplied logos in real mode and neutral tiles in demo. And a region guessed wrong from `Accept-Language` is fixed by the always-visible region switcher.
+
+### 13.7 Handover
+- **Architect** (docs/04-architecture): write an ADR for the where-to-watch data flow (append `watch/providers` to the enrich call; the weekly provider-list sync; storage shape per supported region; a 30-day stale guard; refresh cadence daily for rails and weekly for the rest). Add a `WatchProviders` type and a title-detail contract field. Add the env vars `WATCH_REGION_DEFAULT`, `WATCH_REGIONS`, `WATCH_GEO_HEADER` (default off), and later `DEEPLINK_PROVIDER=none`, all in `.env.example`. Own `provider-links` as versioned config. Confirm with the own-server profile (L-7) whether a geo header can be trusted.
+- **Backend**: map the enrich data (`flatrate/free/ads/rent/buy` → our types; merge rent and buy); add a migration (new file) for the provider tables and columns; add the provider-list sync; resolve the region (setting → header → Accept-Language → default); store the region in the profile or a cookie; add the fixture data for W6; add the URL guard test (W8-AC2); add the `provider_clicked` event (with E-M1).
+- **Frontend**: build the detail-page block per DESIGN (groups, "+N", attribution, "Checked" line, not-streaming state, region switcher); links per W2; accessibility per W5; no layout shift when hidden. W7 is P1.
+- **QA**: add e2e for W1–W6 in demo mode (US/GB/IN through `Accept-Language` and the switcher; stale and empty fixtures; `href`/`rel`/`target` assertions; axe); add a manual device matrix for W2-AC5 before the real-mode release; run the link check on the top 15 templates each release.
