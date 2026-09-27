@@ -230,7 +230,8 @@ export interface ProfileResponse {
  * Sign-up / sign-in result. v1.4 (ADR-010 ID-1): when Supabase "Confirm email" is ON, sign-up answers
  * `202 { session: null, confirmEmail: true }` and sets no cookie. Sign-in and demo mode always carry a session.
  */
-export type AuthResponse = { session: Session; confirmEmail?: never } | { session: null; confirmEmail: true };
+export type AuthResponse =
+  { session: Session; confirmEmail?: never } | { session: null; confirmEmail: true };
 export interface MagicLinkResponse {
   sent: true;
   /** Demo mode only: the link that would have been emailed (shown in a dev toast). */

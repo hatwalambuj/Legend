@@ -24,6 +24,7 @@ import type {
   DetailCacheStore,
   DetailFields,
   DetailResult,
+  DetailSource,
 } from '@/server/ports';
 import { CircuitBreaker } from './circuit-breaker';
 
@@ -83,6 +84,21 @@ const reviewSchema = z.object({
 });
 
 export const tmdbDetailSchema = z.object({
+  // Catalogue-row fields (DetailSource): only used when our DB is down (ADR-011 §4).
+  title: optStr,
+  name: optStr,
+  original_title: optStr,
+  original_name: optStr,
+  release_date: optStr,
+  first_air_date: optStr,
+  vote_average: num,
+  vote_count: num,
+  popularity: num,
+  genres: list(z.object({ id: z.number().int(), name: z.string() })).optional(),
+  poster_path: optStr,
+  backdrop_path: optStr,
+  imdb_id: optStr,
+  adult: z.boolean().nullish().catch(null),
   overview: str,
   tagline: optStr,
   runtime: num,
@@ -181,7 +197,25 @@ export function mapTmdbDetail(mediaType: MediaType, body: unknown): Omit<DetailR
     summaryPatch.seasonCount = positive(d.number_of_seasons);
   if (mediaType === 'tv' && positive(d.number_of_episodes))
     summaryPatch.episodeCount = positive(d.number_of_episodes);
-  return { fields, summaryPatch };
+  const title = ((mediaType === 'movie' ? d.title : d.name) ?? '').trim();
+  const date = (mediaType === 'movie' ? d.release_date : d.first_air_date) ?? '';
+  const source: DetailSource | undefined = title
+    ? {
+        title,
+        originalTitle:
+          ((mediaType === 'movie' ? d.original_title : d.original_name) ?? '').trim() || title,
+        releaseDate: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
+        voteAverage: Math.round((d.vote_average ?? 0) * 10) / 10,
+        voteCount: Math.max(0, Math.round(d.vote_count ?? 0)),
+        popularity: d.popularity ?? 0,
+        genres: d.genres ?? [],
+        posterPath: d.poster_path ?? null,
+        backdropPath: d.backdrop_path ?? null,
+        imdbId: d.imdb_id && /^tt\d{7,10}$/.test(d.imdb_id) ? d.imdb_id : null,
+        adult: d.adult ?? false,
+      }
+    : undefined;
+  return { fields, summaryPatch, ...(source ? { source } : {}) };
 }
 
 export function detailAppends(mediaType: MediaType): string {

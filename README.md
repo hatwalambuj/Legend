@@ -73,15 +73,41 @@ Do these in order. Keep every key out of git; only `NEXT_PUBLIC_*` values ever r
 - Repo → Settings → Environments → create **`production`** (`.github/workflows/nightly-sync.yml` uses it).
 - Settings → Secrets and variables → Actions: add the secrets and the `NEXT_PUBLIC_SITE_URL` variable from the table above (repo level or in the `production` environment). Optional tuning variables: `SYNC_GUARD_MIN_MOVIE`, `SYNC_GUARD_MIN_TV`, `OMDB_DAILY_BUDGET`, `SYNC_ENRICH_MAX`.
 
+### Environment
+M1 additions (ADR-001 §A3, ADR-011). Set them in Vercel unless noted:
+
+| Variable | Default | What |
+|---|---|---|
+| `TRUSTED_PROXY` | auto: `vercel` when `VERCEL=1`, `netlify` when `NETLIFY=true`, else `none` | Which proxy headers to trust for the client IP and forwarded host/proto: `vercel`, `netlify`, `cloudflare`, `xff-1`…`xff-5` (N proxies you run, e.g. Caddy on a VM = `xff-1`) or `none`. A **live production server without it and without an auto-detected platform refuses to boot.** Leave it unset on Vercel |
+| `HEALTH_MAX_SYNC_AGE_HOURS` | `36` | `/api/health` reports `degraded` when the last full sync is older |
+| `SYNC_RECHECK_MAX` | `500` | GitHub Actions variable. More titles missing from discover than this aborts the apply for a human to look at |
+| `SUPABASE_DB_URL`, `BACKUP_PASSPHRASE` | — | GitHub Actions **secrets** for the backup workflow (see "Backups and restore") |
+
+Monitoring (free): two uptime monitors (UptimeRobot or Better Stack), every 5 minutes: `https://<domain>/api/health` alerts when the site or database is **down** (503), `https://<domain>/api/health?strict=1` also alerts when the catalogue sync is **stale** (> 36 h). The first one also keeps Supabase Free from pausing.
+
 ### 6. First sync
-1. Actions → "Nightly catalogue sync" → **Run workflow** with **dry_run = true**. The log prints the listed count per type against its guardrail, e.g. `[sync] listed tv 1450 (min 1000, max 25000)`, and writes nothing.
-2. Guardrails: the run aborts (index untouched) if a type is below its minimum (`SYNC_GUARD_MIN_MOVIE`, default 3,000; `SYNC_GUARD_MIN_TV`, default 1,000), above `SYNC_GUARD_MAX`, or moves more than 20% against the last good run. On the **first run** (empty catalogue) the minimums only warn, so the first sync can't brick an empty site. Once you know the real numbers, set the two minimums to about **80%** of them (the log prints this hint when a floor is hit).
+1. Actions → "Nightly catalogue sync" → **Run workflow** with **dry_run = true**. A dry run reads TMDB discover pages and the database, and spends no OMDb or enrich budget; it writes nothing (no image downloads either). The log prints the listed count per type against its guardrail, e.g. `[sync] listed tv 1450 (min 1000, max 25000)` (titles that went missing are counted as still listed, and a second line shows the counts if they all dropped), then `[sync] GUARD: pass` or `fail`. A failing guard exits 1.
+2. Guardrails: the run keeps the index membership untouched (no titles added or removed; enrich, IMDb, palettes and the purge still run, and the workflow fails) if a type is below its minimum (`SYNC_GUARD_MIN_MOVIE`, default 3,000; `SYNC_GUARD_MIN_TV`, default 1,000), above `SYNC_GUARD_MAX`, or moves more than 20% against the last good run, or more than `SYNC_RECHECK_MAX` previously listed titles went missing. On the **first run** (empty catalogue) the minimums only warn, so the first sync can't brick an empty site. Once you know the real numbers, set the two minimums to about **80%** of them (the log prints this hint when a floor is hit).
 3. Run it again with **dry_run = false**. Browse and search work after this first run. "Worth it?" details and ticket time lines backfill over **3 to 5 nights** (`SYNC_ENRICH_MAX=3000` detail calls a night at about 10 req/s), IMDb chips over about 2 weeks on the free OMDb key.
 4. After that it runs by itself every night at 03:17 UTC. `npm run sync:catalog -- --from-fixtures` seeds a project from the demo data instead (no TMDB needed); `-- --only=imdb|enrich|discover` runs one step.
 
 ### 7. Before telling anyone
 - Staging smoke on a Vercel preview with real keys: sign up, stub, stub again, review, delete a stub, export and import the CSV into your own Letterboxd account, request a magic link to a Gmail address (it must arrive), check the `sb-*` cookies are httpOnly, delete a test account, run Lighthouse mobile on a title page (LCP < 2.5 s, CLS < 0.1) and check link unfurls and real-poster backgrounds.
 - Check the About page: official TMDB logo, "IMDb ratings via OMDb", privacy text, contact. Make sure the `NEXT_PUBLIC_CONTACT_EMAIL` inbox is read (reports arrive there; hide reported reviews in the Supabase table editor).
+
+### Backups and restore
+Supabase Free has no backups, so `.github/workflows/backup.yml` makes one every night at 04:07 UTC (and on **Run workflow**):
+- Secrets (repo → Settings → Secrets → Actions, `production` environment): `SUPABASE_DB_URL` = the **session pooler** connection string from Supabase → Connect (IPv4; role `postgres`, with the database password), and `BACKUP_PASSPHRASE` = a long random passphrase **kept in your password manager**. Without the passphrase the backups are useless. Without both secrets the workflow does nothing.
+- Check the server version once with `select version();` and keep `PG_MAJOR` in the workflow equal to its major (17 today).
+- Each run uploads `db-YYYY-MM-DD.tar.gpg` (encrypted: AES256) as a workflow artifact, kept **14 days**. It holds two `pg_dump` files: the `public` schema (without the detail cache and staging data) and `auth.users` + `auth.identities` (accounts must be restorable). Keep the repo private: artifacts of a public repo can be downloaded by anyone (they are encrypted, but still).
+- Deleted accounts disappear from backups after at most 14 days.
+
+**Restore** (rehearse once on a staging project before launch):
+1. Create a new Supabase project and apply every migration in `supabase/migrations/` in name order.
+2. Download the artifact, then `gpg -d db-YYYY-MM-DD.tar.gpg > db.tar && tar -xf db.tar` (asks for the passphrase).
+3. Restore without firing the triggers (`on_auth_user_created`, `title_stats`) twice, auth first:
+   `PGOPTIONS='-c session_replication_role=replica' pg_restore --data-only --no-owner -d "$NEW_DB_URL" auth.dump`, then the same for `public.dump`. If Supabase's `postgres` role may not set `session_replication_role`, restore `auth.dump` first, delete the auto-created `profiles` rows (`delete from public.profiles;`), then restore `public.dump`.
+4. Check: `select public.catalog_count('all');` matches the old site, and sign in with a known staging account.
 
 Self-hosting instead of Vercel: `npm run build && npm start` with the same variables, and `npm run sync:catalog` from a system cron. Providers switch on purely through env vars; a **partial** configuration (e.g. a Supabase URL without a key) refuses to boot instead of silently falling back to demo.
 

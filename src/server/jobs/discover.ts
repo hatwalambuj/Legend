@@ -300,16 +300,36 @@ export async function discoverAll(
 /**
  * Previously listed titles absent from discover: re-fetch each one. 404 → gone (stays unlisted, marked
  * source_status 'gone'); otherwise its fresh row (hysteresis may keep it listed) is staged.
+ * - At most `limit` (SYNC_RECHECK_MAX) are re-checked; `skipped > 0` makes the job abort apply (F2).
+ * - Re-check errors are returned as `erroredKeys` so the job carries their current rows forward.
+ * - `dryRun`: no detail call at all (ADR-011 §1); every missing title counts as skipped.
  */
 export async function recheckMissing(
   deps: { detail(type: MediaType, id: number): Promise<unknown | null> },
   missing: TitleKey[],
   ctx: MapContext,
   limit = 500,
-): Promise<{ rows: StagingRow[]; gone: TitleKey[]; skipped: number; errors: number }> {
+  opts: { dryRun?: boolean } = {},
+): Promise<{
+  rows: StagingRow[];
+  gone: TitleKey[];
+  skipped: number;
+  errors: number;
+  erroredKeys: TitleKey[];
+  dryRun?: true;
+}> {
+  if (opts.dryRun)
+    return {
+      rows: [],
+      gone: [],
+      skipped: missing.length,
+      errors: 0,
+      erroredKeys: [],
+      dryRun: true,
+    };
   const rows: StagingRow[] = [];
   const gone: TitleKey[] = [];
-  let errors = 0;
+  const erroredKeys: TitleKey[] = [];
   for (const key of missing.slice(0, limit)) {
     const [type, id] = key.split(':') as [MediaType, string];
     try {
@@ -320,10 +340,61 @@ export async function recheckMissing(
         if (row) rows.push(row);
       }
     } catch {
-      errors++; // left as is; the next run re-checks
+      erroredKeys.push(key); // carried forward unchanged; the next run re-checks
     }
   }
-  return { rows, gone, skipped: Math.max(0, missing.length - limit), errors };
+  return {
+    rows,
+    gone,
+    skipped: Math.max(0, missing.length - limit),
+    errors: erroredKeys.length,
+    erroredKeys,
+  };
+}
+
+/** Columns shared by catalog_index and catalog_staging (select list for carried-forward rows). */
+export const STAGING_COLUMNS = [
+  'media_type',
+  'tmdb_id',
+  'imdb_id',
+  'title',
+  'original_title',
+  'slug',
+  'overview_short',
+  'release_date',
+  'vote_average',
+  'vote_count',
+  'popularity',
+  'genre_ids',
+  'genres',
+  'original_language',
+  'poster_path',
+  'backdrop_path',
+  'sort_title',
+  'search_text',
+  'is_listed',
+] as const;
+
+/**
+ * F2 (ADR-011 §10): titles whose re-check failed are staged exactly as they are in catalog_index
+ * (`is_listed` unchanged), so `catalog_apply_staging` does not unlist them without a re-check.
+ */
+export function carryForwardRows(
+  current: readonly Omit<StagingRow, 'run_id'>[],
+  runId: string,
+): StagingRow[] {
+  return current.map((r) => {
+    const row = { run_id: runId } as Record<string, unknown>;
+    for (const c of STAGING_COLUMNS) row[c] = r[c];
+    return row as unknown as StagingRow;
+  });
+}
+
+/** F2: the guard reason when more titles went missing than one night may re-check. */
+export function recheckCapReason(missing: number, cap: number): string | null {
+  return missing > cap
+    ? `recheck_capped: ${missing} missing titles exceed SYNC_RECHECK_MAX=${cap}`
+    : null;
 }
 
 /* ---------------- guardrails ---------------- */

@@ -85,7 +85,11 @@ describe('cookie security flag', () => {
     const https = new Headers({ 'x-forwarded-proto': 'https' });
     expect(isSecureRequest(https, 'http://localhost', 'vercel')).toBe(true);
     expect(
-      isSecureRequest(new Headers({ 'x-forwarded-proto': 'http' }), 'https://stubbed.app', 'vercel'),
+      isSecureRequest(
+        new Headers({ 'x-forwarded-proto': 'http' }),
+        'https://stubbed.app',
+        'vercel',
+      ),
     ).toBe(false);
     expect(isSecureRequest(new Headers(), 'https://stubbed.app', 'vercel')).toBe(true);
     expect(isSecureRequest(new Headers(), 'http://127.0.0.1:3100', 'vercel')).toBe(false);

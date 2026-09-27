@@ -19,6 +19,21 @@ export class FixturesDetailProvider implements CatalogDetailProvider {
       trailer: t.trailer,
       tmdbReviews: t.tmdbReviews,
     };
-    return { fields };
+    return {
+      fields,
+      source: {
+        title: t.title,
+        originalTitle: t.originalTitle,
+        releaseDate: t.releaseDate,
+        voteAverage: t.voteAverage,
+        voteCount: t.voteCount,
+        popularity: t.popularity,
+        genres: t.genres,
+        posterPath: t.posterPath,
+        backdropPath: t.backdropPath,
+        imdbId: t.imdbId,
+        adult: false,
+      },
+    };
   }
 }

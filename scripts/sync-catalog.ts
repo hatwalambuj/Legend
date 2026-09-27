@@ -4,7 +4,8 @@
  * (unit-tested); this file wires it to TMDB + Supabase. Deterministic data processing only: NO AI/LLM (PRD D15).
  *
  *   npm run sync:catalog                      # full nightly run (needs TMDB + Supabase service role)
- *   npm run sync:catalog -- --dry-run         # fetch + transform + guardrails, write nothing
+ *   npm run sync:catalog -- --dry-run         # discover pages + DB reads + guardrails; 0 OMDb, 0 TMDB
+ *                                             # detail, 0 image fetches, 0 writes (ADR-011 §1)
  *   npm run sync:catalog -- --from-fixtures   # seed a Supabase project from src/fixtures (no TMDB/OMDb needed)
  *   npm run sync:catalog -- --only=imdb       # just the OMDb step (also: --only=enrich, --only=discover)
  *
@@ -15,9 +16,12 @@
  *           &include_adult=false[&without_genres=10767,10763,10764 for tv]&page=n
  *     throttle 10 req/s, honour 429 Retry-After, exponential backoff with jitter (max 5 retries)
  *  3. transform → staging rows (slug, sort_title, search_text via src/lib/text.ts; is_listed via isListed())
- *  4. re-check previously listed titles missing from discover (GET /{type}/{id}): dropped (unlist) vs gone (404)
+ *  4. re-check previously listed titles missing from discover (GET /{type}/{id}): dropped (unlist) vs gone
+ *     (404); at most SYNC_RECHECK_MAX (more missing → guard reason `recheck_capped`); titles whose re-check
+ *     errored are carried forward unchanged (F2, ADR-011 §10)
  *  5. guardrails: listed count per type within [SYNC_GUARD_MIN_MOVIE | _TV, SYNC_GUARD_MAX] and delta vs
- *     last ok run < SYNC_GUARD_MAX_DELTA → otherwise sync_runs.status='aborted', exit 1, index untouched.
+ *     last ok run < SYNC_GUARD_MAX_DELTA → otherwise no staging/apply/gone (index membership untouched),
+ *     the remaining steps still run, sync_runs.status='aborted', exit 1 (ADR-011 §2).
  *     First run (no listed rows yet): the minimums only warn. Per-type counts are always printed
  *     (run `--dry-run` first to see them).
  *  6. upsert staging in batches of 500, rpc('catalog_apply_staging', { p_run })
@@ -31,7 +35,9 @@
  *     → extractColors() → tintsFrom() → LQIP sharp().resize(8,12).webp({quality:40}); 30 concurrent
  * 10. report: rpc('catalog_rating_disagreements') → log count + top 20 (PRD §4.1, for the monthly PM review)
  * 11. rpc('catalog_purge_stale'); POST {SITE_URL}/api/revalidate {tags:['catalog']} with x-revalidate-secret
- * 12. sync_runs.status='ok', counts = { discover, enrich, imdb, palettes, disagreements, purge }
+ *     when any step wrote rows
+ * 12. sync_runs.status='ok' | 'aborted', counts = { discover, enrich, imdb, palettes, disagreements, purge }
+ * Orchestration (order, abort, dry run): src/server/jobs/sync-runner.ts.
  */
 import { randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -46,19 +52,29 @@ import {
   type EnrichmentRow,
 } from '../src/server/jobs/enrich';
 import {
+  carryForwardRows,
   checkGuardrails,
   countListed,
   guardrailReport,
   createThrottle,
   discoverAll,
   genreMap,
+  recheckCapReason,
   recheckMissing,
+  STAGING_COLUMNS,
   withRetry,
   yearShards,
   type ListedCounts,
   type StagingRow,
 } from '../src/server/jobs/discover';
-import { refreshImdbRatings, type ImdbRefreshResult } from '../src/server/jobs/imdb-refresh';
+import { refreshImdbRatings, type ImdbDueRow } from '../src/server/jobs/imdb-refresh';
+import {
+  runSync,
+  type DiscoverResult,
+  type StepResult,
+  type SyncStep,
+  type SyncSteps,
+} from '../src/server/jobs/sync-runner';
 import { mapConcurrent, paletteFromPoster, type SharpLike } from '../src/server/jobs/palettes';
 import { OmdbRatingProvider } from '../src/server/providers/omdb';
 import { TmdbDetailProvider } from '../src/server/providers/tmdb';
@@ -67,7 +83,7 @@ import type { FixtureCatalog } from '../src/fixtures/schema';
 
 const catalog = catalogJson as unknown as FixtureCatalog;
 
-type Step = 'discover' | 'enrich' | 'imdb';
+type Step = SyncStep;
 
 interface Args {
   dryRun: boolean;
@@ -206,14 +222,20 @@ async function seedFromFixtures(env: ServerEnv, today: string, dryRun: boolean):
   console.log('[sync] fixtures seeded (catalogue, enrichment, IMDb ratings, palettes, hooks)');
 }
 
-async function enrichStep(env: ServerEnv, db: SupabaseClient, dryRun: boolean) {
-  if (!env.tmdb) return { skipped: 'no TMDB key' };
-  const tmdb = new TmdbDetailProvider(env.tmdb);
+async function enrichStep(
+  env: ServerEnv,
+  db: SupabaseClient,
+  dryRun: boolean,
+): Promise<StepResult> {
+  if (!env.tmdb) return { counts: { skipped: 'no TMDB key' }, wrote: 0 };
   const due = await rpc<{ id: number; media_type: 'movie' | 'tv'; tmdb_id: number }[]>(
     db,
     'catalog_enrich_due',
     { p_limit: env.sync.enrichMax, p_ttl_days: env.sync.enrichTtlDays },
   );
+  // ADR-011 §1: a dry run spends no enrich budget (no TMDB detail call) and writes nothing.
+  if (dryRun) return { counts: { due: due.length, dry_run: true }, wrote: 0 };
+  const tmdb = new TmdbDetailProvider(env.tmdb);
   const out: EnrichmentRow[] = [];
   let errors = 0;
   for (const r of due) {
@@ -229,36 +251,40 @@ async function enrichStep(env: ServerEnv, db: SupabaseClient, dryRun: boolean) {
     }
     await new Promise((res) => setTimeout(res, 100)); // ~10 req/s, well under TMDB's limit
   }
-  if (!dryRun)
-    for (const batch of chunks(out, 200))
-      await rpc(db, 'catalog_set_enrichment', { p_rows: batch });
-  return { due: due.length, enriched: out.length, errors };
+  for (const batch of chunks(out, 200)) await rpc(db, 'catalog_set_enrichment', { p_rows: batch });
+  return { counts: { due: due.length, enriched: out.length, errors }, wrote: out.length };
 }
 
-async function imdbStep(
-  env: ServerEnv,
-  db: SupabaseClient,
-  dryRun: boolean,
-): Promise<ImdbRefreshResult | { skipped: string }> {
+async function imdbStep(env: ServerEnv, db: SupabaseClient, dryRun: boolean): Promise<StepResult> {
   const omdb = env.omdb;
-  if (!omdb) return { skipped: 'no OMDB_API_KEY' };
+  if (!omdb) return { counts: { skipped: 'no OMDB_API_KEY' }, wrote: 0 };
+  const due = (limit: number) =>
+    rpc<ImdbDueRow[]>(db, 'catalog_imdb_due', {
+      p_limit: limit,
+      p_hot_ttl_days: omdb.hotTtlDays,
+      p_ttl_days: omdb.ttlDays,
+      p_hot_count: omdb.hotCount,
+    });
+  // ADR-011 §1: the due list only (read-only RPC); the OMDb provider is never even constructed.
+  if (dryRun) {
+    const never = () => Promise.reject(new Error('dry run: no OMDb calls'));
+    const counts = await refreshImdbRatings({ due, lookup: never, save: never }, omdb.dailyBudget, {
+      dryRun: true,
+    });
+    return { counts, wrote: 0 };
+  }
   const provider = new OmdbRatingProvider(omdb.apiKey);
-  return refreshImdbRatings(
+  const counts = await refreshImdbRatings(
     {
-      due: (limit) =>
-        rpc(db, 'catalog_imdb_due', {
-          p_limit: limit,
-          p_hot_ttl_days: omdb.hotTtlDays,
-          p_ttl_days: omdb.ttlDays,
-          p_hot_count: omdb.hotCount,
-        }),
+      due,
       lookup: (id) => provider.getImdbRating(id),
       save: async (rows) => {
-        if (!dryRun) await rpc(db, 'catalog_set_imdb', { p_rows: rows });
+        await rpc(db, 'catalog_set_imdb', { p_rows: rows });
       },
     },
     omdb.dailyBudget,
   );
+  return { counts, wrote: counts.looked_up };
 }
 
 /* ------------------------------------------------------------------ */
@@ -306,9 +332,9 @@ export function latestListedCounts(
   return null;
 }
 
-function tmdbGetter(env: ServerEnv) {
+function tmdbGetter(env: ServerEnv, rps = 10) {
   const tmdb = new TmdbDetailProvider(env.tmdb!, { timeoutMs: 10_000 });
-  const throttle = createThrottle(10); // ~10 req/s, well under TMDB's limit
+  const throttle = createThrottle(rps); // ~10 req/s, well under TMDB's limit
   return (path: string, params: Record<string, string> = {}) =>
     withRetry(async () => {
       await throttle();
@@ -322,8 +348,10 @@ async function discoverStep(
   runId: string,
   today: string,
   dryRun: boolean,
-) {
-  const get = tmdbGetter(env);
+  rps = 10,
+): Promise<DiscoverResult> {
+  if (!env.tmdb) return { counts: { skipped: 'no TMDB key' }, wrote: 0 };
+  const get = tmdbGetter(env, rps);
   const shards = yearShards(1900, Number(today.slice(0, 4)));
   console.log(
     `[sync] rule: >= ${env.curation.minRating}, votes movie >= ${env.curation.minVotesMovie}, tv >= ${env.curation.minVotesTv}; ${shards.length} shards per type`,
@@ -363,10 +391,28 @@ async function discoverStep(
     },
     missing,
     { ...ctx, genreNames: new Map() },
+    env.sync.recheckMax,
+    { dryRun },
   );
+  // F2: a failed re-check is not a drop. Stage the current row unchanged so apply keeps it listed.
+  const carried: StagingRow[] = [];
+  for (const batch of chunks(recheck.erroredKeys, 200)) {
+    const { data, error } = await db
+      .from('catalog_index')
+      .select(STAGING_COLUMNS.join(', '))
+      .in('title_key', batch);
+    if (error) throw new Error(`select carried-forward rows: ${error.message}`);
+    carried.push(
+      ...carryForwardRows((data ?? []) as unknown as Omit<StagingRow, 'run_id'>[], runId),
+    );
+  }
   const staged = new Map<string, StagingRow>(found.rows);
-  for (const r of recheck.rows) staged.set(`${r.media_type}:${r.tmdb_id}`, r);
-  const listed = countListed(staged.values());
+  for (const r of [...recheck.rows, ...carried]) staged.set(`${r.media_type}:${r.tmdb_id}`, r);
+  // Dry run (no re-checks): upper bound = every missing title still listed; lower bound = all dropped.
+  const lower = countListed(found.rows.values());
+  const upper = { ...lower };
+  for (const k of missing) upper[k.startsWith('movie:') ? 'movie' : 'tv']++;
+  const listed = dryRun ? upper : countListed(staged.values());
 
   const { data: lastRuns, error: lastErr } = await db
     .from('sync_runs')
@@ -379,22 +425,38 @@ async function discoverStep(
   const last = latestListedCounts(lastRuns);
   const firstRun = previouslyListed.size === 0;
   const guard = checkGuardrails(listed, last, env.sync, { firstRun });
+  const cap = recheckCapReason(missing.length, env.sync.recheckMax);
+  if (cap) guard.reasons.push(cap);
+  guard.ok = guard.reasons.length === 0;
   for (const line of guardrailReport(listed, last, env.sync, guard, { firstRun }))
     console.log(line);
+  if (dryRun) {
+    const low = checkGuardrails(lower, last, env.sync, { firstRun });
+    console.log(
+      `[sync] dry run: missing ${missing.length} (would be re-checked); counted as listed above. ` +
+        `If all dropped: movie ${lower.movie}, tv ${lower.tv} → ${low.ok ? 'pass' : `fail (${low.reasons.join('; ')})`}`,
+    );
+    console.log(`[sync] GUARD: ${guard.ok ? 'pass' : 'fail'}`);
+  }
   const summary = {
     pages: found.pages,
     discovered: found.rows.size,
     malformed: found.malformed,
     truncated_shards: found.truncatedShards,
-    rechecked: missing.length,
+    missing: missing.length,
+    rechecked: missing.length - recheck.skipped,
+    recheck_skipped: recheck.skipped,
     recheck_errors: recheck.errors,
+    carried_forward: carried.length,
     gone: recheck.gone.length,
     listed,
     first_run: firstRun,
+    ...(dryRun ? { listed_if_all_dropped: lower } : {}),
     ...(guard.warnings.length ? { warnings: guard.warnings } : {}),
   };
-  if (!guard.ok) return { ...summary, aborted: guard.reasons };
-  if (dryRun) return { ...summary, dry_run: true };
+  if (!guard.ok)
+    return { counts: { ...summary, aborted: guard.reasons }, wrote: 0, aborted: guard.reasons };
+  if (dryRun) return { counts: { ...summary, dry_run: true }, wrote: 0 };
 
   for (const batch of chunks([...staged.values()], 500)) {
     const { error } = await db.from('catalog_staging').upsert(batch);
@@ -408,14 +470,14 @@ async function discoverStep(
       .in('title_key', batch);
     if (error) throw new Error(`mark gone: ${error.message}`);
   }
-  return { ...summary, applied };
+  return { counts: { ...summary, applied }, wrote: staged.size + recheck.gone.length };
 }
 
 /* ------------------------------------------------------------------ */
 /* Steps 9–11: palettes, disagreement report, purge + revalidate       */
 /* ------------------------------------------------------------------ */
 
-async function paletteStep(db: SupabaseClient, dryRun: boolean, max = 2000) {
+async function paletteStep(db: SupabaseClient, dryRun: boolean, max = 2000): Promise<StepResult> {
   const { data, error } = await db
     .from('catalog_index')
     .select('id, poster_path')
@@ -424,7 +486,8 @@ async function paletteStep(db: SupabaseClient, dryRun: boolean, max = 2000) {
     .limit(max);
   if (error) throw new Error(`palette select: ${error.message}`);
   const rows = (data ?? []) as { id: number; poster_path: string | null }[];
-  if (dryRun || rows.length === 0) return { due: rows.length };
+  // Dry run: no poster download, no sharp, no update (ADR-011 §1).
+  if (dryRun || rows.length === 0) return { counts: { due: rows.length }, wrote: 0 };
   const sharp = (await import('sharp')).default as unknown as SharpLike;
   const result = await mapConcurrent(rows, 30, async (r) => {
     let palette = null;
@@ -441,7 +504,10 @@ async function paletteStep(db: SupabaseClient, dryRun: boolean, max = 2000) {
       .eq('id', r.id);
     if (e) throw new Error(e.message);
   });
-  return { due: rows.length, computed: result.ok.length, failed: result.failed.length };
+  return {
+    counts: { due: rows.length, computed: result.ok.length, failed: result.failed.length },
+    wrote: result.ok.length,
+  };
 }
 
 async function disagreementStep(db: SupabaseClient) {
@@ -475,6 +541,37 @@ export async function revalidateSite(
 /* Main + sync_runs bookkeeping                                        */
 /* ------------------------------------------------------------------ */
 
+/** The injected steps for `runSync`, wired to Supabase (service role), TMDB and OMDb. */
+export function buildSteps(
+  env: ServerEnv,
+  db: SupabaseClient,
+  opts: { runId: string; today: string; tmdbRps?: number },
+): SyncSteps {
+  const { runId, today } = opts;
+  return {
+    startRun: async () => {
+      const { error } = await db
+        .from('sync_runs')
+        .insert({ id: runId, kind: 'catalog', status: 'running' });
+      if (error) throw new Error(`sync_runs insert: ${error.message}`);
+    },
+    finishRun: async (status, counts, error) => {
+      const { error: e } = await db
+        .from('sync_runs')
+        .update({ status, counts, error: error ?? null, finished_at: new Date().toISOString() })
+        .eq('id', runId);
+      if (e) console.error('[sync] could not record the run:', e.message);
+    },
+    discover: ({ dryRun }) => discoverStep(env, db, runId, today, dryRun, opts.tmdbRps),
+    enrich: ({ dryRun }) => enrichStep(env, db, dryRun),
+    imdb: ({ dryRun }) => imdbStep(env, db, dryRun),
+    palettes: ({ dryRun }) => paletteStep(db, dryRun),
+    disagreements: () => disagreementStep(db),
+    purge: () => rpc(db, 'catalog_purge_stale', {}),
+    revalidate: (tags) => revalidateSite(env.siteUrl, env.revalidateSecret, tags),
+  };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const env = parseEnv();
@@ -489,55 +586,17 @@ async function main() {
     return;
   }
   const db = admin(env);
-  const counts: Record<string, unknown> = {};
-  const run = (s: Step) => args.only === null || args.only === s;
-  const runId = randomUUID();
-  const finish = async (status: 'ok' | 'aborted' | 'failed', error?: string) => {
-    if (args.dryRun) return;
-    const { error: e } = await db
-      .from('sync_runs')
-      .update({ status, counts, error: error ?? null, finished_at: new Date().toISOString() })
-      .eq('id', runId);
-    if (e) console.error('[sync] could not record the run:', e.message);
-  };
-  if (!args.dryRun) {
-    const { error } = await db
-      .from('sync_runs')
-      .insert({ id: runId, kind: 'catalog', status: 'running' });
-    if (error) throw new Error(`sync_runs insert: ${error.message}`);
+  const result = await runSync(buildSteps(env, db, { runId: randomUUID(), today }), args);
+  if (result.status === 'aborted') {
+    console.error(
+      '[sync] guardrails failed; index membership untouched, the other steps ran:',
+      result.reasons.join('; '),
+    );
+    process.exitCode = 1;
   }
-
-  try {
-    if (run('discover')) {
-      if (!env.tmdb) counts.discover = { skipped: 'no TMDB key' };
-      else {
-        const d = await discoverStep(env, db, runId, today, args.dryRun);
-        counts.discover = d;
-        if ('aborted' in d && d.aborted) {
-          console.error('[sync] guardrails failed; index untouched:', d.aborted.join('; '));
-          await finish('aborted', d.aborted.join('; '));
-          process.exitCode = 1;
-          return;
-        }
-      }
-    }
-    if (run('enrich')) counts.enrich = await enrichStep(env, db, args.dryRun);
-    if (run('imdb')) counts.imdb = await imdbStep(env, db, args.dryRun);
-    if (run('discover')) {
-      counts.palettes = await paletteStep(db, args.dryRun);
-      counts.disagreements = await disagreementStep(db);
-      if (!args.dryRun) {
-        counts.purge = await rpc(db, 'catalog_purge_stale', {});
-        counts.revalidate = await revalidateSite(env.siteUrl, env.revalidateSecret, ['catalog']);
-      }
-    }
-    await finish('ok');
-    console.log('[sync] done', JSON.stringify(counts));
-    if (args.dryRun) console.log('[sync] dry run: nothing was written');
-  } catch (e) {
-    await finish('failed', e instanceof Error ? e.message : String(e));
-    throw e;
-  }
+  console.log('[sync] done', JSON.stringify(result.counts));
+  if (args.dryRun)
+    console.log('[sync] dry run: nothing was written; no OMDb, enrich or image budget was spent');
 }
 
 // Only run when executed directly (tests may import the helpers).

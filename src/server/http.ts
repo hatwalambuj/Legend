@@ -105,10 +105,7 @@ export async function parseBody<S extends z.ZodType>(
 }
 
 /** For body-less mutations (DELETE). Browsers always send Origin on cross-origin/unsafe requests. */
-export function assertSameOrigin(
-  req: NextRequest,
-  trust: TrustedProxy = env().trustedProxy,
-): void {
+export function assertSameOrigin(req: NextRequest, trust: TrustedProxy = env().trustedProxy): void {
   const origin = req.headers.get('origin');
   if (!origin) return; // same-origin fetches from older browsers / server-to-server; cookies are SameSite=Lax
   // Same host resolution as requestOrigin(): the first hop of a (possibly chained) proxy list.

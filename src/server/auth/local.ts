@@ -174,7 +174,11 @@ export class LocalAuthProvider implements AuthProvider {
    */
   async updatePassword(password: string): Promise<void> {
     const claims = verifySessionClaims((await this.jar()).get(DEMO_SESSION_COOKIE), this.secret());
-    const user = claims && demoStore().get().users.find((x) => x.id === claims.uid);
+    const user =
+      claims &&
+      demoStore()
+        .get()
+        .users.find((x) => x.id === claims.uid);
     if (!claims || !user) throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
     if (Date.now() - claims.iat * 1000 > REAUTH_WINDOW_MS)
       throw new AppError('reauth_required', ERROR_COPY.reauth_required);

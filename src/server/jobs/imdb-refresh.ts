@@ -8,6 +8,7 @@
  *   checked, so they are not retried until their TTL).
  * - Stops cleanly on OmdbLimitError (quota exhausted / bad key): saves what it has, resumes tomorrow.
  * - Transient errors skip the row (left unchecked → retried next night).
+ * - `dryRun`: reads the due list only; never calls `lookup` or `save` (ADR-011 §1).
  */
 import type { ImdbRating } from '@/server/ports';
 import { OmdbLimitError } from '@/server/providers/omdb';
@@ -38,11 +39,28 @@ export interface ImdbRefreshResult {
   stopped_by_limit: boolean;
 }
 
+/** `--dry-run` (ADR-011 §1): the due list only (read-only RPC), zero OMDb calls, nothing saved. */
+export interface ImdbDryRunResult {
+  due: number;
+  dry_run: true;
+}
+
 export async function refreshImdbRatings(
   deps: ImdbRefreshDeps,
   budget: number,
-  opts: { concurrency?: number; batchSize?: number } = {},
-): Promise<ImdbRefreshResult> {
+  opts: { concurrency?: number; batchSize?: number; dryRun: true },
+): Promise<ImdbDryRunResult>;
+export async function refreshImdbRatings(
+  deps: ImdbRefreshDeps,
+  budget: number,
+  opts?: { concurrency?: number; batchSize?: number; dryRun?: false },
+): Promise<ImdbRefreshResult>;
+export async function refreshImdbRatings(
+  deps: ImdbRefreshDeps,
+  budget: number,
+  opts: { concurrency?: number; batchSize?: number; dryRun?: boolean } = {},
+): Promise<ImdbRefreshResult | ImdbDryRunResult> {
+  if (opts.dryRun) return { due: budget > 0 ? (await deps.due(budget)).length : 0, dry_run: true };
   const concurrency = Math.max(1, opts.concurrency ?? 4);
   const batchSize = Math.max(1, opts.batchSize ?? 100);
   const result: ImdbRefreshResult = {

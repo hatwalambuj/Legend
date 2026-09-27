@@ -6,13 +6,28 @@
  */
 import 'server-only';
 import { cache } from 'react';
-import { AppError } from '@/lib/errors';
+import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { DataAccess } from '@/lib/data-access';
 import { normalizeSearch } from '@/lib/text';
 import { SORT_KEYS } from '@/lib/catalog-order';
-import type { MediaType, TitleDetail, TitleSummary, TypeFilter } from '@/lib/types';
+import { toTitleKey } from '@/lib/keys';
+import type {
+  MediaType,
+  TitleDegraded,
+  TitleDetail,
+  TitleKey,
+  TitleStats,
+  TitleSummary,
+  TypeFilter,
+} from '@/lib/types';
 import { buildWorthIt } from '@/lib/worth-it';
 import { container } from './container';
+import {
+  EMPTY_ENRICHMENT,
+  LastGoodEntries,
+  summaryFromDetail,
+  type CatalogEntry,
+} from './degraded';
 import { env, today } from './env';
 
 const safeType = (t: TypeFilter | undefined): TypeFilter =>
@@ -24,16 +39,70 @@ const clampLimit = (n: number | undefined, def = 20) =>
 /** Per-request memoised session (React cache dedupes across a single render). */
 const getSession = cache(async () => container().auth.getSession());
 
+const ZERO_STATS: TitleStats = { stubCount: 0, reviewCount: 0, ratingAvg10: null, ratingCount: 0 };
+
+/** Process-wide last-good catalogue entries: the first fallback when our DB is down (ADR-011 §4). */
+const lastGood = new LastGoodEntries(1000);
+
+const errCode = (e: unknown) =>
+  e instanceof AppError ? e.code : e instanceof Error ? e.name : 'error';
+
+function logDegraded(key: TitleKey, degraded: TitleDegraded, e: unknown) {
+  console.error('[dal.getTitle] degraded', { key, degraded, code: errCode(e) });
+}
+
+/**
+ * Catalogue entry with the ADR-011 §4 fallbacks: DB → last-good copy → TMDB-derived summary.
+ * `null` = unknown title (404). Throws `upstream_unavailable` only when both our DB and TMDB fail.
+ */
+async function loadEntry(
+  mediaType: MediaType,
+  tmdbId: number,
+): Promise<{ entry: CatalogEntry; degraded: TitleDegraded } | null> {
+  const c = container();
+  const key = toTitleKey(mediaType, tmdbId);
+  try {
+    const entry = await c.catalog.getEntry(mediaType, tmdbId);
+    if (entry) lastGood.set(key, entry);
+    return entry ? { entry, degraded: null } : null;
+  } catch (e) {
+    if (e instanceof AppError && e.code === 'not_found') return null;
+    logDegraded(key, 'catalog', e);
+    const kept = lastGood.get(key);
+    if (kept) return { entry: kept, degraded: 'catalog' };
+    let summary: TitleSummary | null;
+    try {
+      const d = await c.detail.getDetail(mediaType, tmdbId);
+      if (!d) return null;
+      summary = summaryFromDetail(mediaType, tmdbId, d, env().curation, today());
+    } catch (tmdbError) {
+      throw new AppError('upstream_unavailable', ERROR_COPY.upstream_unavailable, {
+        cause: tmdbError,
+      });
+    }
+    if (!summary)
+      throw new AppError('upstream_unavailable', ERROR_COPY.upstream_unavailable, { cause: e });
+    return { entry: { summary, enrichment: EMPTY_ENRICHMENT }, degraded: 'catalog' };
+  }
+}
+
 /** Deduped per request: generateMetadata + the page both call getTitle (TitleDetail incl. worthIt). */
 const getTitle = cache(
   async (mediaType: MediaType, tmdbId: number): Promise<TitleDetail | null> => {
     const c = container();
-    const entry = await c.catalog.getEntry(mediaType, tmdbId);
-    if (!entry) return null;
-    const { summary, enrichment } = entry;
+    const loaded = await loadEntry(mediaType, tmdbId);
+    if (!loaded) return null;
+    const { summary, enrichment } = loaded.entry;
+    let degraded = loaded.degraded;
     const [stats, recommended, base] = await Promise.all([
-      c.titleStates.stats(summary.key),
-      c.catalog.getMany(enrichment.recommendationKeys),
+      c.titleStates.stats(summary.key).catch((e: unknown) => {
+        if (!degraded) logDegraded(summary.key, 'community', e);
+        degraded ??= 'community';
+        return ZERO_STATS;
+      }),
+      c.catalog
+        .getMany(enrichment.recommendationKeys)
+        .catch(() => new Map<TitleKey, TitleSummary>()),
       loadDetail(summary, enrichment.tagline),
     ]);
     // "Worth it?" is computed on read from stored data by pure rules (PRD §4.2, D15: no AI).
@@ -45,7 +114,7 @@ const getTitle = cache(
       stats,
       recommended: [...recommended.values()],
     });
-    return { ...base, worthIt, degraded: null };
+    return { ...base, worthIt, degraded };
   },
 );
 

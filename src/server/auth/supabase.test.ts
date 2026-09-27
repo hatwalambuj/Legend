@@ -261,16 +261,19 @@ describe('SupabaseAuthProvider', () => {
     it('maps Supabase errors', async () => {
       await expect(
         make(60, { code: 'same_password' }).provider.updatePassword('x'.repeat(8)),
-      ).rejects.toMatchObject({ code: 'validation_failed', fields: { password: expect.any(String) } });
+      ).rejects.toMatchObject({
+        code: 'validation_failed',
+        fields: { password: expect.any(String) },
+      });
       expect(mapPasswordError({ code: 'weak_password' }).code).toBe('validation_failed');
       expect(mapPasswordError({ code: 'reauthentication_needed' }).code).toBe('reauth_required');
       expect(mapPasswordError({ status: 429 }).code).toBe('rate_limited');
       expect(mapPasswordError({ message: 'boom' }).code).toBe('internal');
     });
     it('lastAuthMs takes the newest amr timestamp and ignores junk', () => {
-      expect(lastAuthMs({ amr: [{ timestamp: 10 }, { timestamp: 20 }, 'x', { timestamp: 'y' }] })).toBe(
-        20_000,
-      );
+      expect(
+        lastAuthMs({ amr: [{ timestamp: 10 }, { timestamp: 20 }, 'x', { timestamp: 'y' }] }),
+      ).toBe(20_000);
       expect(lastAuthMs({ amr: ['password'] })).toBeNull();
       expect(lastAuthMs(null)).toBeNull();
     });

@@ -12,6 +12,7 @@ import type { RateLimiter } from './rate-limit';
 import type {
   CatalogQuery,
   DiaryEntry,
+  Genre,
   MediaType,
   Page,
   ProfileStats,
@@ -77,9 +78,28 @@ export interface CatalogDetailProvider {
   getDetail(mediaType: MediaType, tmdbId: number): Promise<DetailResult | null>;
 }
 
+/**
+ * Catalogue-row fields of the TMDB detail body. Only used to rebuild a summary when our DB is down
+ * (ADR-011 §4, `summaryFromDetail`). Optional: older L2 cache payloads don't carry it.
+ */
+export interface DetailSource {
+  title: string;
+  originalTitle: string;
+  releaseDate: string | null;
+  voteAverage: number;
+  voteCount: number;
+  popularity: number;
+  genres: Genre[];
+  posterPath: string | null;
+  backdropPath: string | null;
+  imdbId: string | null;
+  adult: boolean;
+}
+
 export interface DetailResult {
   fields: DetailFields;
   summaryPatch?: Partial<TitleSummary>;
+  source?: DetailSource;
   /** True when served from the L2 cache after an upstream failure (→ detailStatus 'stale'). */
   stale?: boolean;
   /** When the payload was fetched from the source (ISO). Defaults to now. */

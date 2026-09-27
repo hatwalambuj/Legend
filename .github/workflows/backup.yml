@@ -1,0 +1,71 @@
+name: Nightly database backup
+
+# ADR-011 §7: Supabase Free has no backups. Two pg_dump files (public schema + auth identities), tarred
+# and encrypted with BACKUP_PASSPHRASE (AES256, gpg symmetric), kept 14 days as a workflow artifact.
+# Without both secrets this workflow succeeds and does nothing. Restore runbook: README "Backups and restore".
+# Artifacts of a PUBLIC repository can be downloaded by anyone: that is why encryption is mandatory.
+on:
+  schedule:
+    - cron: '7 4 * * *' # 04:07 UTC, after the nightly sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      # Session pooler connection string (IPv4; GitHub runners have no IPv6), role postgres.
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      # Must match the server's major version (`select version()` in the SQL editor).
+      PG_MAJOR: '17'
+    steps:
+      - name: Skip when not configured
+        id: guard
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "SUPABASE_DB_URL or BACKUP_PASSPHRASE not set; skipping backup." && echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install the Postgres client (PGDG)
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-$PG_MAJOR" > /dev/null
+      - name: Dump, tar and encrypt
+        id: dump
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          umask 077
+          PGBIN="/usr/lib/postgresql/$PG_MAJOR/bin"
+          day="$(date -u +%Y-%m-%d)"
+          mkdir -p dump
+          "$PGBIN/pg_dump" "$SUPABASE_DB_URL" --format=custom --no-owner --no-privileges --schema=public \
+            --exclude-table-data=public.title_detail_cache --exclude-table-data=public.catalog_staging \
+            --file=dump/public.dump
+          "$PGBIN/pg_dump" "$SUPABASE_DB_URL" --format=custom --data-only \
+            --table=auth.users --table=auth.identities --file=dump/auth.dump
+          tar -C dump -cf "db-$day.tar" public.dump auth.dump
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --symmetric \
+            --cipher-algo AES256 --passphrase-fd 0 --output "db-$day.tar.gpg" "db-$day.tar"
+          rm -rf dump "db-$day.tar"
+          echo "Backup size: $(stat -c %s "db-$day.tar.gpg") bytes"
+          echo "name=db-$day.tar.gpg" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          name: ${{ steps.dump.outputs.name }}
+          path: ${{ steps.dump.outputs.name }}
+          retention-days: 14
+          if-no-files-found: error

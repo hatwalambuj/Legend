@@ -126,7 +126,8 @@ export const SYNC_GUARD_MIN_DEFAULTS = { movie: 3000, tv: 1000 } as const;
  * x-forwarded-host/-proto. `xff-N`: the N-th X-Forwarded-For entry from the right (N proxies we control).
  * `none`: trust no header (all clients share one per-IP key; auth limits get 20× headroom).
  */
-export type TrustedProxy = 'vercel' | 'netlify' | 'cloudflare' | 'none' | `xff-${1 | 2 | 3 | 4 | 5}`;
+export type TrustedProxy =
+  'vercel' | 'netlify' | 'cloudflare' | 'none' | `xff-${1 | 2 | 3 | 4 | 5}`;
 
 export interface ServerEnv {
   nodeEnv: 'development' | 'production' | 'test';

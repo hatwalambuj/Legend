@@ -1,7 +1,8 @@
 name: Nightly catalogue sync
 
 # ADR-002 / ADR-008: refresh the curated catalog_index from TMDB, enrich new titles ("Worth it?"), and
-# refresh cached IMDb ratings from OMDb (staggered). Also keeps Supabase Free from pausing.
+# refresh cached IMDb ratings from OMDb (staggered). Also keeps Supabase Free from pausing: the first
+# step pings health_probe() with the anon key only, independent of the TMDB secret (ADR-011 §5).
 # Deterministic data processing only — no AI/LLM steps or secrets (PRD D15).
 on:
   schedule:
@@ -9,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Fetch + guardrails only, write nothing'
+        description: 'Discover + guardrails only: no OMDb/enrich/image budget, write nothing'
         type: boolean
         default: false
       only:
@@ -62,7 +63,19 @@ jobs:
       OMDB_HOT_COUNT: ${{ vars.OMDB_HOT_COUNT || '1000' }}
       OMDB_HOT_TTL_DAYS: ${{ vars.OMDB_HOT_TTL_DAYS || '7' }}
       OMDB_TTL_DAYS: ${{ vars.OMDB_TTL_DAYS || '30' }}
+      # Max missing titles re-checked per night; more aborts the apply for a human to look at (F2).
+      SYNC_RECHECK_MAX: ${{ vars.SYNC_RECHECK_MAX || '500' }}
     steps:
+      - name: Keep-alive (Supabase Free pauses after ~7 idle days)
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "keep-alive skipped" && exit 0
+          fi
+          curl -fsS -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/health_probe" \
+            -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            -H 'Content-Type: application/json' -d '{}' > /dev/null
+          echo "keep-alive ok"
       - name: Skip when not configured
         id: guard
         run: |
