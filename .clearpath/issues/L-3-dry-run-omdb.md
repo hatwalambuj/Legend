@@ -9,6 +9,6 @@ confidence: high
 ---
 # L-3-dry-run-omdb
 
-status: open
+status: open (spec done: ADR-011 §1 → M1-01)
 
 Dry-run sync spends real OMDb/TMDB budget (AR-1, scripts/sync-catalog.ts:246-258). Must-before-launch.

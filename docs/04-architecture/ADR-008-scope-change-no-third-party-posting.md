@@ -1,6 +1,6 @@
 # ADR-008: No third-party posting; show the IMDb rating everywhere
 
-- Status: **Accepted** (founder decision, 2026-09-26; implementation details decided by the Architect)
+- Status: **Accepted** (founder decision, 2026-09-26; implementation details decided by the Architect) · **Amended 2026-09-27 by ADR-011 §1**: a dry run makes 0 OMDb calls, so the §3 headroom holds
 - Supersedes: ADR-004 §4, §7 and §8, and the old API_CONTRACT §5.13
 - Related: ADR-009 ("Worth it?"), PRD §4.1 "Ratings we show", PRD D3 (retired), A7
 

@@ -1,6 +1,6 @@
 # Stubbed — API contract
 
-Status: **Frozen v1.3** (ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
+Status: **Frozen v1.4** (v1.4 = 2026-09-27, ADR-010/011: honest `/api/health`, `TitleDetail.degraded`, confirm-email-safe sign-up, `PUT /api/auth/password`, `reauth_required`; ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
 Source of truth in code (keep in sync; a change needs both):
 - `src/lib/types.ts` (domain types)
 - `src/lib/contracts.ts` (zod request schemas + response types)
@@ -41,7 +41,9 @@ watchlist, wallet (`WalletItem.title`), diary (`DiaryEntry.title`), profile revi
 | `isListed` | boolean | false = hysteresis title reachable by URL ("BELOW 6.5 NOW") |
 
 `TitleDetail` adds `overview`, `tagline`, `directors`, `cast`, `trailer`, `tmdbReviews`, `detailStatus`,
-`fetchedAt` and **`worthIt: WorthIt`** (ADR-009):
+`fetchedAt`, **`degraded: null | 'community' | 'catalog'`** (v1.4, ADR-011 §4: `catalog` = our DB was unreachable and the page
+is built from a last-good copy or from TMDB, IMDb chip hidden, stubs/reviews paused; `community` = only community stats are
+missing; the page shows `data-testid="degraded-banner"`) and **`worthIt: WorthIt`** (ADR-009):
 
 ```ts
 worthIt: {
@@ -69,6 +71,7 @@ Every non-2xx response has the body `ApiErrorBody`:
 |---|---|---|
 | `validation_failed` | 400 | zod failure on query/body. `fields` maps field → message |
 | `invalid_credentials` | 401 | Wrong email or password, always generic: "That email and password don't match." |
+| `reauth_required` | 401 | v1.4: `PUT /api/auth/password` with a session older than 10 min: "Sign in again to change your password." |
 | `unauthenticated` | 401 | The endpoint needs a session |
 | `forbidden` | 403 | Cross-origin mutation, bad revalidate secret |
 | `not_found` | 404 | Unknown title, stub, review or handle (also used for other users' rows, so existence is never leaked) |
@@ -76,7 +79,7 @@ Every non-2xx response has the body `ApiErrorBody`:
 | `unsupported_media_type` | 415 | Mutation without `Content-Type: application/json` |
 | `rate_limited` | 429 | 30 stubs/min, 10 reviews/min. `retryAfter` (seconds) + `Retry-After` header |
 | `not_implemented` | 501 | Scaffold placeholder, gone at MVP |
-| `upstream_unavailable` | 503 | Only where degradation is impossible (never for title pages) |
+| `upstream_unavailable` | 503 | Only where degradation is impossible. Title pages reach it only when **both** our DB and TMDB fail (ADR-011 §4) |
 | `internal` | 500 | Anything unexpected (logged server-side, generic message) |
 
 The client gets `ApiError { status, code, message, fields?, retryAfter? }` thrown from `api.*`. Map `code` to copy with `ERROR_COPY` (errors.ts) and DESIGN §10.
@@ -94,14 +97,38 @@ The client gets `ApiError { status, code, message, fields?, retryAfter? }` throw
 | `GET /api/catalog` | `public, s-maxage=3600, stale-while-revalidate=86400` | Tag `catalog` revalidated by the nightly sync |
 | `GET /api/search` | `public, s-maxage=300, stale-while-revalidate=3600` | |
 | `GET /api/titles/{type}/{id}/reviews` | `public, s-maxage=60, stale-while-revalidate=300` | |
+| `GET`/`HEAD /api/health` | `no-store` | v1.4: never cached at any layer; the probe bypasses the data cache (ADR-011 §3) |
 | Everything under `/api/me/**`, `/api/auth/**`, all mutations, all errors | `private, no-store` + `Vary: Cookie` | A response that reads the cookie is **never** public |
 | Pages | Dynamic SSR (ADR-001). TMDB detail data-cached 24 h (tag `title:{key}`), catalogue data-cached 1 h (tag `catalog`) | Invariant: never `Set-Cookie` on a public response |
 | Hashed static assets | `public, max-age=31536000, immutable` | Next default |
 
 ## 5. Route handlers
 
-### 5.1 `GET /api/health`
-→ `200 HealthResponse` `{ ok, mode: {catalog, data, isDemo}, catalogCount, lastSyncAt }`. Used by Playwright `webServer` and uptime checks.
+### 5.1 `GET /api/health` · `HEAD /api/health` (v1.4, ADR-011 §3)
+Query: `strict=1` (optional) → a `degraded` result returns 503 instead of 200. No auth, never reads or sets cookies,
+`Cache-Control: no-store`, per-IP limit 60/min (`429`). `HEAD` returns the same status with no body.
+
+```ts
+interface HealthResponse {
+  ok: boolean;                                   // status === 'ok' (kept for v1.3 clients)
+  status: 'ok' | 'degraded' | 'down';
+  mode: { catalog; data; isDemo };
+  catalogCount: number | null;                   // listed titles; null when down
+  lastSyncAt: string | null;                     // last FULL sync (discover applied, status ok); F1
+  syncAgeHours: number | null;                   // rounded to 0.1
+  checks: { db: 'ok' | 'fail' | 'skipped'; sync: 'ok' | 'stale' | 'never' | 'unknown' | 'skipped' };
+  reasons: ('db_unreachable' | 'sync_never' | 'sync_stale' | 'catalog_empty')[];
+}
+```
+| Condition | HTTP | `status` |
+|---|---|---|
+| Demo mode | 200 | `ok` (`checks` = `skipped`) |
+| Live, DB probe fails or exceeds 3 s | **503** | `down` |
+| Live, no full sync, sync older than `HEALTH_MAX_SYNC_AGE_HOURS` (36), or 0 listed titles | 200 (**503** with `strict=1`) | `degraded` |
+| Live, all good | 200 | `ok` |
+
+The body never contains error messages, hosts or stack traces. Used by Playwright `webServer` (demo → always 200) and by
+two free uptime monitors (default URL = "site down", `?strict=1` = "sync stale"); the monitor also keeps Supabase Free awake.
 
 ### 5.2 `GET /api/me`
 → `200 MeResponse` `{ session: Session | null, mode: AppMode, stubCount: number }`. Private. This powers the header (avatar, wallet badge) and the demo pill. `stubCount` is the signed-in user's total stubs (0 when signed out), so the wallet badge needs no diary paging (v1.2).
@@ -189,9 +216,10 @@ Body `updateProfileSchema` (`displayName` 1..50, `bio` ≤ 160, `avatarUrl` URL 
 ### 5.18 Auth
 | Route | Body | Success | Errors |
 |---|---|---|---|
-| `POST /api/auth/signup` | `signUpSchema` `{ email, password (8..72), handle, displayName? }` | `201 AuthResponse { session }` and sets the session cookie | `400` fields, `409 email_taken`, `409 handle_taken` |
+| `POST /api/auth/signup` | `signUpSchema` `{ email, password (8..72), handle, displayName? }` | `201 AuthResponse { session }` and sets the session cookie. v1.4: when the Supabase "Confirm email" setting is ON, `202 AuthResponse { session: null, confirmEmail: true }` and no cookie (UI: "Check your inbox to finish signing up"; ADR-010 ID-1). Demo mode never returns 202 | `400` fields, `409 email_taken`, `409 handle_taken` |
 | `POST /api/auth/signin` | `signInSchema` `{ email, password }` | `200 AuthResponse` and sets the cookie | `401 invalid_credentials` (generic) |
 | `POST /api/auth/signout` | `{}` | `204` and clears the cookie | — |
+| `PUT /api/auth/password` 🔒 (v1.4) | `setPasswordSchema` `{ password (8..72) }` | `204`. Live: Supabase `updateUser({ password })`; demo: re-hash in the store. Other sessions stay valid (ADR-010 ID-2) | `400` fields, `401 unauthenticated`, `401 reauth_required` (last sign-in > 10 min ago), `429` (5 per 10 min per user) |
 | `POST /api/auth/magic-link` | `magicLinkSchema` `{ email, next? }` | `202 MagicLinkResponse { sent: true, devLink? }` (`devLink` in demo mode only; it points at the origin the request used. On a production demo (`DEMO_DEV_LINKS` defaults to `seeded`) only the seeded `@demo.stubbed.app` accounts get one, v1.3) | `400`, `429`. Never reveals whether the email exists |
 | `GET /api/auth/handle-available?handle=` | — | `200 { available, reason? }` | — |
 | `GET /auth/callback?code=&next=` (demo: `demo_token=`) | — | `302` to `safeNext(next)` after the code exchange, with a **relative** `Location` (the browser stays on the host it used; `safeNext` guarantees a same-origin path) | `302 /signin?error=callback&next=…` |

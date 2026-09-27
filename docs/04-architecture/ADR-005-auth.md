@@ -1,6 +1,6 @@
 # ADR-005: Authentication and authorisation
 
-Status: **Accepted** · Date: 2026-09-26 · Decider: Architect
+Status: **Accepted** · Date: 2026-09-26 · Decider: Architect · **Extended 2026-09-27 by ADR-010** (identity model, launch tasks ID-1…ID-7)
 Inputs: PRD B1–B3, E5; SYSTEM_DESIGN §7, §8.1
 
 ## Decision

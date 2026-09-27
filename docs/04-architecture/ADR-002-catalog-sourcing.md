@@ -1,6 +1,6 @@
 # ADR-002: Catalogue sourcing — "Why put everything in a DB? Can't we get it real-time?"
 
-Status: **Accepted** · Date: 2026-09-26 · Decider: Architect (final call)
+Status: **Accepted** · Date: 2026-09-26 · Decider: Architect (final call) · **Amended 2026-09-27 by ADR-011**: §1 guard abort blocks discover/apply only (§2 there); dry-run semantics (§1 there); recheck cap (§10 there)
 Inputs: SYSTEM_DESIGN §3 (options A/B/C, request-budget maths), PRD D2–D4, research.md §2, §11–12
 
 ## The answer for the founder, in plain words

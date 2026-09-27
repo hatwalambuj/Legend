@@ -9,6 +9,6 @@ confidence: high
 ---
 # L-4-guard-abort-scope
 
-status: open
+status: open (spec done: ADR-011 §2 → M1-02)
 
 Guard abort skips enrich/IMDb/palette/purge (AR-2). Must-before-launch.

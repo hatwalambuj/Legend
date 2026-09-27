@@ -18,7 +18,7 @@ Status legend: active · stale · superseded — verify stale pages against live
 - [[debt.md]] — shortcut ledger · active
 
 ## Decisions
-- [[decisions/_index.md]] — 6 decisions · active
+- [[decisions/_index.md]] — 7 decisions · active
 
 ## Components
 - [[components/_index.md]]

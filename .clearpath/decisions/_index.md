@@ -15,3 +15,4 @@ confidence: high
 - [[decisions/004-no-third-party-posting.md]] · active
 - [[decisions/005-worth-it-deterministic.md]] · active
 - [[decisions/006-ratings-shown.md]] · active
+- [[decisions/007-operations-free-tier.md]] · active

@@ -1,6 +1,6 @@
 # Work split: Frontend ∥ Backend
 
-Owner: Architect · Date: 2026-09-26 (v1.1: ADR-008 IMDb everywhere + no posting, ADR-009 "Worth it?", no AI)
+Owner: Architect · Date: 2026-09-26 (v1.1: ADR-008 IMDb everywhere + no posting, ADR-009 "Worth it?", no AI · v1.2 2026-09-27: §5 M1 task list for ADR-010/011 and ADR-001 Amendment A)
 Applies to: Frontend Dev, Backend Dev, Reviewer, QA
 
 Two agents work at the same time with **zero file conflicts**. Every path in the repo has exactly one owner.
@@ -127,3 +127,40 @@ Integration point: after step 2 on both sides the demo app is fully interactive,
   `src/components` and `src/hooks`).
 - `data-testid`s from API_CONTRACT §8 (incl. `imdb-rating`, `ticket-time`, `worth-it-*`). There is no `imdb-assist`.
 - All user-visible copy follows DESIGN §10.
+
+## 5. M1 task list (launch hardening, v1.2 · ADR-001 §A, ADR-010, ADR-011)
+
+**Frozen-file waiver for M1 (single writer = backend-dev):** the architect is docs-only in this run, so backend-dev makes
+exactly these additive edits to frozen files, and nobody else touches them: `src/lib/types.ts` (`TitleDetail.degraded`),
+`src/lib/contracts.ts` (`HealthResponse` v1.4, `AuthResponse.confirmEmail`, `setPasswordSchema`), `src/lib/errors.ts`
+(`reauth_required` + copy), `src/lib/api-client.ts` (`api.setPassword`), `src/server/env.ts` (`TRUSTED_PROXY`,
+`HEALTH_MAX_SYNC_AGE_HOURS`, `SYNC_RECHECK_MAX`), `.github/workflows/nightly-sync.yml`, new `.github/workflows/backup.yml`,
+`.env.example`, and the README sections "First sync", "Backups and restore", "Environment". Shapes must match API_CONTRACT v1.4
+exactly. **Order:** backend-dev lands M1-00 first (types/contracts/errors/api-client only, gate green), then frontend-dev starts.
+
+| id | Task (spec) | Owner | Exact files |
+|---|---|---|---|
+| M1-00 | Shared-type edits above, no behaviour (contract v1.4) | backend-dev | `src/lib/types.ts`, `src/lib/contracts.ts`, `src/lib/errors.ts`, `src/lib/api-client.ts` |
+| M1-01 | Dry run: 0 OMDb, 0 TMDB detail, 0 image fetches, 0 DB writes (ADR-011 §1) | backend-dev | `scripts/sync-catalog.ts`, `src/server/jobs/imdb-refresh.ts`, `src/server/jobs/discover.ts` (`recheckMissing` `dryRun`), new `tests/server/sync-dry-run.test.ts`, README "First sync" |
+| M1-02 | Guard abort blocks discover/apply only; orchestration moved to a testable runner (ADR-011 §2) | backend-dev | new `src/server/jobs/sync-runner.ts`, `scripts/sync-catalog.ts`, new `tests/server/sync-runner.test.ts` |
+| M1-03 | Honest `/api/health` + `HEAD`, `?strict=1`, uncached probe, 3 s timeout, 60/min per IP (ADR-011 §3) | backend-dev | `src/app/api/health/route.ts`, `src/server/ports.ts` (`CatalogRepository.probe`), `src/server/repositories/supabase/index.ts`, `src/server/repositories/memory/catalog.ts`, `src/server/env.ts`, new `tests/server/health.test.ts` |
+| M1-04 | F1 migration: full-sync-only `last_catalog_sync()`, `health_probe()` (ADR-011 §9) | backend-dev | new `supabase/migrations/20260927000000_ops_health.sql`, `tests/db/migrations.test.ts` |
+| M1-05 | DAL degrade: last-good LRU → TMDB-derived entry → 503; stats/recommended fallbacks; `degraded` field (ADR-011 §4) | backend-dev | `src/server/dal.ts`, new `src/server/degraded.ts`, new `tests/server/dal-degraded.test.ts` |
+| M1-06 | `DegradedBanner` + disabled Stub/Review/Watchlist CTAs when `degraded === 'catalog'` | frontend-dev | new `src/components/DegradedBanner.tsx` + `.module.css` + `.test.tsx`, `src/app/title/[type]/[slug]/page.tsx`, the CTA components under `src/components/**` |
+| M1-07 | Keep-alive step before the secrets guard, anon key only (ADR-011 §5) | backend-dev | `.github/workflows/nightly-sync.yml` |
+| M1-08 | Encrypted nightly `pg_dump` artifact, 14 days; README restore runbook (ADR-011 §7) | backend-dev | new `.github/workflows/backup.yml`, README "Backups and restore" |
+| M1-09 | F2: `SYNC_RECHECK_MAX`, `skipped > 0` aborts apply, errored re-checks carried forward (ADR-011 §10) | backend-dev | `src/server/jobs/discover.ts`, `scripts/sync-catalog.ts`, `src/server/env.ts`, `src/server/jobs/discover.test.ts` (or `tests/server/`) |
+| M1-10 | `TRUSTED_PROXY` for client IP and forwarded host/proto; boot fails in live production when unset and not auto-detected (ADR-001 §A3) | backend-dev | `src/server/env.ts`, `src/server/rate-limit.ts`, `src/server/rate-limit.test.ts`, `src/server/http.ts`, `src/app/api/auth/**/route.ts`, `.env.example` |
+| M1-11 | ID-1 confirm-email-safe sign-up (`202 { session: null, confirmEmail: true }`) | backend-dev (adapter + route) · frontend-dev (message) | `src/server/auth/supabase.ts`, `src/app/api/auth/signup/route.ts` · `src/components/AuthForm.tsx` |
+| M1-12 | ID-2 "Set a new password": `PUT /api/auth/password`, `reauth_required` after 10 min | backend-dev (route + port) · frontend-dev (form) | `src/server/ports.ts` (`AuthProvider.updatePassword`), `src/server/auth/supabase.ts`, `src/server/auth/local.ts`, new `src/app/api/auth/password/route.ts` · new `src/components/SetPasswordForm.tsx` (+ css, test), `src/app/me/settings/page.tsx` |
+| M1-13 | ID-5 magic-link limit per hashed email (5/h) in addition to per IP | backend-dev | `src/app/api/auth/magic-link/route.ts`, `src/server/rate-limit.ts` |
+| M1-14 | ID-6 privacy copy: what is stored where, immediate deletion, backups ≤ 14 days | frontend-dev | `src/app/about/page.tsx` |
+| M1-15 | L-1 official TMDB logo (after the founder supplies it) | frontend-dev | `public/tmdb-logo.svg` |
+| M1-16 | E2E: health (demo 200, `no-store`, `HEAD`), set-password flow, sign-up unchanged in demo; flake L-15 (retry on `ECONNRESET`) | qa-engineer | new `e2e/ops.spec.ts`, `e2e/support/fixtures.ts` |
+| M1-17 | Staging smoke L-2 + restore rehearsal + spoofed-XFF check per `TRUSTED_PROXY` + "do many clients share GoTrue's per-IP limit?" check | qa-engineer (+ founder keys) | new `docs/06-qa/STAGING_SMOKE.md`, screenshots under `docs/06-qa/screenshots/` |
+
+Founder (no code): custom SMTP in Supabase (Resend), two free uptime monitors (`/api/health` and `/api/health?strict=1`),
+secrets `SUPABASE_DB_URL` + `BACKUP_PASSPHRASE`, keep the repo private (recommended), `TRUSTED_PROXY` only if leaving Vercel.
+
+Gate for every task: `npm run lint && npm run typecheck && npm test && npm run build && npm run format:check`
+(+ `npm run test:e2e` for M1-06, M1-11, M1-12, M1-16).

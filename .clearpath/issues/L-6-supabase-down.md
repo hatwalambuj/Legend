@@ -9,6 +9,6 @@ confidence: high
 ---
 # L-6-supabase-down
 
-status: open
+status: open (spec done: ADR-011 §4 → M1-05, M1-06)
 
 Title pages fail when Supabase is down (AR-4, src/server/dal.ts:110). Must-before-launch.
