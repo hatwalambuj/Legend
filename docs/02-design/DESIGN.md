@@ -2,7 +2,7 @@
 
 Author: UI/UX Designer · Date: 2026-09-26 · Status: **v1.0, ready for System Design / Architect / FE**
 Inputs: `docs/00-orchestrator/BRIEF.md`, `docs/01-product/PRD.md` (story IDs referenced as `A1`, `C1-AC1`, …), `research.md`, `naming.md`
-Prototype: `docs/02-design/prototype.html` (self-contained; open in any browser. Routes: `#/` home, `#/title/dune-part-two` detail, `#/u/maya` wallet)
+Prototype: `docs/02-design/prototype.html` (updated 2026-09-27 with Where to watch §7.4.2; self-contained; open in any browser. Routes: `#/` home, `#/title/dune-part-two` detail, `#/u/maya` wallet)
 
 ---
 
@@ -179,6 +179,7 @@ Max content width 1320px (at 1440 that gives 60px margins). Header height 64 (mo
 | On watchlist | Small bookmark glyph in the type-pill row (grid) / "On watchlist ✓" button (detail) | — |
 | Loading | Skeleton: surface block 2:3 with 1.3s shimmer + dashed stub with 3 bars | Shimmer off under reduced motion |
 | Image error / no poster | CSS fallback poster: `--tint` gradient + title set in Bricolage 800 on it + grain (same system as the prototype posters) | Never a broken-image icon |
+| Streaming hint | Stub footer shows ≤ 2 16px provider logos + `+N` instead of the serial (grid/rail only, §7.4.2) | Folded into the link name |
 | Hidden by hysteresis (D4) | Reached by URL or diary only: normal ticket plus a mono tag `BELOW 6.5 NOW` on the stub | Not shown in browse/search |
 
 ### 3.4 Accessibility markup
@@ -426,6 +427,81 @@ The block is a **paper "programme slip"**: it uses the same language as the tick
 - **Test ids**: `worth-it`, `worth-it-hook`, `worth-it-vibes`, `worth-it-time`, `worth-it-cert`, `worth-it-verdict`, `worth-it-like`, and `ticket-time` on the stub.
 - **Quick-peek sheet (v1)**: the same slip inside the standard bottom sheet, opened from the card's `⋯` menu, with [Stub it] [Watchlist] [Open].
 
+### 7.4.2 Where to watch (founder scope 2026-09-27; PRD "Where to watch", promoted from v1)
+Job: "I'm sold. Where do I press play?" The answer is one tap away, and it never pushes the primary CTA off screen.
+
+**Placement (the fold rule)**
+- **375**: directly **under the action row and stubbed line, above "Worth it?"**. Measured on the implemented page (`fix-title-375.png`), the bottom of Stub it sits at about y 583 and the stubbed line at about y 620, and the tab bar starts at y 752. So the module starts at about y 636 and **its header plus the first logo row peek above the fold**. Stub it does not move. Placing the module above the action row would push Stub it down by about 120px, which is why it goes below it.
+- **1440**: the same slot in the info column (cols 6–12, max 600px, the same width as "Worth it?"). Everything fits above the 900px fold next to the sticky ticket.
+- Order on the page: scores, **Stub it** row, stubbed line, **Where to watch**, Worth it?, overview. Scores come first ("is it good"), then the action ("I watched it"), then "where", then the details. Where to watch sits outside the paper slip on purpose. Paper means *our* judgement, and provider availability is a third-party fact, so it goes on glass like the score chips.
+
+**Anatomy**
+```
+┌ glass panel · --r-md · 1px --line · padding 14/16 ─────────────────────┐
+│ WHERE TO WATCH                                       [ US ▾ ] region    │ ← print mono eyebrow · ghost pill 32px (44 hit)
+│ STREAM            FREE          RENT            BUY                     │ ← print 10.5px --fg-2 group labels
+│ ┌──┐ ┌──┐        ┌──┐          ┌──┐ ┌──┐       ┌──┐                    │
+│ │N↗│ │D↗│        │T↗│          │a↗│ │G↗│       │V↗│                    │ ← 44×44 logo tile, --r-sm (10), ↗ corner badge
+│ └──┘ └──┘        └──┘          └──┘ └──┘       └──┘                    │
+│ Netflix Disney+   Tubi          Apple TV Google  Vudu                   │ ← caption 12px --fg, 1 line, max 64px, ellipsis
+│ DATA: JUSTWATCH VIA TMDB · Availability can change                      │ ← print 10px --fg-2, JustWatch word links out
+└─────────────────────────────────────────────────────────────────────────┘
+```
+- **Groups**, always in this order and only when not empty: **Stream** (TMDB `flatrate`), **Free** (`free` + `ads`, with an `ADS` micro-tag when the source is ads), **Rent**, **Buy**. When a provider appears in both Rent and Buy, it shows once under **Rent** with the caption "Rent · Buy", and Buy drops it. If Buy is then empty, the Buy group is hidden.
+- **Tile** = one `<a>`: a 44×44 logo box (TMDB `logo_path` at `w92`, rendered 44px, `--r-sm`, 1px `rgba(255,255,255,.10)` inner ring so dark logos hold on dark glass) plus the name caption below (tile width 64px). A **↗ badge** (14px circle, `--surface` fill, `--fg` glyph) sits on the top-right corner of the logo, so each tile is clearly external. Use provider logos exactly as supplied: no tint, no recolour, no crop.
+- **Price type**: TMDB gives no prices, so we never invent one. The group label carries the price type, and the caption adds "Rent · Buy" or the `ADS` tag where needed.
+- **Layout**: at 375 all groups sit on **one horizontal rail** (`overflow-x:auto`, scroll-snap to groups, 16px gap between groups, 8px between tiles, a fade mask on the right edge when the rail overflows). The page never scrolls sideways. At ≥ 640 the groups wrap (`flex-wrap`), with no inner scroll. Cap each group at 6 tiles, sorted by TMDB `display_priority`. More than 6 shows a `+N` tile that expands the group in place.
+- **Height budget**: about 150px at 375 (eyebrow 20, labels 16, tiles 62, attribution 18, padding 28).
+
+**Links: "opens the service automatically"**
+- Each tile links to the provider's **https universal/app link** for this title. On phones with the app installed, iOS and Android open the app directly; everywhere else it opens the website in a new tab. Never use custom schemes (`nflx://`), because they fail silently when the app is missing.
+- Link resolution, best first: (1) a per-title deeplink from an enricher (Watchmode, PRD v1), (2) a per-provider **search URL template** we keep in a small map (for example `https://www.netflix.com/search?q={title}`), (3) the TMDB/JustWatch title watch page (`results.{region}.link`). **Open item for the Architect**: TMDB `watch/providers` returns only (3), not per-provider deeplinks, so (2) is what makes "opens the service" work in the MVP.
+- Markup: `<a href target="_blank" rel="noopener noreferrer nofollow">`. Analytics event `provider_clicked {provider_id, group, region}` (no PII).
+
+**Region**
+- Default: auto-detected from the edge geo header, falling back to the `Accept-Language` region, then `US`. The user's choice persists in a cookie (per account in v1). The same region also drives certification (§7.4.1).
+- Control: the ghost pill `[US ▾]` (flag emoji not used, text code only) opens the standard sheet/popover with a searchable list of TMDB-supported regions ("United Kingdom · GB"). Accessible name: "Region: United States. Change region".
+
+**States**
+| State | Visual | Copy |
+|---|---|---|
+| Loading | Same panel, 4 skeleton tiles 44×44 `--surface-3` + 2 caption bars; shimmer 1.3 s (none under reduced motion). Reserve the full height so there is no CLS. | — |
+| Available | As above | — |
+| Only rent/buy | Rent/Buy groups only | — |
+| Not streaming in region (`wtw-empty`) | Panel stays, one row: outline ghost-ticket icon 28px, text, two ghost `sm` buttons | "**Not streaming in the US right now.**" [Change region] [Watchlist it] |
+| Error / timeout (1.5 s) | Collapses to one quiet line in `--fg-2`; nothing blocks the page | "Couldn't load where to watch." [Retry] |
+| Region has no data (TMDB lacks the region) | Same as empty | "No streaming data for {Region} yet." [Change region] |
+| Demo mode | Fixture providers, the same UI; the demo pill already signals fake data | — |
+
+**Interaction and motion**
+- Hover (pointer): the tile lifts −2px and the ↗ badge nudges +2px/−2px (`--d-2`, `--ease-out`).
+- Press: scale .94 (`--d-1`), `haptic(8)` where supported, then navigate. No toast, because the user is leaving.
+- Focus-visible: 2px `--accent` ring at a 3px offset around the **logo box** (`:focus-visible` on the `<a>`, drawn on `.wtw-logo` via `:has`). The caption stays readable.
+- Reduced motion: no lift, no nudge, no shimmer; opacity changes only.
+- Accent is not used here as a fill (the one-accent rule, §2.1).
+
+**Accessibility**
+- `<section aria-labelledby="wtw-h">` with an `h2`-styled heading "Where to watch" (rendered in the mono eyebrow style), and each group as `<ul role="list" aria-label="Stream">`.
+- Tile name: "**Watch Dune: Part Two on Netflix (stream), opens in a new tab**". For rent: "Rent Dune: Part Two on Apple TV, opens in a new tab". The logo `<img alt="">` is decorative because the name is on the link.
+- Tiles are 44×44 minimum and captions are 12px `--fg` on glass (≥ 9.8:1 worst case, §4.4). The ↗ is `aria-hidden`; "opens in a new tab" is in the name.
+- The rail is keyboard-scrollable; focus scrolls the tile into view (`scroll-margin-inline:16px`).
+
+**Tokens**: `--wtw-tile:44px` · `--wtw-tile-w:64px` · `--wtw-radius:var(--r-sm)` · `--wtw-gap:8px` · `--wtw-group-gap:16px` · `--wtw-ring:rgba(255,255,255,.10)`. No new colours.
+
+**Ticket card hint (`ticket-providers`)**
+- **Proposal**: a **tiny logo stack** in the stub footer, in place of the `ADMIT ONE · №` serial, on `ticket/grid` and `ticket/rail` only. Up to 2 overlapping 16px rounded-square logos (radius 4, 1.5px `--paper` ring, −5px overlap), then `+N` in `print` mono `--ink-2`. **Stream and Free only**. Almost every title can be rented, so showing rent/buy would be noise.
+- **Why a stack and not "on Netflix + 2"**: a 375 grid card is about 165px wide, and its footer already holds the 30px stub button. The text version needs about 110px and would truncate "Paramount+". The stack needs 48px and reads at a glance. The serial is decorative (§3.1), and it stays on the detail hero ticket and the share ticket, where the brand moment happens. So the stub height (118/126) and the stub layout are unchanged.
+- It is not interactive (the card is already one link plus one button). Its information goes into the ticket link's name: "…, rated 8.2 on TMDB, streaming on Netflix and 2 more".
+- It is hidden when the title streams nowhere in the region, in `ticket/row`, and on wallet stubs.
+
+**Browse: provider filter chips (P1, `provider-filter`)**
+- A row under the type segment and sort: "**On**" + chips with a 20px logo and name (36px pill, 44px hit area, `aria-pressed`), for the top 8 providers in the region by `display_priority`, followed by "More ▾" (the Filters sheet, §7.2). This is multi-select (OR). URL: `?providers=8,337&region=US`. Scope is Stream + Free only.
+- 375: the chips live on a horizontal chip rail inside the toolbar (it scrolls itself; the page doesn't). At 1440 they sit inline in the sticky toolbar after the sort select. The result count reads "9 titles · on Netflix or Max".
+- Empty: "Nothing 6.5+ on those services in the US. Try another service." [Clear services].
+- v1: a "My services" toggle that remembers the user's chips.
+
+**Test ids**: `where-to-watch`, `wtw-region`, `wtw-group-stream|free|rent|buy`, `wtw-provider-{providerId}`, `wtw-more`, `wtw-skeleton`, `wtw-empty`, `wtw-error`, `wtw-attribution`, `ticket-providers` (on the stub), `provider-filter`, `provider-chip-{providerId}`.
+
 ### 7.5 Reviews (on the title page) + composer (D1–D2)
 - Header "Reviews". A segmented control switches "On Stubbed · N" / "From TMDB · N", and a sort select offers Newest / Highest rated.
 - **Composer** (logged-in; logged-out users see "Sign in to review" with the same frame):
@@ -502,7 +578,7 @@ The block is a **paper "programme slip"**: it uses the same language as the tick
 | **Ticket stub** | The label "TMDB" next to every score. |
 | **TMDB reviews** | A TMDB mark plus "review" on every item, and a footer line "Reviews from TMDB community members. Read-only." |
 | **Share images (v1)** | "Poster: TMDB" micro-credit. |
-| **Where to watch (v1)** | "Powered by JustWatch" on the module. |
+| **Where to watch** | "DATA: JUSTWATCH VIA TMDB" line at the bottom of the module (JustWatch links to justwatch.com), per TMDB's watch-provider terms. See §7.4.2. |
 
 Open item for the Architect/legal: confirm that IMDb's brand rules allow the yellow "IMDb" chip. If not, fall back to a neutral outlined text label "IMDb".
 
@@ -558,7 +634,7 @@ Open item for the Architect/legal: confirm that IMDb's brand rules allow the yel
 
 ## 11. Handoff notes
 
-- **Hooks for QA**: the prototype uses `data-ticket`, `data-stub`, `data-focus` and `data-count`. Keep equivalent `data-testid`s in the app: `ticket-{id}`, `stub-button`, `stub-count`, `sort-select`, `type-filter`, `review-composer`, `imdb-rating` (the IMDb chip on stubs and the detail score chip), `demo-pill`, `toast`, plus the `worth-it-*` ids in §7.4.1.
+- **Hooks for QA**: the prototype uses `data-ticket`, `data-stub`, `data-focus` and `data-count`. Keep equivalent `data-testid`s in the app: `ticket-{id}`, `stub-button`, `stub-count`, `sort-select`, `type-filter`, `review-composer`, `imdb-rating` (the IMDb chip on stubs and the detail score chip), `demo-pill`, `toast`, plus the `worth-it-*` ids in §7.4.1 and the `wtw-*` / `ticket-providers` / `provider-*` ids in §7.4.2.
 - **CSS**: tokens as custom properties in a global stylesheet. The ticket mask and adaptive background are plain CSS with no JS dependency (JS only swaps the `--tint-*` vars and the LQIP). Tailwind is fine; keep the mask and keyframes in a component CSS module.
 - **Images** (E3): TMDB `w342` in grids (`w185` for rows), `w500` for the detail ticket, `w780` backdrop / OG, `w92` for extraction only. Always set `width`/`height` so CLS stays < 0.1. The adaptive bg uses the inline LQIP, so it causes zero CLS and zero requests.
 - **Performance**: `drop-shadow` filters on up to about 30 visible tickets are fine. Beyond that, virtualise the grid. Use `content-visibility:auto` on off-screen grid rows.

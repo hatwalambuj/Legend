@@ -298,6 +298,18 @@ main{ padding-bottom:96px; }
 .detail__ticket .ticket{ --stub-h:152px; --notch:12px; }
 .detail__ticket .stub__title{ font-size:17px; }
 .detail__ticket .stub__score{ font-size:34px; }
+@media (max-width:899px){ /* mobile hero matches the implemented app (fix-title-375.png): small ticket beside the title so Stub it stays above the fold */
+  .detail{ display:block; padding-top:var(--s-6); }
+  .detail__ticket{ float:left; width:132px; margin:0 16px 14px 0; }
+  .detail__ticket .ticket{ --stub-h:92px; --notch:9px; }
+  .detail__ticket .stub__title{ font-size:14px; } .detail__ticket .stub__scores,.detail__ticket .stamp{ display:none; }
+  .detail__ticket .stub{ padding:10px 11px 9px; }
+  .detail__info .d-title{ font-size:clamp(34px,10vw,44px); }
+  .detail__info .scores{ clear:both; margin:18px 0 14px; padding-top:1px; gap:8px; }
+  .detail__info .score{ padding:9px 12px; } .detail__info .score b{ font-size:26px; } .detail__info .score--community{ display:none; }
+  .detail__info .actions{ flex-wrap:nowrap; } .detail__info .actions #bigStub{ flex:1 1 auto; }
+  .detail__info #wl{ width:56px; padding:0; } .detail__info #wl span{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+}
 @media (min-width:900px){
   .detail{ grid-template-columns:repeat(12,minmax(0,1fr)); gap:24px; padding:var(--s-14) 0; align-items:start; }
   .detail__ticket{ grid-column:1 / span 4; width:100%; max-width:380px; margin:0; position:sticky; top:calc(var(--header-h) + 24px); }
@@ -470,6 +482,52 @@ dialog::backdrop{ background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px);
 .field textarea{ height:84px; padding:12px 14px; resize:none; }
 .field .seg{ width:max-content; max-width:100%; flex-wrap:wrap; }
 .sheet .btns{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+
+/* =========================================================
+   Where to watch (DESIGN §7.4.2) — logos are CSS stand-ins, ship TMDB logo_path as supplied
+   ========================================================= */
+:root{ --wtw-tile:44px; --wtw-tile-w:64px; --wtw-radius:var(--r-sm); --wtw-gap:8px; --wtw-group-gap:16px; --wtw-ring:rgba(255,255,255,.10); }
+.wtw{ margin:18px 0 0; max-width:600px; padding:14px 16px 12px; border-radius:var(--r-md); background:var(--glass); border:1px solid var(--line); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); min-height:150px; }
+.wtw__h{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.wtw__h h2{ margin:0; }
+.wtw-region{ position:relative; display:inline-flex; align-items:center; height:32px; padding:0 26px 0 12px; border-radius:var(--r-pill); background:rgba(255,255,255,.06); border:1px solid var(--line-2); font:600 12px/1 var(--font-mono); letter-spacing:.08em; color:var(--fg); }
+.wtw-region::before{ content:""; position:absolute; inset:-6px 0; }
+.wtw-region::after{ content:""; position:absolute; right:11px; top:12px; width:5px; height:5px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); pointer-events:none; }
+.wtw-region select{ position:absolute; inset:0; opacity:0; width:100%; cursor:pointer; }
+.wtw-region:has(select:focus-visible){ outline:2px solid var(--accent); outline-offset:3px; }
+.wtw__rail{ display:flex; gap:var(--wtw-group-gap); overflow-x:auto; scroll-snap-type:x proximity; scroll-padding-inline:16px; scrollbar-width:none; margin:0 -16px; padding:4px 16px 2px; -webkit-mask:linear-gradient(90deg,#000 calc(100% - 28px),#0000); mask:linear-gradient(90deg,#000 calc(100% - 28px),#0000); }
+.wtw__rail::-webkit-scrollbar{ display:none; }
+@media (min-width:640px){ .wtw__rail{ flex-wrap:wrap; overflow:visible; -webkit-mask:none; mask:none; row-gap:12px; } }
+.wtw-group{ flex:none; scroll-snap-align:start; }
+.wtw-group__l{ display:block; font:500 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--fg-2); margin:0 0 8px; }
+.wtw-group ul{ display:flex; gap:var(--wtw-gap); margin:0; padding:0; list-style:none; }
+.wtw-tile{ display:flex; flex-direction:column; align-items:center; width:var(--wtw-tile-w); text-align:center; -webkit-tap-highlight-color:transparent; transition:transform var(--d-2) var(--ease-out); }
+.wtw-logo{ position:relative; width:var(--wtw-tile); height:var(--wtw-tile); border-radius:var(--wtw-radius); display:grid; place-items:center; box-shadow:inset 0 0 0 1px var(--wtw-ring); font:800 13px/1 var(--font-ui); letter-spacing:-.03em; transition:transform var(--d-1) var(--ease-out); }
+.wtw-ext{ position:absolute; top:-5px; right:-5px; width:16px; height:16px; border-radius:50%; background:var(--surface); border:1px solid var(--line-2); display:grid; place-items:center; color:var(--fg); transition:transform var(--d-2) var(--ease-out); }
+.wtw-ext svg{ width:9px; height:9px; }
+.wtw-name{ margin-top:6px; max-width:100%; font-size:12px; line-height:1.25; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wtw-sub{ white-space:nowrap; font:500 9.5px/1.2 var(--font-mono); letter-spacing:.04em; text-transform:uppercase; color:var(--fg-2); }
+.wtw-tile:hover{ transform:translateY(-2px); }
+.wtw-tile:hover .wtw-ext{ transform:translate(2px,-2px); }
+.wtw-tile:active .wtw-logo{ transform:scale(.94); }
+.wtw-tile:focus-visible{ outline:none; }
+.wtw-tile:focus-visible .wtw-logo{ outline:2px solid var(--accent); outline-offset:3px; }
+.wtw__attr{ margin:10px 0 0; font:500 10px/1.3 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--fg-2); }
+.wtw__attr a{ color:var(--fg); text-decoration:underline; text-underline-offset:2px; }
+.wtw-empty{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:6px 0 4px; }
+.wtw-empty p{ margin:0; flex:1 1 180px; font-size:14px; color:var(--fg-2); } .wtw-empty b{ color:var(--fg); font-weight:650; }
+.wtw-empty .btn{ height:36px; padding:0 14px; font-size:13px; position:relative; } .wtw-empty .btn::before{ content:""; position:absolute; inset:-4px 0; }
+.wtw-sk{ display:flex; gap:var(--wtw-gap); padding-top:18px; }
+.wtw-sk i{ display:block; width:var(--wtw-tile); height:var(--wtw-tile); border-radius:var(--wtw-radius); background:linear-gradient(100deg, var(--surface) 30%, var(--surface-3) 50%, var(--surface) 70%) 0 0/300% 100%; animation:shimmer 1.3s linear infinite; margin-right:20px; }
+/* ticket hint: logo stack in the stub footer (grid/rail only) */
+.stub__prov{ display:inline-flex; align-items:center; min-width:0; }
+.stub__prov .pl{ width:16px; height:16px; border-radius:4px; display:grid; place-items:center; font:800 7px/1 var(--font-ui); box-shadow:0 0 0 1.5px var(--paper); }
+.stub__prov .pl + .pl{ margin-left:-5px; }
+.stub__prov .more{ margin-left:5px; font:600 10px/1 var(--font-mono); letter-spacing:.04em; color:var(--ink-2); }
+.stub__foot.has-prov .stub__serial{ display:none; }
+.detail__ticket .stub__prov{ display:none; } .detail__ticket .stub__foot.has-prov .stub__serial{ display:block; }
+@media (prefers-reduced-motion: reduce){ .wtw-tile:hover,.wtw-tile:hover .wtw-ext{ transform:none; } .wtw-sk i{ animation:none; } }
 
 /* view switching */
 [data-view]{ display:none; }
@@ -685,6 +743,87 @@ const TMDB_REVIEWS = {
   'oppenheimer':[{n:'r96sk',s:9,d:'2023-07-25',body:'Dense, loud and relentless in a good way. Murphy carries three hours without blinking.'}]
 };
 
+
+/* Where to watch fixtures (TMDB watch/providers shape, region US). Stand-in "logos": brand-ish colour + text glyph. */
+const PROV = {
+  netflix:{id:8,n:'Netflix',bg:'#000',fg:'#E50914',g:'N',u:'https://www.netflix.com/search?q='},
+  max:{id:1899,n:'Max',bg:'#002BE7',fg:'#fff',g:'max',u:'https://play.max.com/search?q='},
+  hulu:{id:15,n:'Hulu',bg:'#1CE783',fg:'#0B0B0D',g:'hulu',u:'https://www.hulu.com/search?q='},
+  disney:{id:337,n:'Disney+',bg:'#0E2A6E',fg:'#fff',g:'D+',u:'https://www.disneyplus.com/search?q='},
+  appletvp:{id:350,n:'Apple TV+',bg:'#000',fg:'#fff',g:'tv+',u:'https://tv.apple.com/search?term='},
+  prime:{id:9,n:'Prime Video',bg:'#00A8E1',fg:'#fff',g:'prime',u:'https://www.amazon.com/s?i=instant-video&k='},
+  tubi:{id:73,n:'Tubi',bg:'#7408FF',fg:'#FFE500',g:'tubi',u:'https://tubitv.com/search/'},
+  apple:{id:2,n:'Apple TV',bg:'#1c1c1e',fg:'#fff',g:'tv',u:'https://tv.apple.com/search?term='},
+  google:{id:3,n:'Google Play',bg:'#fff',fg:'#1a73e8',g:'▶',u:'https://play.google.com/store/search?c=movies&q='},
+  vudu:{id:7,n:'Fandango at Home',bg:'#3478F6',fg:'#fff',g:'FaH',u:'https://athome.fandango.com/content/browse/search?searchString='},
+  crunchy:{id:283,n:'Crunchyroll',bg:'#F47521',fg:'#fff',g:'cr',u:'https://www.crunchyroll.com/search?q='}
+};
+const WATCH = { /* region US only; other regions demo the empty state */
+  'dune-part-two':{stream:['max'],rent:['apple','prime','google','vudu'],buy:['apple','prime','google','vudu']},
+  'the-bear':{stream:['hulu','disney'],buy:['apple','prime']},
+  'past-lives':{rent:['apple','prime','google'],buy:['apple','prime','google']},
+  'arcane':{stream:['netflix']},
+  'oppenheimer':{stream:['prime'],free:[],rent:['apple','google'],buy:['apple','google','vudu']},
+  'severance':{stream:['appletvp']},
+  'spirited-away':{stream:['max'],buy:['apple','prime','google']},
+  'shogun':{stream:['hulu','disney'],buy:['apple','prime']},
+  'aftersun':{stream:['netflix','max'],free:['tubi'],rent:['apple']},
+  'eeaao':{stream:['max','netflix','prime'],free:['tubi'],rent:['apple','google']},
+  'succession':{stream:['max'],buy:['apple','prime','google']},
+  'poor-things':{stream:['hulu','disney'],rent:['apple','prime']},
+  'fleabag':{stream:['prime'],buy:['apple']}
+  /* interstellar: nothing in US -> empty state */
+};
+const REGIONS = [['US','United States'],['GB','United Kingdom'],['IN','India'],['DE','Germany'],['BR','Brazil']];
+let REGION = 'US';
+function wtwFor(id, region=REGION){
+  if(region!=='US') return null;
+  const w=WATCH[id]; if(!w) return null;
+  const rent=w.rent||[], buy=(w.buy||[]).filter(k=>!rent.includes(k));
+  const allBoth=rent.length&&rent.every(k=>(w.buy||[]).includes(k));
+  const groups=[['stream','Stream',w.stream||[]],['free','Free',w.free||[]],['rent',allBoth?'Rent or buy':'Rent',rent],['buy','Buy',buy]].filter(g=>g[2].length);
+  return groups.length ? {groups, allBoth, both:new Set(rent.filter(k=>(w.buy||[]).includes(k)))} : null;
+}
+function streamingKeys(id){ const w=WATCH[id]; return w ? [...(w.stream||[]),...(w.free||[])] : []; }
+function provLogo(k, cls='wtw-logo'){ const p=PROV[k]; return `<span class="${cls}" style="background:${p.bg};color:${p.fg}" aria-hidden="true">${cls==='pl'?p.g.slice(0,2):p.g}`; }
+function wtwTile(t, k, gk, both, allBoth){
+  const p=PROV[k];
+  const verb = gk==='rent' ? (both?'Rent or buy':'Rent') : gk==='buy' ? 'Buy' : 'Watch';
+  const tail = gk==='stream' ? ' (stream)' : gk==='free' ? ' for free' : '';
+  const name = `${verb} ${t.t} on ${p.n}${tail}, opens in a new tab`;
+  return `<li><a class="wtw-tile" data-testid="wtw-provider-${p.id}" href="${p.u}${encodeURIComponent(t.t)}" target="_blank" rel="noopener noreferrer nofollow" aria-label="${esc(name)}">
+    ${provLogo(k)}<span class="wtw-ext"><svg aria-hidden="true"><use href="#i-ext"/></svg></span></span>
+    <span class="wtw-name">${esc(p.n)}</span>${both&&!allBoth?`<span class="wtw-sub">Rent · Buy</span>`:''}</a></li>`;
+}
+function wtwBody(t){
+  const d=wtwFor(t.id), rn=REGIONS.find(r=>r[0]===REGION)[1];
+  if(!d) return `<div class="wtw-empty" data-testid="wtw-empty"><p><b>Not streaming in ${REGION==='US'?'the US':esc(rn)} right now.</b></p>
+      <button class="btn btn--ghost" type="button" id="wtwChange">Change region</button><button class="btn btn--ghost" type="button" id="wtwWl">Watchlist it</button></div>`;
+  return `<div class="wtw__rail">${d.groups.map(([gk,gl,ks])=>`<div class="wtw-group" data-testid="wtw-group-${gk}"><span class="wtw-group__l" id="wtw-${gk}">${gl}</span>
+      <ul role="list" aria-labelledby="wtw-${gk}">${ks.slice(0,6).map(k=>wtwTile(t,k,gk,gk==='rent'&&d.both.has(k),d.allBoth)).join('')}</ul></div>`).join('')}</div>`;
+}
+function wtwHTML(t){
+  return `<section class="wtw" id="wtw" data-testid="where-to-watch" aria-labelledby="wtw-h">
+    <div class="wtw__h"><h2 class="eyebrow" id="wtw-h">Where to watch</h2>
+      <label class="wtw-region" data-testid="wtw-region"><span aria-hidden="true">${REGION}</span><select id="wtwRegion" aria-label="Region: ${esc(REGIONS.find(r=>r[0]===REGION)[1])}. Change region">${REGIONS.map(([c,n])=>`<option value="${c}" ${c===REGION?'selected':''}>${n} · ${c}</option>`).join('')}</select></label></div>
+    <div id="wtwBody">${wtwBody(t)}</div>
+    <p class="wtw__attr" data-testid="wtw-attribution">Data: <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a> via TMDB · Availability can change</p>
+  </section>`;
+}
+function wireWtw(t){
+  const sel=$('#wtwRegion'); if(!sel) return;
+  sel.addEventListener('change',()=>{ REGION=sel.value; $('.wtw-region span').textContent=REGION;
+    sel.setAttribute('aria-label',`Region: ${REGIONS.find(r=>r[0]===REGION)[1]}. Change region`);
+    $('#wtwBody').innerHTML=`<div class="wtw-sk" data-testid="wtw-skeleton" aria-hidden="true"><i></i><i></i><i></i><i></i></div>`;
+    setTimeout(()=>{ $('#wtwBody').innerHTML=wtwBody(t); wireWtwEmpty(t); }, 450); });
+  wireWtwEmpty(t);
+  $$('#wtw .wtw-tile').forEach(a=>a.addEventListener('pointerdown',()=>haptic(8)));
+}
+function wireWtwEmpty(t){
+  const c=$('#wtwChange'); if(c) c.onclick=()=>{ $('#wtwRegion').focus(); try{ $('#wtwRegion').showPicker(); }catch(e){} };
+  const w=$('#wtwWl'); if(w) w.onclick=()=>$('#wl').click();
+}
+
 /* ============================================================
    Helpers
    ============================================================ */
@@ -714,14 +853,14 @@ function posterHTML(t, opts={}){
 }
 function serial(t){ return t.type==='tv' ? `S01–S${String(t.seasons).padStart(2,'0')}<span class="no"> · № ${t.no}</span>` : `Admit one<span class="no"> · № ${t.no}</span>`; }
 function stubInner(t){
-  const n=count(t.id);
+  const n=count(t.id), sk=streamingKeys(t.id);
   return `<div class="stub__title">${esc(t.t)}</div>
     <div class="stub__row">
       <span class="stub__scores"><span class="stub__score">${t.r.toFixed(1)}<small>TMDB</small></span>${t.imdbR?`<span class="stub__imdb"><span class="imdb-mark imdb-mark--xs" aria-hidden="true">IMDb</span>${t.imdbR.toFixed(1)}<span class="sr-only"> on IMDb</span></span>`:''}</span>
       <span class="stub__meta">${year(t)}<br>${t.type==='tv'?'Show':'Movie'}</span>
     </div>
-    <div class="stub__foot">
-      <span class="stub__serial">${serial(t)}</span>
+    <div class="stub__foot ${sk.length?'has-prov':''}">
+      <span class="stub__serial">${serial(t)}</span>${sk.length?`<span class="stub__prov" data-testid="ticket-providers" aria-hidden="true">${sk.slice(0,2).map(k=>provLogo(k,'pl')+'</span>').join('')}${sk.length>2?`<span class="more">+${sk.length-2}</span>`:''}</span>`:''}
       <button type="button" class="stub-act ${n?'is-on':''}" data-stub="${t.id}" aria-label="${n?'Stub again':'Stub it'}: ${esc(t.t)}${n?` (${n}× stubbed)`:''}">
         <svg aria-hidden="true"><use href="#${n?'i-check':'i-plus'}"/></svg><span>${n?`${n}×`:'Stub it'}</span>
       </button>
@@ -729,7 +868,8 @@ function stubInner(t){
     ${n?`<span class="stamp">${n}× stubbed</span>`:''}`;
 }
 function ticketHTML(t, extra=''){
-  const label = `${t.t}, ${t.type==='tv'?'show':'movie'}, ${year(t)}, rated ${t.r.toFixed(1)} on TMDB`;
+  const sk=streamingKeys(t.id);
+  const label = `${t.t}, ${t.type==='tv'?'show':'movie'}, ${year(t)}, rated ${t.r.toFixed(1)} on TMDB${sk.length?`, streaming on ${PROV[sk[0]].n}${sk.length>1?` and ${sk.length-1} more`:''}`:''}`;
   return `<div class="tw" data-focus="${t.id}">
     <article class="ticket" data-ticket="${t.id}">
       ${extra}
@@ -825,7 +965,7 @@ function renderTitle(id){
         <div class="scores">
           <div class="score"><b>${t.r.toFixed(1)}</b><div><span class="src">TMDB</span><span>${fmtVotes(t.v)} votes</span></div></div>
           ${t.imdbR?`<div class="score"><span class="imdb-mark">IMDb</span><b>${t.imdbR.toFixed(1)}</b><div><span>IMDb rating</span><span>via OMDb</span></div></div>`:''}
-          <div class="score"><b>${(REVIEWS[id]||[]).length}</b><div><span class="src">STUBBED</span><span>reviews · avg unlocks at 5</span></div></div>
+          <div class="score score--community"><b>${(REVIEWS[id]||[]).length}</b><div><span class="src">STUBBED</span><span>reviews · avg unlocks at 5</span></div></div>
         </div>
         <div class="actions">
           <button class="btn btn--primary btn--lg" type="button" id="bigStub" data-stub="${id}"><svg aria-hidden="true"><use href="#i-ticket"/></svg><span>${n?'Stub again':'Stub it'}</span></button>
@@ -833,6 +973,7 @@ function renderTitle(id){
           <button class="btn btn--ghost btn--lg" type="button" id="wl" aria-pressed="${WATCHLIST.has(id)}"><svg aria-hidden="true"><use href="#${WATCHLIST.has(id)?'i-check':'i-bookmark'}"/></svg><span>${WATCHLIST.has(id)?'On watchlist':'Watchlist'}</span></button>
         </div>
         <div class="stubbed-line" id="stubLine" aria-live="polite">${n?`<span class="n">${n}× STUBBED</span><span>Last stub ${fmtDate(last)}</span>`:`<span>Not stubbed yet. One tap when you’ve watched it.</span>`}</div>
+        ${wtwHTML(t)}
         <p class="overview">${esc(t.ov)}</p>
         <dl class="facts">
           <div><dt>${t.byL}</dt><dd>${esc(t.by)}</dd></div>
@@ -858,7 +999,7 @@ function renderTitle(id){
       </div>
     </div>
   </div>`;
-  wireTitle(t);
+  wireTitle(t); wireWtw(t);
 }
 function composerHTML(t, mine){
   return `<form class="composer" id="composer" novalidate>
