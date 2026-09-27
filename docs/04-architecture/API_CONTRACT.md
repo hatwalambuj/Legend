@@ -1,6 +1,6 @@
 # Stubbed — API contract
 
-Status: **Frozen v1.4** (v1.4 = 2026-09-27, ADR-010/011: honest `/api/health`, `TitleDetail.degraded`, confirm-email-safe sign-up, `PUT /api/auth/password`, `reauth_required`; ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
+Status: **Frozen v1.5** (v1.5 = 2026-09-27, ADR-012 "Where to watch": `TitleDetail.watch`, `GET /api/titles/{type}/{id}/watch`, `PUT /api/me/watch-region`, `stubbed_region` cookie, `SessionUser.watchRegion`, `AppMode.watchRegions`, P1 `region`/`provider` on the catalogue; lands after M1 as W-00; v1.4 = 2026-09-27, ADR-010/011: honest `/api/health`, `TitleDetail.degraded`, confirm-email-safe sign-up, `PUT /api/auth/password`, `reauth_required`; ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
 Source of truth in code (keep in sync; a change needs both):
 - `src/lib/types.ts` (domain types)
 - `src/lib/contracts.ts` (zod request schemas + response types)
@@ -8,6 +8,7 @@ Source of truth in code (keep in sync; a change needs both):
 - `src/lib/data-access.ts` (server read interface for pages)
 - `src/lib/api-client.ts` (typed browser client)
 - `src/lib/format.ts` (score/count display rules, IMDb chip visibility, ticket accessible name)
+- `src/lib/provider-links.ts` + `src/lib/regions.ts` (v1.5, ADR-012: link config and builder, supported-region names)
 - `src/lib/worth-it.ts` + `src/lib/vibes.ts` ("Worth it?" rules; signatures frozen, Backend tunes the rules)
 
 ---
@@ -62,6 +63,44 @@ UI rules: render `titleScores(title)` for score chips (TMDB always, IMDb only wh
 when `hook.source` starts with `tmdb_`; hide any missing line; never print a blended number. Everything
 is computed by rules on the server — **no AI/LLM** (PRD D15).
 
+## 1b. Where to watch (v1.5, ADR-012)
+`TitleDetail.watch: TitleWatch | null`. **null = do not render the block** (never fetched, older than 30 days, or `degraded === 'catalog'`;
+SSR decides, so no CLS). Built per request for one region; all `href`s are built on the server (ADR-012 §6.3).
+
+```ts
+type WatchOfferType = 'stream' | 'free' | 'ads' | 'rent' | 'buy';
+type WatchGroupType = WatchOfferType | 'rent_buy';           // rent_buy = every rent provider is also a buy provider
+type WatchLinkKind  = 'search' | 'home' | 'tmdb';
+type WatchRegionSource = 'query' | 'setting' | 'geo' | 'accept_language' | 'default';
+
+interface WatchRegionInfo {
+  region: string;              // ISO 3166-1 alpha-2, always in AppMode.watchRegions
+  regionName: string;          // "United States" (src/lib/regions.ts)
+  requested: string | null;    // what the winning source asked for (may be unsupported)
+  fallback: boolean;           // true → UI shows "Showing: United States · Change" (W3-AC4)
+  source: WatchRegionSource;
+}
+interface WatchProviderItem {
+  providerId: number;
+  name: string;                // "Netflix"
+  logoPath: string | null;     // TMDB path → providerLogoUrl() (w92); null → monogram tile
+  monogram: string;            // ≤ 2 chars, always present
+  tile: string | null;         // monogram background (demo), null → --surface-2
+  href: string;                // https only; allowlisted host; no tracking params
+  linkKind: WatchLinkKind;
+  alsoBuy?: true;              // only inside a 'rent' group: sub-caption "RENT · BUY"
+}
+interface WatchGroup { type: WatchGroupType; providers: WatchProviderItem[] }  // full list, UI caps at 6 + "+N"
+interface TitleWatch extends WatchRegionInfo {
+  status: 'available' | 'none';   // none → "Not streaming in {Region} right now" (groups = [])
+  groups: WatchGroup[];           // fixed order stream, free, ads, rent|rent_buy, buy; empty groups omitted
+  allOptionsHref: string;         // https://www.themoviedb.org/{type}/{id}/watch?locale={region}
+  checkedAt: string;              // ISO-8601 UTC → "CHECKED SEP 27, 2026"
+}
+```
+UI accessible name per tile: `Open {name} ({type label}) — opens in a new tab` (W5-AC1). Links: `target="_blank" rel="noopener noreferrer"`.
+`AppMode.watchRegions: { code: string; name: string }[]` feeds the region `<select>`. `SessionUser.watchRegion: string | null`.
+
 ## 2. Error model
 Every non-2xx response has the body `ApiErrorBody`:
 ```json
@@ -97,9 +136,11 @@ The client gets `ApiError { status, code, message, fields?, retryAfter? }` throw
 | `GET /api/catalog` | `public, s-maxage=3600, stale-while-revalidate=86400` | Tag `catalog` revalidated by the nightly sync |
 | `GET /api/search` | `public, s-maxage=300, stale-while-revalidate=3600` | |
 | `GET /api/titles/{type}/{id}/reviews` | `public, s-maxage=60, stale-while-revalidate=300` | |
+| `GET /api/titles/{type}/{id}/watch?region=` | `public, s-maxage=3600, stale-while-revalidate=86400` | v1.5: `region` is required and is the **only** region input (no cookie, no `Accept-Language`, no `Set-Cookie`), so the URL keys the cache |
+| `GET /api/watch/providers?region=` (P1) | `public, s-maxage=3600, stale-while-revalidate=86400` | Tag `watch-providers` |
 | `GET`/`HEAD /api/health` | `no-store` | v1.4: never cached at any layer; the probe bypasses the data cache (ADR-011 §3) |
 | Everything under `/api/me/**`, `/api/auth/**`, all mutations, all errors | `private, no-store` + `Vary: Cookie` | A response that reads the cookie is **never** public |
-| Pages | Dynamic SSR (ADR-001). TMDB detail data-cached 24 h (tag `title:{key}`), catalogue data-cached 1 h (tag `catalog`) | Invariant: never `Set-Cookie` on a public response |
+| Pages | Dynamic SSR (ADR-001), `private`. The title page reads the `stubbed_region` cookie and `Accept-Language` (ADR-012 §5), never the session. TMDB detail data-cached 24 h (tag `title:{key}`), catalogue data-cached 1 h (tag `catalog`) | Invariant: never `Set-Cookie` on a public response |
 | Hashed static assets | `public, max-age=31536000, immutable` | Next default |
 
 ## 5. Route handlers
@@ -132,6 +173,7 @@ two free uptime monitors (default URL = "site down", `?strict=1` = "sync stale")
 
 ### 5.2 `GET /api/me`
 → `200 MeResponse` `{ session: Session | null, mode: AppMode, stubCount: number }`. Private. This powers the header (avatar, wallet badge) and the demo pill. `stubCount` is the signed-in user's total stubs (0 when signed out), so the wallet badge needs no diary paging (v1.2).
+v1.5: `session.user.watchRegion` (`string | null`) and `mode.watchRegions`. When `watchRegion` is set and differs from a page's `TitleWatch.region` (cookie missing or stale, e.g. another device), the island calls `PUT /api/me/watch-region` once to heal the cookie (ADR-012 §7).
 `mode.demoResets` (v1.3, optional) is `true` when demo data is not durable (a production/public demo opted in with `DEMO_MODE_PUBLIC=true`, `DEMO_RESET_ON_BOOT`, an in-memory store or Vercel's `/tmp`): the pill then reads **"Demo: data resets"**. Pages get the same object from `dal.getMode()`.
 
 ### 5.2a `DELETE /api/me` 🔒 (v1.3, GAP-06)
@@ -149,6 +191,8 @@ Query `catalogQuerySchema`:
 | `genre` | `18,35` (P1) | — |
 | `cursor` | opaque | — |
 | `limit` | 1..50 | 20 |
+
+P1 (v1.5, W7, ADR-012 §9): `region` (`^[A-Z]{2}$`) and `provider` (TMDB provider id). `provider` without `region` → `400`. With `region`, items carry `watchHint: { providerId, name, logoPath } | null`; without it, `watchHint` is absent.
 
 → `200 Page<TitleSummary>` with `total`. Listed titles only. Order per ADR-003. Every item carries `imdbRating`/`imdbVotes` (§1a).
 
@@ -229,6 +273,22 @@ After a successful sign-up or sign-in the client navigates to `safeNext(next)` a
 ### 5.19 `POST /api/revalidate` (job only)
 Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → `200 { revalidated }`. Otherwise `403`.
 
+### 5.21 `GET /api/titles/{movie|tv}/{tmdbId}/watch?region=GB` (v1.5, ADR-012)
+Region switcher reads. Query `watchQuerySchema` `{ region }`: 2 letters, upper-cased, `UK→GB`; missing or malformed → `400 validation_failed`.
+An unsupported region answers with the default region and `fallback: true` (200). → `200 TitleWatchResponse { watch: TitleWatch | null }`
+(`null` = hide the block, same rules as §1b). Unknown type or id → `404`. No auth, no cookies read or set. Client: `api.titleWatch(key, region)`.
+On `ApiError` or a 1.5 s timeout the UI shows `wtw-error` with Retry (DESIGN §7.4.2).
+
+### 5.22 `PUT /api/me/watch-region` (v1.5, ADR-012 §7) 🔒-soft
+Body `setWatchRegionSchema` `{ region: string | null }` (null = automatic; a non-null value must be in `WATCH_REGIONS`, else `400` with
+`fields.region`). Works signed out (cookie only) and signed in (also upserts `user_settings`). → `200 SetWatchRegionResponse { region: string | null }`
+and `Set-Cookie: stubbed_region=…; Path=/; Max-Age=31536000; SameSite=Lax; HttpOnly; Secure` (cleared with `Max-Age=0` for null).
+`private, no-store`. Same-origin + JSON rules; `429` over 30/min per IP. Client: `api.setWatchRegion(region)`. Sign-in and `/auth/callback`
+also set this cookie from `user_settings` when a value exists.
+
+### 5.23 `GET /api/watch/providers?region=US` (P1, W7)
+→ `200 { region, providers: { providerId, name, logoPath, monogram, count }[] }`: at most 6, by TMDB priority in the region, `count ≥ 1` listed titles.
+
 ### 5.20 Contact and report (v1.3, GAP-06; no route)
 `src/lib/contact.ts` (client-safe): `CONTACT_EMAIL` from `NEXT_PUBLIC_CONTACT_EMAIL` (placeholder `contact@example.com` when unset or invalid), `contactHref()` for the footer "Contact" link and `reportReviewHref({ id, titleKey })` for "Report" on other people's reviews (a `mailto:` with the review id in subject and body).
 
@@ -239,7 +299,8 @@ Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → 
 | `listCatalog(CatalogQuery)` | `Page<TitleSummary>` + `total` | Browse grid (first page SSR, then `api.catalog` for "Load more") |
 | `listTrending(type, limit=10)` | `TitleSummary[]` | Home rail |
 | `searchCatalog(q, type?, limit?)` | `SearchResult` | `/search?q=` page |
-| `getTitle(mediaType, tmdbId)` | `TitleDetail \| null` | `null` → `notFound()`. `detailStatus` drives the "may be out of date" / "More details unavailable" notes. `isListed=false` → "This title dropped below our 6.5 bar". Includes `worthIt` (always present, even when `detailStatus='index_only'`) |
+| `getWatchRegion()` | `WatchRegionInfo` | v1.5: reads `stubbed_region`, the trusted geo header (only when `WATCH_GEO_HEADER` and `TRUSTED_PROXY≠none`) and `Accept-Language`; never the session |
+| `getTitle(mediaType, tmdbId, opts?: { region?: WatchRegionInfo })` | `TitleDetail \| null` | v1.5: `watch` is built for `opts.region` (default region when omitted). `null` → `notFound()`. `detailStatus` drives the "may be out of date" / "More details unavailable" notes. `isListed=false` → "This title dropped below our 6.5 bar". Includes `worthIt` (always present, even when `detailStatus='index_only'`) |
 | `getTitleStats(key)` | `TitleStats` | `ratingAvg10` is null below 5 ratings |
 | `listTitleReviews(key, {sort, cursor, limit})` | `Page<Review>` | The user's own review is pinned client-side from `TitleState.myReview` |
 | `getProfile(handle)` | `ProfilePage \| null` | Header, stats, palette for `/u/{handle}` |
@@ -256,7 +317,7 @@ Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → 
 | `/` | `listTrending`, `listCatalog` | `?type=&sort=` (the home browse section) |
 | `/browse` | `listCatalog` | `?type=movie\|tv&sort=…&cursor=` (use `browseHref`) |
 | `/search` | `searchCatalog` | `?q=&type=` |
-| `/title/{movie\|tv}/{tmdbId}-{slug}` | `getTitle`, `getTitleStats`, `listTitleReviews` | A wrong slug with the right id → `permanentRedirect` to the canonical `titleHref()`. Unknown → 404. `generateMetadata` uses `worthIt.metaDescription` for description + `og:description` |
+| `/title/{movie\|tv}/{tmdbId}-{slug}` | `getWatchRegion`, `getTitle`, `getTitleStats`, `listTitleReviews` | A wrong slug with the right id → `permanentRedirect` to the canonical `titleHref()`. Unknown → 404. `generateMetadata` uses `worthIt.metaDescription` for description + `og:description` |
 | `/u/{handle}` | `getProfile`, `listWallet`, `listDiary`, `listProfileReviews` | `?tab=wallet\|diary\|reviews\|watchlist` |
 | `/me/stubs` | `getSession`, `listDiary(session.handle)` | `?type=` |
 | `/me/settings` | `getSession` | — |
@@ -264,6 +325,6 @@ Header `x-revalidate-secret: $REVALIDATE_SECRET`, body `{ tags: string[] }` → 
 | `/about` | — | — |
 
 ## 8. QA hooks (`data-testid`), from DESIGN §11
-`ticket-{key}` (for example `ticket-movie:693134`), `stub-button`, `stub-count`, `tmdb-rating`, `imdb-rating` (the IMDb chip on a stub and the detail IMDb score chip; absent when `imdbRating` is null), `ticket-time`, `sort-select`, `type-filter`, `search-input`, `review-composer`, `review-card`, `spoiler-toggle`, `demo-pill`, `toast`, `auth-sheet`, `load-more`, `diary-row`, `wallet-stub`, and for "Worth it?" (DESIGN §7.4.1): `worth-it`, `worth-it-hook`, `worth-it-vibes`, `worth-it-time`, `worth-it-cert`, `worth-it-verdict`, `worth-it-like`.
+`ticket-{key}` (for example `ticket-movie:693134`), `stub-button`, `stub-count`, `tmdb-rating`, `imdb-rating` (the IMDb chip on a stub and the detail IMDb score chip; absent when `imdbRating` is null), `ticket-time`, `sort-select`, `type-filter`, `search-input`, `review-composer`, `review-card`, `spoiler-toggle`, `demo-pill`, `toast`, `auth-sheet`, `load-more`, `diary-row`, `wallet-stub`, and for "Worth it?" (DESIGN §7.4.1): `worth-it`, `worth-it-hook`, `worth-it-vibes`, `worth-it-time`, `worth-it-cert`, `worth-it-verdict`, `worth-it-like`, and for "Where to watch" (DESIGN §7.4.2, v1.5): `where-to-watch`, `wtw-region`, `wtw-group-stream|free|ads|rent|buy` (a `rent_buy` group uses `wtw-group-rent`), `wtw-provider-{providerId}`, `wtw-more`, `wtw-skeleton`, `wtw-empty`, `wtw-error`, `wtw-attribution`, `wtw-all-options`, `wtw-checked`, P1 `ticket-providers`, `provider-filter`, `provider-chip-{providerId}`.
 
 There is deliberately **no** `imdb-assist` (or any "post to…") hook: gap review checks its absence (PRD D3).
