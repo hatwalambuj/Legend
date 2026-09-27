@@ -85,6 +85,45 @@ per-story evidence.
 - [x] No speculative code. Validation is intact: the server still rejects dates later than today+1.
 - [x] Ran the full gate (G1, G2), the targeted repeat (G2b) and the full E2E suite again (G3).
 
+## 6a. Flake root cause (resumed run, 2026-09-27)
+
+### `platform.spec.ts:57`: "socket hang up" on `POST /api/auth/signup`. Cause: the test harness, not the app
+
+| Check | Result | Evidence |
+|---|---|---|
+| Repro in isolation, pre-M1 tree `91d9085` (built in a scratch copy; HEAD didn't build at the time) | 630 passed, 30 skipped, **0 hang-ups** | `npx playwright test e2e/platform.spec.ts --repeat-each=15 --workers=4` → "630 passed (12.2m)" |
+| Full suite, same tree, 3 runs, private port 3217 | 169 / 169 / 167 passed. **0 hang-ups** (run 3's 2 failures are `auth.spec.ts:206`, see below) | `full1..3.log`: "169 passed (6.9m)", "169 passed (7.0m)", "2 failed, 167 passed (6.1m)" |
+| Keep-alive idle race (client reuses a socket as the server closes it) | **Ruled out** | Server advertises `Keep-Alive: timeout=5` and closes idle sockets at 6001–6004 ms (5 s + Node 22 `keepAliveTimeoutBuffer`). Playwright's shared `keepAlive` agent (`playwright-core/lib/server/utils/happyEyeballs.js:74-75`) retires them at 4 s. A 3.8–6.4 s gap sweep (100 ms steps) gave 0 failures |
+| `next build` rewriting `.next` under a live `next start` | Not reproduced | 1,304 sign-ups during a concurrent rebuild: all 201 |
+| Server killed while a request is in flight | **Same error text** | `apiRequestContext.post: socket hang up`, identical to G2 |
+| Runs sharing one server | **Observed** | `playwright.config.ts` had fixed port 3100 + `reuseExistingServer: !process.env.CI`. While my scratch `next start` held :3100, another agent's run in `/home/user/Legend` attached to it. That run's `test-results/` showed `platform.spec.ts:302` (net guard) failing, because my server had no guard, and then `net::ERR_CONNECTION_REFUSED` on every axe page once I stopped it |
+| After the fix: HEAD `d0998fd` + config change, port 3231 | **630 passed, 30 skipped, 0 failed** (10.6m) | same `--repeat-each=15 --workers=4` command |
+
+- **Inferred root cause:** the pipeline runs several agents' suites at once. With `reuseExistingServer`,
+  a run silently attaches to whatever server is on :3100, even one built from another tree or started without the
+  net guard, and that server's owner can stop or restart it mid-run. An in-flight request then fails with
+  exactly "socket hang up". I can't prove this is what happened in G2 itself (that server is gone). This is
+  the only mechanism that reproduced the exact error, and the app-side causes above were ruled out.
+- **Fix (harness):** `playwright.config.ts` → `reuseExistingServer: process.env.E2E_REUSE_SERVER === '1'`.
+  If the port is busy, the run now fails fast: "http://127.0.0.1:3232/api/health is already used" (checked).
+  Run concurrent suites with `E2E_PORT=<free port>`. Rollback: revert that one line.
+
+### `auth.spec.ts:206` (B2-AC3): stub count goes to 1, then back to 0. Cause: the app (client race), fix not applied
+
+- **Observed:** reproduced in full-suite run 3 on both viewports. The trace (`tr3/.../trace.zip`) shows that
+  after `POST /api/auth/signup` (201), a batched `GET /api/me/title-states?keys=movie:13,…` and
+  `POST /api/stubs` both start at 27.033. The GET returns `stubCount: 0`, the POST returns `stubCount: 1`,
+  and the UI settles on `data-count="0"`.
+- **Root cause (`src/components/AppProvider.tsx`):** `onAuthed` → `applySession` clears `loaded`, re-queues
+  every known key, and schedules `flush()` in 16 ms. `replay()` only adds the key to `loaded` *after* its own
+  `await api.titleStates`, so the batch still includes that key. When that read resolves it overwrites
+  whatever `setTitleState` wrote meanwhile: last response wins. The app side is outside this QA run's edit scope, so the
+  fix is proposed to the orchestrator: a per-key write counter bumped in `setTitleState`, and `flush()`
+  skips keys written while its read was in flight. It also needs a unit test in `AppProvider.test.tsx`: hold
+  the batch, stub (POST → 1), release the batch with 0, and expect `data-count` to stay 1. **Unverified until applied.**
+- **Same pattern, not fixed (Inferred from code):** `loadWalletCount()` (`GET /api/me`) can land after the
+  optimistic wallet `+1` and reset the badge.
+
 ## 7. Verdict
 
 **SHIP** (demo build). The flagged coverage is added and passing on both viewports. F3 and F4 were real
@@ -93,5 +132,5 @@ bugs, and each is fixed with a small diff. The only red in G2 is one transport f
 
 ```
 — clearpath: mode=review · evidence=labeled · verify=SHIP
-   memory=off · unverified=live Supabase delete cascade, live TMDB/OMDb sync (AR-1/AR-2), real TMDB posters on fold, Lighthouse, non-Chromium browsers, platform.spec.ts:57 socket-hang-up flake (1/4)
+   memory=off · unverified=live Supabase delete cascade, live TMDB/OMDb sync (AR-1/AR-2), real TMDB posters on fold, Lighthouse, non-Chromium browsers, platform.spec.ts:57 cause in G2 itself (Inferred: shared reused server, §6a), auth.spec.ts:206 AppProvider fix (proposed, not applied)
 ```

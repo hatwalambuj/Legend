@@ -44,7 +44,11 @@ export default defineConfig({
         command: `npm run build && NODE_OPTIONS="--require ./e2e/support/net-guard.cjs" npx next start -p ${PORT}`,
         url: `${baseURL}/api/health`,
         timeout: 240_000,
-        reuseExistingServer: !process.env.CI,
+        // Never silently attach to a server we didn't start: agents run the suite concurrently, and a
+        // foreign server on this port (other tree, no net guard, killed/restarted by its owner) caused the
+        // platform.spec.ts:57 "socket hang up" flake. A busy port now fails fast; pick another with
+        // E2E_PORT, or opt in with E2E_REUSE_SERVER=1 (docs/08-clearpath/QA_VERIFICATION.md §Flake root cause).
+        reuseExistingServer: process.env.E2E_REUSE_SERVER === '1',
         env: {
           // Force demo mode even if a developer has keys in .env.local.
           CATALOG_MODE: 'fixtures',
