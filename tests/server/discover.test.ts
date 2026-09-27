@@ -18,7 +18,12 @@ import {
   type MapContext,
 } from '@/server/jobs/discover';
 import { mapConcurrent, paletteFromPoster, type SharpLike } from '@/server/jobs/palettes';
-import { lastListedCounts, revalidateSite, selectAll } from '../../scripts/sync-catalog';
+import {
+  lastListedCounts,
+  latestListedCounts,
+  revalidateSite,
+  selectAll,
+} from '../../scripts/sync-catalog';
 
 const rule = DEFAULT_CURATION_RULE;
 const ctx: MapContext = {
@@ -364,6 +369,18 @@ describe('guardrails', () => {
     });
     expect(lastListedCounts({ discover: { skipped: 'x' } })).toBeNull();
     expect(lastListedCounts(null)).toBeNull();
+    // A single-step run (--only=imdb|enrich) is the newest ok run but has no discover counts: the
+    // delta guardrail must compare against the last run that did discover, not switch itself off.
+    expect(
+      latestListedCounts([
+        { counts: { imdb: { requested: 5 } } },
+        { counts: { enrich: { due: 0 } } },
+        { counts: { discover: { listed: { movie: 9000, tv: 2500 } } } },
+        { counts: { discover: { listed: { movie: 1, tv: 1 } } } },
+      ]),
+    ).toEqual({ movie: 9000, tv: 2500 });
+    expect(latestListedCounts([{ counts: { imdb: {} } }])).toBeNull();
+    expect(latestListedCounts(null)).toBeNull();
     expect(genreMap({ genres: [{ id: 18, name: 'Drama' }] }).get(18)).toBe('Drama');
     expect(genreMap('bad').size).toBe(0);
   });

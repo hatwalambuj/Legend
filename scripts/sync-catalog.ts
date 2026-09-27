@@ -291,6 +291,21 @@ export function lastListedCounts(counts: unknown): ListedCounts | null {
     : null;
 }
 
+/**
+ * Listed counts of the newest OK run that actually ran discover (runs newest first). Single-step runs
+ * (`--only=enrich|imdb`) are also recorded as ok `catalog` runs but carry no discover counts; they must
+ * not switch the delta guardrail off for the next nightly run.
+ */
+export function latestListedCounts(
+  runs: readonly { counts: unknown }[] | null,
+): ListedCounts | null {
+  for (const r of runs ?? []) {
+    const c = lastListedCounts(r.counts);
+    if (c) return c;
+  }
+  return null;
+}
+
 function tmdbGetter(env: ServerEnv) {
   const tmdb = new TmdbDetailProvider(env.tmdb!, { timeoutMs: 10_000 });
   const throttle = createThrottle(10); // ~10 req/s, well under TMDB's limit
@@ -353,15 +368,15 @@ async function discoverStep(
   for (const r of recheck.rows) staged.set(`${r.media_type}:${r.tmdb_id}`, r);
   const listed = countListed(staged.values());
 
-  const { data: lastRun } = await db
+  const { data: lastRuns, error: lastErr } = await db
     .from('sync_runs')
     .select('counts')
     .eq('kind', 'catalog')
     .eq('status', 'ok')
     .order('finished_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const last = lastListedCounts(lastRun?.counts);
+    .limit(50);
+  if (lastErr) throw new Error(`select last runs: ${lastErr.message}`);
+  const last = latestListedCounts(lastRuns);
   const firstRun = previouslyListed.size === 0;
   const guard = checkGuardrails(listed, last, env.sync, { firstRun });
   for (const line of guardrailReport(listed, last, env.sync, guard, { firstRun }))

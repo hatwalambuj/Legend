@@ -16,4 +16,5 @@
 | 8 | Fix loop 1 | frontend-dev ∥ backend-dev | done | MUST FIX 1-6 done; 271 unit + 151 E2E green (orchestrator re-ran full gate) |
 | 9 | Loop review | reviewer | done | 4 fixes (error leak on delete, cookie-clear 500, mailto header chars, a11y); 272 unit + 151 E2E green |
 | 10 | PM re-check | orchestrator | done | MUST FIX 1-6 verified from screenshots; 7 (TMDB logo) and 8 (staging smoke on real keys) are founder tasks |
-| 11 | ClearPath audit: code ∥ architecture | code-reviewer, arch-reviewer | running | protocol copied to docs/08-clearpath/protocol |
+| 11 | ClearPath audit: code ∥ architecture | code-reviewer, arch-reviewer | done | Code: SHIP, 1 medium fixed (sync ±20% guard baseline). Arch: SHIP to staging, 7 medium + 2 low (AR-1..AR-4 before public launch) |
+| 12 | ClearPath QA | qa-engineer | running | |
