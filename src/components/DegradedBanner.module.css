@@ -1,0 +1,20 @@
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: var(--s-4) 0 0;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(245, 196, 81, 0.28);
+  background: rgba(11, 11, 13, 0.72);
+  color: var(--warn);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.banner svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.banner p {
+  margin: 0;
+}

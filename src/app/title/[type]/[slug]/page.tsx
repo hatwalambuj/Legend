@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { cache } from 'react';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
 import { CastList } from '@/components/CastList';
+import { DegradedBanner } from '@/components/DegradedBanner';
 import { formatDate } from '@/components/lib/display';
 import { safe } from '@/components/lib/safe';
 import { Reviews } from '@/components/Reviews';
@@ -105,11 +106,14 @@ export default async function TitlePage({ params }: { params: Params }) {
   const trailer = trailerHref(t);
   const target = stubTarget(t);
   const overview = t.overview || t.overviewShort;
+  // ADR-011 §4: undefined is treated as null; 'catalog' pauses stubs, reviews and watchlist.
+  const paused = t.degraded === 'catalog';
 
   return (
     <>
       <AdaptiveBackground palette={palette} />
       <div className="wrap">
+        <DegradedBanner degraded={t.degraded} />
         <div className={styles.detail}>
           <nav className={styles.crumbs} aria-label="Breadcrumb">
             <ol>
@@ -147,7 +151,7 @@ export default async function TitlePage({ params }: { params: Params }) {
           </div>
           <div className={styles.info}>
             <ScoreChips title={t} stats={stats} />
-            <TitleActions target={target} />
+            <TitleActions target={target} paused={paused} />
             <WorthIt data={t.worthIt} />
             {t.detailStatus !== 'fresh' && (
               <p className={styles.status}>
@@ -211,6 +215,7 @@ export default async function TitlePage({ params }: { params: Params }) {
               initial={reviews}
               tmdbReviews={t.tmdbReviews}
               reviewCount={stats?.reviewCount ?? reviews.items.length}
+              paused={paused}
             />
           </div>
         </div>

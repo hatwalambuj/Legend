@@ -5,6 +5,7 @@ import { AdaptiveBackground } from '@/components/AdaptiveBackground';
 import { DeleteAccount } from '@/components/DeleteAccount';
 import { EditProfile } from '@/components/Owner';
 import { safe } from '@/components/lib/safe';
+import { SetPasswordForm } from '@/components/SetPasswordForm';
 import { SignOutButton } from '@/components/SignOutButton';
 import { api } from '@/lib/api-client';
 import { NEUTRAL_PALETTE } from '@/lib/images';
@@ -54,8 +55,10 @@ export default async function SettingsPage() {
               </div>
             </dl>
             <p className={styles.hint}>
-              Forgot your password? Use &ldquo;Email me a magic link&rdquo; on the sign-in screen.
+              Forgot your password? Sign in with &ldquo;Email me a magic link&rdquo;, then set a new
+              one here.
             </p>
+            <SetPasswordForm />
           </section>
           <section className={styles.card} id="export" aria-labelledby="set-export">
             <h2 id="set-export">Export</h2>

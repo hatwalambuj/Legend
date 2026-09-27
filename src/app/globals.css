@@ -158,8 +158,12 @@ main {
 .btn:active:not(:disabled) {
   transform: scale(0.97);
 }
-.btn:disabled {
+.btn:disabled,
+.btn[aria-disabled='true'] {
   opacity: 0.55;
+}
+.btn[aria-disabled='true'] {
+  cursor: not-allowed;
 }
 .btn svg {
   flex: none;

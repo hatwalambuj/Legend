@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { api, ApiError } from '@/lib/api-client';
 import type { Page, Review, ReviewSort, TmdbReview } from '@/lib/types';
 import { useApp, useTitleState, type StubTarget } from '@/hooks/useApp';
+import { DEGRADED_DESC_ID } from './DegradedBanner';
 import { EmptyState } from './EmptyState';
 import { Icon } from './Icon';
 import { ReviewCard, TmdbReviewCard } from './ReviewCard';
@@ -18,11 +19,14 @@ export function Reviews({
   initial,
   tmdbReviews,
   reviewCount,
+  paused = false,
 }: {
   target: StubTarget;
   initial: Page<Review>;
   tmdbReviews: TmdbReview[];
   reviewCount: number;
+  /** degraded === 'catalog' (ADR-011 §4): writing, editing and deleting reviews are paused. */
+  paused?: boolean;
 }) {
   const app = useApp();
   const state = useTitleState(target.key);
@@ -84,7 +88,21 @@ export function Reviews({
     }
   }
 
-  const composer = app.session ? (
+  const pausedProps = paused
+    ? { 'aria-disabled': true as const, 'aria-describedby': DEGRADED_DESC_ID }
+    : {};
+
+  const composer = paused ? (
+    <div className={styles.composer} id="review-composer" data-testid="review-composer">
+      <div className={styles.composerTop}>
+        <strong>Reviews are paused</strong>
+      </div>
+      <p className={styles.signinCopy}>You can write one again once we&apos;re back.</p>
+      <button type="button" className="btn btn--ghost btn--sm" {...pausedProps}>
+        Write a review
+      </button>
+    </div>
+  ) : app.session ? (
     <ReviewComposer
       key={mine ? `${mine.id}-${mine.updatedAt}` : 'new'}
       target={target}
@@ -165,7 +183,9 @@ export function Reviews({
                   <button
                     type="button"
                     className="btn btn--ghost btn--sm"
+                    {...pausedProps}
                     onClick={() => {
+                      if (paused) return;
                       const el = document.getElementById('review-composer');
                       el?.scrollIntoView({ block: 'center' });
                       el?.querySelector<HTMLElement>('textarea')?.focus();
@@ -176,7 +196,10 @@ export function Reviews({
                   <button
                     type="button"
                     className="btn btn--ghost btn--sm"
-                    onClick={() => void remove(mine)}
+                    {...pausedProps}
+                    onClick={() => {
+                      if (!paused) void remove(mine);
+                    }}
                   >
                     Delete
                   </button>
@@ -194,7 +217,9 @@ export function Reviews({
                 <button
                   type="button"
                   className="btn btn--ghost"
+                  {...pausedProps}
                   onClick={() => {
+                    if (paused) return;
                     if (!app.session) app.openAuth({ kind: 'review', titleKey: target.key });
                     else
                       document

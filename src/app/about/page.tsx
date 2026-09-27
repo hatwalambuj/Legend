@@ -96,6 +96,11 @@ export default function AboutPage() {
               <li>
                 We store your email, handle, stubs, ratings, reviews and watchlist. That&apos;s it.
               </li>
+              <li>
+                Where it lives: your email and password (hashed, never readable) sit in our sign-in
+                service, Supabase Auth. Your profile, stubs, ratings, reviews and watchlist sit in
+                our Supabase database.
+              </li>
               <li>Diaries, wallets and reviews are public; your watchlist is private.</li>
               <li>
                 Posters load straight from TMDB&apos;s image servers, which means TMDB can see your
@@ -107,6 +112,11 @@ export default function AboutPage() {
                   delete your whole account
                 </Link>{' '}
                 in Settings.
+              </li>
+              <li>
+                Deleting your account erases it right away: profile, stubs, ratings, reviews and
+                watchlist. Encrypted backups may still hold a copy for up to 14 days, then it&apos;s
+                gone for good.
               </li>
             </ul>
           </section>

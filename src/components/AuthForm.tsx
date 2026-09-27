@@ -60,6 +60,8 @@ export function AuthForm({
     text: string;
   } | null>(null);
   const [magic, setMagic] = useState<{ sent: boolean; devLink?: string } | null>(null);
+  // ADR-010 ID-1: live sign-up with "Confirm email" ON answers 202 { session: null, confirmEmail: true }.
+  const [confirmFor, setConfirmFor] = useState<string | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
   const fields: Field[] =
@@ -123,7 +125,8 @@ export function AuthForm({
               handle: values.handle.trim().toLowerCase(),
             })
           : await api.signIn({ email: values.email.trim(), password: values.password });
-      onSuccess(res.session);
+      if (res.session) onSuccess(res.session);
+      else setConfirmFor(values.email.trim());
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
       if (ae?.code === 'invalid_credentials') setFormError(ERROR_COPY.invalid_credentials);
@@ -173,6 +176,27 @@ export function AuthForm({
   const id = (f: string) => `${uid}-${f}`;
   const describe = (f: Field, extra?: string) =>
     [errors[f] ? id(`${f}-err`) : null, extra].filter(Boolean).join(' ') || undefined;
+
+  if (confirmFor) {
+    return (
+      <div className={styles.form} data-testid="auth-confirm-email">
+        <H id={headingId} className={styles.title}>
+          Check your inbox
+        </H>
+        <p className={styles.sub} role="status">
+          Check your inbox to finish signing up. We sent a link to{' '}
+          <strong className="mono">{confirmFor}</strong>.
+        </p>
+        <button
+          type="button"
+          className="btn btn--ghost btn--block"
+          onClick={() => onViewChange('signin')}
+        >
+          Back to sign in
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form className={styles.form} onSubmit={submit} noValidate data-testid="auth-form">

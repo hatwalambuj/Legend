@@ -5,11 +5,13 @@
  */
 import { useEffect, useRef } from 'react';
 import { useApp, useTitleState, type StubTarget } from '@/hooks/useApp';
+import { DEGRADED_DESC_ID } from './DegradedBanner';
 import { Icon } from './Icon';
 import { formatDate, starsLabel, starsText } from './lib/display';
 import styles from './TitleActions.module.css';
 
-export function TitleActions({ target }: { target: StubTarget }) {
+/** `paused` (degraded === 'catalog', ADR-011 §4): CTAs stay focusable but aria-disabled and inert. */
+export function TitleActions({ target, paused = false }: { target: StubTarget; paused?: boolean }) {
   const app = useApp();
   const state = useTitleState(target.key);
   const n = state?.stubCount ?? 0;
@@ -24,6 +26,10 @@ export function TitleActions({ target }: { target: StubTarget }) {
     el.classList.add(styles.pop!);
   }, [app.lastStub, target.key]);
 
+  const pausedProps = paused
+    ? { 'aria-disabled': true as const, 'aria-describedby': DEGRADED_DESC_ID }
+    : {};
+
   return (
     <>
       <div className={styles.actions}>
@@ -32,7 +38,10 @@ export function TitleActions({ target }: { target: StubTarget }) {
           className={`btn btn--primary btn--lg ${styles.cta}`}
           data-testid="stub-button"
           data-count={n}
-          onClick={(e) => void app.stub(target, { source: e.currentTarget })}
+          {...pausedProps}
+          onClick={(e) => {
+            if (!paused) void app.stub(target, { source: e.currentTarget });
+          }}
         >
           <Icon name="ticket" size={20} />
           <span>{n ? 'Stub again' : 'Stub it'}</span>
@@ -41,7 +50,10 @@ export function TitleActions({ target }: { target: StubTarget }) {
           type="button"
           className="btn btn--ghost btn--lg btn--icon"
           aria-label="Stub with date, place and note"
-          onClick={() => app.openStubSheet(target)}
+          {...pausedProps}
+          onClick={() => {
+            if (!paused) app.openStubSheet(target);
+          }}
           data-testid="stub-details"
         >
           <Icon name="more" size={20} />
@@ -50,7 +62,10 @@ export function TitleActions({ target }: { target: StubTarget }) {
           type="button"
           className={`btn btn--ghost btn--lg ${styles.wl}`}
           aria-pressed={watchlisted}
-          onClick={() => void app.toggleWatchlist(target)}
+          {...pausedProps}
+          onClick={() => {
+            if (!paused) void app.toggleWatchlist(target);
+          }}
           data-testid="watchlist-button"
         >
           <Icon name={watchlisted ? 'check' : 'bookmark'} size={18} />
