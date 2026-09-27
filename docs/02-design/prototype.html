@@ -513,7 +513,14 @@ dialog::backdrop{ background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px);
 .wtw-tile:active .wtw-logo{ transform:scale(.94); }
 .wtw-tile:focus-visible{ outline:none; }
 .wtw-tile:focus-visible .wtw-logo{ outline:2px solid var(--accent); outline-offset:3px; }
-.wtw__attr{ margin:10px 0 0; font:500 10px/1.3 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--fg-2); }
+.wtw__foot{ display:flex; align-items:center; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; margin-top:10px; }
+.wtw-all{ position:relative; display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600; color:var(--fg); text-decoration:underline; text-underline-offset:3px; }
+.wtw-all::before{ content:""; position:absolute; inset:-12px -6px; }
+.wtw-all svg{ width:12px; height:12px; }
+.wtw__jw{ margin-top:6px!important; }
+.wtw-more{ background:none; border:0; padding:0; color:var(--fg); cursor:pointer; font:inherit; }
+.wtw-more .wtw-logo{ background:var(--surface-2); font:600 13px/1 var(--font-mono); }
+.wtw__attr{ margin:0; font:500 10px/1.3 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--fg-2); }
 .wtw__attr a{ color:var(--fg); text-decoration:underline; text-underline-offset:2px; }
 .wtw-empty{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:6px 0 4px; }
 .wtw-empty p{ margin:0; flex:1 1 180px; font-size:14px; color:var(--fg-2); } .wtw-empty b{ color:var(--fg); font-weight:650; }
@@ -523,8 +530,6 @@ dialog::backdrop{ background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px);
 /* ticket hint: logo stack in the stub footer (grid/rail only) */
 .stub__prov{ display:inline-flex; align-items:center; min-width:0; }
 .stub__prov .pl{ width:16px; height:16px; border-radius:4px; display:grid; place-items:center; font:800 7px/1 var(--font-ui); box-shadow:0 0 0 1.5px var(--paper); }
-.stub__prov .pl + .pl{ margin-left:-5px; }
-.stub__prov .more{ margin-left:5px; font:600 10px/1 var(--font-mono); letter-spacing:.04em; color:var(--ink-2); }
 .stub__foot.has-prov .stub__serial{ display:none; }
 .detail__ticket .stub__prov{ display:none; } .detail__ticket .stub__foot.has-prov .stub__serial{ display:block; }
 @media (prefers-reduced-motion: reduce){ .wtw-tile:hover,.wtw-tile:hover .wtw-ext{ transform:none; } .wtw-sk i{ animation:none; } }
@@ -756,9 +761,14 @@ const PROV = {
   apple:{id:2,n:'Apple TV',bg:'#1c1c1e',fg:'#fff',g:'tv',u:'https://tv.apple.com/search?term='},
   google:{id:3,n:'Google Play',bg:'#fff',fg:'#1a73e8',g:'▶',u:'https://play.google.com/store/search?c=movies&q='},
   vudu:{id:7,n:'Fandango at Home',bg:'#3478F6',fg:'#fff',g:'FaH',u:'https://athome.fandango.com/content/browse/search?searchString='},
-  crunchy:{id:283,n:'Crunchyroll',bg:'#F47521',fg:'#fff',g:'cr',u:'https://www.crunchyroll.com/search?q='}
+  crunchy:{id:283,n:'Crunchyroll',bg:'#F47521',fg:'#fff',g:'cr',u:'https://www.crunchyroll.com/search?q='},
+  jio:{id:2336,n:'JioHotstar',bg:'#0F1B4C',fg:'#fff',g:'jio',u:'https://www.hotstar.com/in/explore?search_query='},
+  amazon:{id:10,n:'Amazon Video',bg:'#232F3E',fg:'#FF9900',g:'a',u:'https://www.amazon.com/s?i=instant-video&k='},
+  youtube:{id:192,n:'YouTube',bg:'#fff',fg:'#FF0000',g:'▶',u:'https://www.youtube.com/results?search_query='},
+  pluto:{id:300,n:'Pluto TV',bg:'#111',fg:'#FFF200',g:'pl',u:'https://pluto.tv/search/details?query='}
 };
-const WATCH = { /* region US only; other regions demo the empty state */
+const WATCH_IN = { 'dune-part-two':{stream:['jio'],rent:['apple','google'],buy:['apple','google']}, 'the-bear':{stream:['jio']}, 'arcane':{stream:['netflix']} };
+const WATCH = { /* region US (+ IN above); other regions demo the empty state */
   'dune-part-two':{stream:['max'],rent:['apple','prime','google','vudu'],buy:['apple','prime','google','vudu']},
   'the-bear':{stream:['hulu','disney'],buy:['apple','prime']},
   'past-lives':{rent:['apple','prime','google'],buy:['apple','prime','google']},
@@ -767,8 +777,8 @@ const WATCH = { /* region US only; other regions demo the empty state */
   'severance':{stream:['appletvp']},
   'spirited-away':{stream:['max'],buy:['apple','prime','google']},
   'shogun':{stream:['hulu','disney'],buy:['apple','prime']},
-  'aftersun':{stream:['netflix','max'],free:['tubi'],rent:['apple']},
-  'eeaao':{stream:['max','netflix','prime'],free:['tubi'],rent:['apple','google']},
+  'aftersun':{stream:['netflix','max'],ads:['tubi','pluto'],rent:['apple']},
+  'eeaao':{stream:['max','netflix','prime'],ads:['tubi'],rent:['apple','google','amazon','youtube','vudu','prime','max'],buy:['apple','google']},
   'succession':{stream:['max'],buy:['apple','prime','google']},
   'poor-things':{stream:['hulu','disney'],rent:['apple','prime']},
   'fleabag':{stream:['prime'],buy:['apple']}
@@ -777,37 +787,37 @@ const WATCH = { /* region US only; other regions demo the empty state */
 const REGIONS = [['US','United States'],['GB','United Kingdom'],['IN','India'],['DE','Germany'],['BR','Brazil']];
 let REGION = 'US';
 function wtwFor(id, region=REGION){
-  if(region!=='US') return null;
-  const w=WATCH[id]; if(!w) return null;
+  const w=(region==='US'?WATCH:region==='IN'?WATCH_IN:{})[id]; if(!w) return null;
   const rent=w.rent||[], buy=(w.buy||[]).filter(k=>!rent.includes(k));
   const allBoth=rent.length&&rent.every(k=>(w.buy||[]).includes(k));
-  const groups=[['stream','Stream',w.stream||[]],['free','Free',w.free||[]],['rent',allBoth?'Rent or buy':'Rent',rent],['buy','Buy',buy]].filter(g=>g[2].length);
+  const groups=[['stream','Stream',w.stream||[]],['free','Free',w.free||[]],['ads','Free with ads',w.ads||[]],['rent',allBoth?'Rent · Buy':'Rent',rent],['buy','Buy',buy]].filter(g=>g[2].length);
   return groups.length ? {groups, allBoth, both:new Set(rent.filter(k=>(w.buy||[]).includes(k)))} : null;
 }
-function streamingKeys(id){ const w=WATCH[id]; return w ? [...(w.stream||[]),...(w.free||[])] : []; }
+function streamingKeys(id){ const w=WATCH[id]; return w ? [...(w.stream||[]),...(w.free||[]),...(w.ads||[])].slice(0,1) : []; }
 function provLogo(k, cls='wtw-logo'){ const p=PROV[k]; return `<span class="${cls}" style="background:${p.bg};color:${p.fg}" aria-hidden="true">${cls==='pl'?p.g.slice(0,2):p.g}`; }
 function wtwTile(t, k, gk, both, allBoth){
   const p=PROV[k];
-  const verb = gk==='rent' ? (both?'Rent or buy':'Rent') : gk==='buy' ? 'Buy' : 'Watch';
-  const tail = gk==='stream' ? ' (stream)' : gk==='free' ? ' for free' : '';
-  const name = `${verb} ${t.t} on ${p.n}${tail}, opens in a new tab`;
-  return `<li><a class="wtw-tile" data-testid="wtw-provider-${p.id}" href="${p.u}${encodeURIComponent(t.t)}" target="_blank" rel="noopener noreferrer nofollow" aria-label="${esc(name)}">
+  const type = gk==='rent' ? (both?'rent · buy':'rent') : gk==='ads' ? 'free with ads' : gk;
+  const name = `Open ${p.n} (${type}) — opens in a new tab`;
+  return `<li><a class="wtw-tile" data-testid="wtw-provider-${p.id}" href="${p.u}${encodeURIComponent(t.t)}" target="_blank" rel="noopener noreferrer nofollow" aria-label="${esc(name)}" title="Open in ${esc(p.n)}">
     ${provLogo(k)}<span class="wtw-ext"><svg aria-hidden="true"><use href="#i-ext"/></svg></span></span>
     <span class="wtw-name">${esc(p.n)}</span>${both&&!allBoth?`<span class="wtw-sub">Rent · Buy</span>`:''}</a></li>`;
 }
 function wtwBody(t){
   const d=wtwFor(t.id), rn=REGIONS.find(r=>r[0]===REGION)[1];
   if(!d) return `<div class="wtw-empty" data-testid="wtw-empty"><p><b>Not streaming in ${REGION==='US'?'the US':esc(rn)} right now.</b></p>
-      <button class="btn btn--ghost" type="button" id="wtwChange">Change region</button><button class="btn btn--ghost" type="button" id="wtwWl">Watchlist it</button></div>`;
+      <button class="btn btn--ghost" type="button" id="wtwChange">Change region</button><button class="btn btn--ghost" type="button" id="wtwWl">Add to Watchlist</button></div>`;
   return `<div class="wtw__rail">${d.groups.map(([gk,gl,ks])=>`<div class="wtw-group" data-testid="wtw-group-${gk}"><span class="wtw-group__l" id="wtw-${gk}">${gl}</span>
-      <ul role="list" aria-labelledby="wtw-${gk}">${ks.slice(0,6).map(k=>wtwTile(t,k,gk,gk==='rent'&&d.both.has(k),d.allBoth)).join('')}</ul></div>`).join('')}</div>`;
+      <ul role="list" aria-labelledby="wtw-${gk}">${ks.slice(0,6).map(k=>wtwTile(t,k,gk,gk==='rent'&&d.both.has(k),d.allBoth)).join('')}${ks.length>6?`<li><button type="button" class="wtw-tile wtw-more" data-testid="wtw-more" data-g="${gk}" aria-label="Show ${ks.length-6} more ${gl} options"><span class="wtw-logo">+${ks.length-6}</span><span class="wtw-name">More</span></button></li>`:''}</ul></div>`).join('')}</div>`;
 }
 function wtwHTML(t){
   return `<section class="wtw" id="wtw" data-testid="where-to-watch" aria-labelledby="wtw-h">
     <div class="wtw__h"><h2 class="eyebrow" id="wtw-h">Where to watch</h2>
       <label class="wtw-region" data-testid="wtw-region"><span aria-hidden="true">${REGION}</span><select id="wtwRegion" aria-label="Region: ${esc(REGIONS.find(r=>r[0]===REGION)[1])}. Change region">${REGIONS.map(([c,n])=>`<option value="${c}" ${c===REGION?'selected':''}>${n} · ${c}</option>`).join('')}</select></label></div>
     <div id="wtwBody">${wtwBody(t)}</div>
-    <p class="wtw__attr" data-testid="wtw-attribution">Data: <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a> via TMDB · Availability can change</p>
+    <div class="wtw__foot"><span class="wtw__attr" data-testid="wtw-checked">Checked Sep 27, 2026 · Availability can change</span>
+      <a class="wtw-all" data-testid="wtw-all-options" href="https://www.themoviedb.org/${t.type==='tv'?'tv':'movie'}/${encodeURIComponent(t.id)}/watch?locale=${REGION}" target="_blank" rel="noopener noreferrer">All options<svg aria-hidden="true"><use href="#i-ext"/></svg></a></div>
+    <p class="wtw__attr wtw__jw" data-testid="wtw-attribution">Data by <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a></p>
   </section>`;
 }
 function wireWtw(t){
@@ -817,9 +827,10 @@ function wireWtw(t){
     $('#wtwBody').innerHTML=`<div class="wtw-sk" data-testid="wtw-skeleton" aria-hidden="true"><i></i><i></i><i></i><i></i></div>`;
     setTimeout(()=>{ $('#wtwBody').innerHTML=wtwBody(t); wireWtwEmpty(t); }, 450); });
   wireWtwEmpty(t);
-  $$('#wtw .wtw-tile').forEach(a=>a.addEventListener('pointerdown',()=>haptic(8)));
+  $$('#wtw a.wtw-tile').forEach(a=>a.addEventListener('pointerdown',()=>haptic(8)));
 }
 function wireWtwEmpty(t){
+  $$('#wtw .wtw-more').forEach(b=>b.onclick=()=>{ const d=wtwFor(t.id), g=d.groups.find(x=>x[0]===b.dataset.g); const ul=b.closest('ul'); b.parentElement.remove(); ul.insertAdjacentHTML('beforeend', g[2].slice(6).map(k=>wtwTile(t,k,g[0],g[0]==='rent'&&d.both.has(k),d.allBoth)).join('')); ul.children[6].querySelector('a').focus(); });
   const c=$('#wtwChange'); if(c) c.onclick=()=>{ $('#wtwRegion').focus(); try{ $('#wtwRegion').showPicker(); }catch(e){} };
   const w=$('#wtwWl'); if(w) w.onclick=()=>$('#wl').click();
 }
@@ -860,7 +871,7 @@ function stubInner(t){
       <span class="stub__meta">${year(t)}<br>${t.type==='tv'?'Show':'Movie'}</span>
     </div>
     <div class="stub__foot ${sk.length?'has-prov':''}">
-      <span class="stub__serial">${serial(t)}</span>${sk.length?`<span class="stub__prov" data-testid="ticket-providers" aria-hidden="true">${sk.slice(0,2).map(k=>provLogo(k,'pl')+'</span>').join('')}${sk.length>2?`<span class="more">+${sk.length-2}</span>`:''}</span>`:''}
+      <span class="stub__serial">${serial(t)}</span>${sk.length?`<span class="stub__prov" data-testid="ticket-providers" role="img" aria-label="On ${esc(PROV[sk[0]].n)}">${provLogo(sk[0],'pl')}</span></span>`:''}
       <button type="button" class="stub-act ${n?'is-on':''}" data-stub="${t.id}" aria-label="${n?'Stub again':'Stub it'}: ${esc(t.t)}${n?` (${n}× stubbed)`:''}">
         <svg aria-hidden="true"><use href="#${n?'i-check':'i-plus'}"/></svg><span>${n?`${n}×`:'Stub it'}</span>
       </button>
@@ -869,7 +880,7 @@ function stubInner(t){
 }
 function ticketHTML(t, extra=''){
   const sk=streamingKeys(t.id);
-  const label = `${t.t}, ${t.type==='tv'?'show':'movie'}, ${year(t)}, rated ${t.r.toFixed(1)} on TMDB${sk.length?`, streaming on ${PROV[sk[0]].n}${sk.length>1?` and ${sk.length-1} more`:''}`:''}`;
+  const label = `${t.t}, ${t.type==='tv'?'show':'movie'}, ${year(t)}, rated ${t.r.toFixed(1)} on TMDB${sk.length?`, on ${PROV[sk[0]].n}`:''}`;
   return `<div class="tw" data-focus="${t.id}">
     <article class="ticket" data-ticket="${t.id}">
       ${extra}
