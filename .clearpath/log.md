@@ -22,3 +22,7 @@ confidence: high
 - what: ADR-010-identity (new), ADR-011-operations-free-tier (new), ADR-001 Amendment A ($0 hard constraint, verified free-alternatives matrix, TRUSTED_PROXY), API_CONTRACT v1.4, WORK_SPLIT §5 M1 task list; pointer notes in ADR-002/005/008. Docs only.
 - why: founder updates 2026-09-27 (identity table, free-of-cost DB/server, ops hardening).
 - verification: web-checked free tiers (sources in ADR-001 §A4); code facts cited file:line; no build run (docs only).
+
+## 2026-09-27 · M1 + where-to-watch wave
+- done: ADR-010 identity, ADR-001 $0 hard rule + free alternates, ADR-011 ops, ADR-012 where-to-watch, API v1.5, WORK_SPLIT §5/§6; PRD §13 + DESIGN §7.4.2 (where to watch).
+- interrupted: backend M1 and QA flake runs stopped on a usage limit; partial work snapshot 55d0243; both relaunched to resume.
