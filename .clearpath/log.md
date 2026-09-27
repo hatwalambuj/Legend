@@ -26,3 +26,8 @@ confidence: high
 ## 2026-09-27 · M1 + where-to-watch wave
 - done: ADR-010 identity, ADR-001 $0 hard rule + free alternates, ADR-011 ops, ADR-012 where-to-watch, API v1.5, WORK_SPLIT §5/§6; PRD §13 + DESIGN §7.4.2 (where to watch).
 - interrupted: backend M1 and QA flake runs stopped on a usage limit; partial work snapshot 55d0243; both relaunched to resume.
+
+## 2026-09-27 · M1 complete
+- backend + frontend M1 tasks implemented; e2e harness fix (no server reuse); ClearPath M1 code review SHIP (M1-CR-1 fixed).
+- verification: lint/typecheck/338 unit/build/format green; 169 E2E passed (reviewer run). HEAD 3d279b102c50e01b68045bd3563b4a7c72007d8a.
+- open: stub-count race (founder decision), M1-15 logo, M1-17 staging smoke.

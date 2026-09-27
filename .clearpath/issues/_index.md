@@ -9,11 +9,12 @@ confidence: high
 ---
 # issues
 
-- [[issues/L-3-dry-run-omdb.md]] · open
-- [[issues/L-4-guard-abort-scope.md]] · open
-- [[issues/L-5-health-check.md]] · open
-- [[issues/L-6-supabase-down.md]] · open
-- [[issues/L-7-hosting-portability.md]] · open
+- [[issues/L-3-dry-run-omdb.md]] · closed
+- [[issues/L-4-guard-abort-scope.md]] · closed
+- [[issues/L-5-health-check.md]] · closed
+- [[issues/L-6-supabase-down.md]] · closed
+- [[issues/L-7-hosting-portability.md]] · closed
 - [[issues/founder-tasks.md]] · open
 - [[issues/should-later.md]] · open
 - [[issues/where-to-watch.md]] · open
+- [[issues/stub-count-race.md]] · open (founder decision)

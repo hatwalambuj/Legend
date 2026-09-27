@@ -3,7 +3,7 @@ type: issue
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 91d9085662416a6cf983f3f92907b4e7f52e40ee
+verified_against: 3d279b102c50e01b68045bd3563b4a7c72007d8a
 source: docs/04-architecture/ADR-001-stack-and-hosting.md
 confidence: high
 ---
