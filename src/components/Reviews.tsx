@@ -35,7 +35,9 @@ export function Reviews({
   const [deletedId, setDeletedId] = useState<string | null>(null);
 
   const others = list.filter((r) => r.id !== mine?.id && r.id !== deletedId);
-  const stubbedCount = Math.max(reviewCount, list.length);
+  // A deleted review that was in the server list was counted; drop it (CODE_REVIEW F4).
+  const stubbedCount =
+    Math.max(reviewCount, list.length) - (list.some((r) => r.id === deletedId) ? 1 : 0);
 
   async function load(nextSort: ReviewSort, more = false) {
     setBusy(true);

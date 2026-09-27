@@ -42,13 +42,15 @@ export function StubDetailsForm({
   const [error, setError] = useState<string | null>(null);
   const uid = useId();
   const min = minDate ?? `${target.year - 1}-01-01`;
+  // An existing stub may be dated today+1 (the API's UTC slack); keep it re-savable (CODE_REVIEW F3).
+  const max = initial?.watchedOn && initial.watchedOn > today ? initial.watchedOn : today;
 
   return (
     <form
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
-        if (!date || date > today) return setError("Pick a date that isn't in the future.");
+        if (!date || date > max) return setError("Pick a date that isn't in the future.");
         if (date < min) return setError(`Pick a date from ${min.slice(0, 4)} or later.`);
         onSubmit({ watchedOn: date, watchedWhere: where, note: note.trim() });
       }}
@@ -64,7 +66,7 @@ export function StubDetailsForm({
           type="date"
           required
           value={date}
-          max={today}
+          max={max}
           min={min}
           onChange={(e) => {
             setDate(e.target.value);
