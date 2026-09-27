@@ -53,6 +53,9 @@ export function SetPasswordForm() {
         setFieldError(ae.fields.password);
       } else if (ae?.code === 'unauthenticated') {
         setFormError(ERROR_COPY.unauthenticated);
+      } else if (ae?.code === 'forbidden') {
+        // e.g. the shared seeded demo accounts: the server copy says why (not "try again").
+        setFormError(ae.message);
       } else if (ae?.code === 'rate_limited') {
         setFormError('Too many tries. Wait a few minutes.');
       } else if (ae?.code === 'not_implemented') {

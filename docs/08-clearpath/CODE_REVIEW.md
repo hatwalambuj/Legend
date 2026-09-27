@@ -96,3 +96,85 @@ single-step runs as catalogue syncs. It is cosmetic (health only), and the corre
 
 — clearpath: mode=review · evidence=labeled · verify=SHIP
    memory=off · unverified=live Supabase/PostgREST behaviour of the 50-row sync_runs query (no live project; R2 in REVIEW.md)
+
+---
+
+# M1 review (launch hardening, 2026-09-27)
+
+Reviewer: code-reviewer (ClearPath). Scope: `git diff 4d842f2..HEAD -- src scripts supabase tests .github playwright.config.ts .env.example README.md`
+(62 files, +3,000/−204). Specs: WORK_SPLIT §5 (M1-00…M1-17), ADR-010, ADR-011, ADR-001 §A3, API_CONTRACT v1.4.
+Skipped: `docs/**`, `docs/06-qa/screenshots/**`, `package-lock.json`, fixture JSON. `src/components/AppProvider.tsx` is not in the
+diff and was not edited (QA §6a / auth.spec.ts:206 race awaits a founder decision).
+
+## M1.1 Findings (confidence ≥ 80)
+
+| id | sev | category | file:line | evidence | conf | recommendation | status |
+|---|---|---|---|---|---|---|---|
+| M1-CR-1 | low | UX / error copy | `src/components/SetPasswordForm.tsx:52-66` (pre-fix) | **Observed:** the demo provider rejects the shared seeded accounts with `403 forbidden` "Demo accounts can't change their password. Create your own to try it." (`src/server/auth/local.ts:185-189`). The form had no `forbidden` branch, so it fell through to `ERROR_COPY.internal`, "Something went wrong. Try again.", which invites a retry that can never work. Reachable: sign in with a listed demo account (`AuthForm` shows them) → Settings → Save new password | 90 | Show the server copy for `forbidden` | **Fixed**: one `else if` branch + test `on forbidden (seeded demo account) shows the server reason` (`SetPasswordForm.test.tsx`) |
+
+No critical, high or medium findings ≥ 80.
+
+## M1.2 Spec conformance (each task, Observed unless labeled)
+
+| Task | Verdict | Evidence |
+|---|---|---|
+| M1-00 | meets | `types.ts:133-143` `degraded?` (optional, reason documented), `contracts.ts` `AuthResponse` union, `HealthResponse` v1.4, `setPasswordSchema`; `errors.ts` `reauth_required` 401 + copy; `api.setPassword` |
+| M1-01 dry run | meets | `enrichStep` returns before constructing `TmdbDetailProvider` (`sync-catalog.ts:237`); `imdbStep` never constructs `OmdbRatingProvider` and passes rejecting `lookup/save` (`:269-275`); `recheckMissing` early return (`discover.ts:321`); `paletteStep` returns before `sharp` (`:490`); runner skips `startRun/finishRun/purge/revalidate` (`sync-runner.ts:55-75`). Due RPCs are `stable` (`init.sql:501,543`). Tests drive the real `buildSteps` with counting fakes for the full run and each `--only` (`sync-dry-run.test.ts:190-227`) |
+| M1-02 guard scope | meets | `runSync` records `aborted`, continues enrich/imdb/palettes/disagreements/purge, `finishRun('aborted', …)`; throw → `failed` + rethrow (`sync-runner.ts:55-78`); `sync-runner.test.ts` (a)–(d) |
+| M1-03 health | meets | `force-dynamic`; probe on `clients.public()` (cookie-less `supabasePublic`, POST rpc = no data cache) with `AbortSignal.timeout` plus a `Promise.race` fallback (`health.ts:23-29`); `Cache-Control: no-store` on 200/503 and `private, no-store` on 429 (`http.ts:47`); 60/min per `clientIp`; body built only from probe numbers, logs `code` only (`health.ts:46`); `HEAD` has no body |
+| M1-04 migration | meets | `20260927000000_ops_health.sql`: both functions `security definer set search_path = public`, every relation and function schema-qualified; `create or replace` keeps `last_catalog_sync` grants (anon call in `migrations.test.ts`); `health_probe` revoked from `public`, granted to anon/authenticated/service_role; uses `catalog_count('all')` (ADR §9 option). `sync_runs` RLS unchanged (no policy; definer only) |
+| M1-05 DAL degrade | meets | `loadEntry` → last-good LRU (1,000, catalogue rows only, no session/user data) → `summaryFromDetail` → `null` (404) / `upstream_unavailable` (503) (`dal.ts:58-87`); stats → `ZERO_STATS` + `community`; recommended → empty map; per-user data stays on its own calls, which the page wraps in `safe()` (`page.tsx:80-87`) |
+| M1-06 banner/CTAs | meets | `DegradedBanner` `role="status"`, `data-testid`; Stub, details, Watchlist and all review buttons `aria-disabled` + `aria-describedby="degraded-desc"`, handlers inert, still focusable |
+| M1-07 keep-alive | meets | first step, anon key only, `curl -fsS … /rpc/health_probe`, "keep-alive skipped" when unset (`nightly-sync.yml:69-78`) |
+| M1-08 backup | meets | skip guard; PGDG client pinned `PG_MAJOR=17`; two custom-format dumps per ADR §7; `umask 077`; passphrase piped via the `printf` builtin (not in argv); AES256 symmetric; plaintext removed before upload; only size logged; `permissions: contents: read`; 14-day retention; no `set -x`, URL never echoed |
+| M1-09 F2 | meets | `SYNC_RECHECK_MAX` parsed; `recheck_capped` guard reason; errored keys carried forward with `STAGING_COLUMNS` identical to `catalog_staging` (`init.sql:89-111`) |
+| M1-10 TRUSTED_PROXY | meets | regex-validated enum; auto-detect `VERCEL=1`/`NETLIFY=true`; boot fails in live production outside the build phase (`env.ts:251-264`); `clientIp` reads only the edge's header, `xff-N` from the right, `none` → `shared`, missing → `unknown` (never a per-request free key); forwarded host/proto ignored under `none` (`http.ts:15-19,126-135`, `cookies.ts:17-25`) |
+| M1-11 confirm email | meets | adapter returns `null` without a session, still maps empty identities to `email_taken` (`supabase.ts:162-167`); route 202 without a cookie; `AuthForm` "Check your inbox" view (mounted with `key={view}`, so "Back to sign in" resets it) |
+| M1-12 set password | meets | `assertSameOrigin` + JSON-only `parseBody` (CSRF), `requireSession`, per-user 5/10 min, reauth from newest JWT `amr` timestamp (Supabase) / cookie `iat` issued only by `startSession` (demo); unknown time → reauth; form: label, hint + error in `aria-describedby`, `aria-invalid`, alert + status regions, show/hide with `aria-pressed` |
+| M1-13 magic-link per email | meets | key = SHA-256 of trimmed lower-cased email, 5/h, consumed for every address before the provider call, so the 429 says nothing about existence |
+| M1-14 privacy copy | meets | `/about`: where data lives, immediate deletion, backups ≤ 14 days |
+| M1-15 | not in diff | waits for the founder's logo (expected) |
+| M1-16/17 | partly | only the harness change is here (`playwright.config.ts` `E2E_REUSE_SERVER`); `e2e/ops.spec.ts` and the staging smoke are QA's |
+
+## M1.3 Not flagged (checked)
+
+- **Spoofing:** under `vercel` a client-sent `X-Forwarded-For` prefix is ignored when `x-real-ip` is present, and `xff-N` counts from the right
+  (`rate-limit.test.ts:81-99`). `assertSameOrigin` still compares against the host the edge sets.
+- **Limiter eviction bypass:** per-IP keys are touched on every request, including rejected ones, before any per-email key is created. An
+  over-limit IP therefore can't flood the LRU to evict itself (Inferred from `magic-link/route.ts:22-34`).
+- **Inbox lock-out:** anyone can spend a victim's 5 magic links per hour. This is inherent to ID-5 as specified (accepted by the ADR, not a defect).
+- **Supabase `amr` refresh:** auth-js lists no `token_refresh` method (`node_modules/@supabase/auth-js/dist/module/lib/types.d.ts:315`), so a token
+  refresh should not reset the 10-minute window. This is Inferred, not proven against live GoTrue. **Unverified → M1-17**.
+- **Degraded slug:** `summaryFromDetail` uses `slugify(title)`, the same function discover uses (`discover.ts:157`). A TMDB rename during an
+  outage could 308 to the new slug. That is cosmetic and below threshold.
+- **Degrade logging:** the `getMany` fallback (`dal.ts:104`) does not log, although ADR §4 says every fallback logs. This is below threshold (no
+  user impact, and it only fires when `getEntry` already logged or the DB is partly up).
+- **Not reportable:** `Reviews` F4 still miscounts when your own review isn't on the loaded first page. That is pre-existing family R10 and cosmetic.
+- **Backup restore (Unverified):** `session_replication_role` on Supabase's `postgres` role is flagged by the ADR itself and needs the M1-17 rehearsal.
+  `NETLIFY`/`VERCEL` availability at function runtime is also Unverified. If they are missing, boot fails loudly, which is fail-safe.
+
+## M1.4 Verifier checklist
+
+- [x] Read every judged file in full or at the hunk plus its callers: routes, `http.ts`, `rate-limit.ts`, `env.ts`, `health.ts`, `dal.ts`, `degraded.ts`,
+  `tmdb.ts` detail path, auth adapters, sync script/runner/discover/imdb, migration + `init.sql` dependencies, workflows, and the frontend components.
+- [x] Callers checked: `AuthResponse` consumers (`AuthForm` only), `limitFor`/`clientIp` call sites (typecheck), `dal.getTitle` (title page only), `proxy.ts` → `isSecureRequest`.
+- [x] Project rules: WORK_SPLIT §5 frozen-file waiver respected (frontend commit `d0998fd` touched only `src/app/**` pages/css and `src/components/**`).
+  AppProvider not touched. No new dependency.
+- [x] Memory: `.clearpath/hot.md` read; its M1 claims were checked against the live diff.
+- [x] Git history: the XFF first-hop trust (`d55b289`, "cookie/CSP hardening") is superseded on purpose by ADR-001 §A3. No other past decision is contradicted.
+- [x] No speculative code in the fix (one branch, one test).
+- [x] Security, validation, a11y and data safety intact. The fix shows server-authored copy only.
+- [x] Gate: see M1.5.
+
+## M1.5 Gate
+
+`npm run lint && npm run typecheck && npm test && npm run build && npm run format:check` → all green (53 files, 338 tests; build and format clean).
+`npm run test:e2e` (UI file touched; `E2E_PORT=3247`) → 169 passed, 5 skipped, 0 failed (6.0m). Then `git checkout -- docs/06-qa/screenshots`.
+
+**Rollback:** `git checkout -- src/components/SetPasswordForm.tsx src/components/SetPasswordForm.test.tsx docs/08-clearpath/CODE_REVIEW.md`.
+
+**Verdict: SHIP** (M1 code). There are no critical, high or medium findings, and the one low finding is fixed. Open before launch, outside code review: M1-15 logo,
+M1-16/17 QA work (live amr refresh, spoofed-XFF, restore rehearsal), and the AppProvider §6a founder decision.
+
+— clearpath: mode=review · evidence=labeled · verify=SHIP
+   memory=unchanged · unverified=live GoTrue amr on refresh, restore with session_replication_role, VERCEL/NETLIFY runtime detection, live health probe latency

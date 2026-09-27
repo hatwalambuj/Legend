@@ -59,4 +59,12 @@ describe('SetPasswordForm (M1-12, ADR-010 ID-2)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign in again' }));
     expect(value.openAuth).toHaveBeenCalledTimes(2);
   });
+
+  it('on forbidden (seeded demo account) shows the server reason, not "try again"', async () => {
+    const reason = "Demo accounts can't change their password. Create your own to try it.";
+    vi.spyOn(api, 'setPassword').mockRejectedValue(new ApiError(403, 'forbidden', reason));
+    renderWithApp(<SetPasswordForm />);
+    type('a-new-password');
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe(reason));
+  });
 });
