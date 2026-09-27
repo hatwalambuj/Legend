@@ -6,6 +6,8 @@
 export const ERROR_STATUS = {
   validation_failed: 400,
   invalid_credentials: 401,
+  /** v1.4: PUT /api/auth/password with a session whose last sign-in is older than 10 min. */
+  reauth_required: 401,
   unauthenticated: 401,
   forbidden: 403,
   not_found: 404,
@@ -77,6 +79,7 @@ export const ERROR_COPY = {
   rate_limited_stub: "Easy — that's a lot of stubs in a minute. Try again shortly.",
   rate_limited_review: "Easy — that's a lot of reviews in a minute. Try again shortly.",
   unauthenticated: 'Sign in to do that.',
+  reauth_required: 'Sign in again to change your password.',
   not_found: "This ticket doesn't exist.",
   upstream_unavailable: "The projector jammed. We couldn't load that.",
   internal: 'Something went wrong. Try again.',

@@ -45,7 +45,7 @@ const getTitle = cache(
       stats,
       recommended: [...recommended.values()],
     });
-    return { ...base, worthIt };
+    return { ...base, worthIt, degraded: null };
   },
 );
 
@@ -145,7 +145,7 @@ export const dal: DataAccess = {
   },
 };
 
-type DetailWithoutPitch = Omit<TitleDetail, 'worthIt'>;
+type DetailWithoutPitch = Omit<TitleDetail, 'worthIt' | 'degraded'>;
 
 async function loadDetail(
   summary: TitleSummary,

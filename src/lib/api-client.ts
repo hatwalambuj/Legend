@@ -16,6 +16,7 @@ import type {
   ProfileResponse,
   ReviewUpsertResponse,
   SearchResponse,
+  SetPasswordInput,
   SignInInput,
   SignUpInput,
   StubDeleteResponse,
@@ -137,6 +138,8 @@ export const api = {
   signUp: (input: SignUpInput) => request<AuthResponse>('POST', '/api/auth/signup', input),
   signIn: (input: SignInInput) => request<AuthResponse>('POST', '/api/auth/signin', input),
   signOut: () => request<void>('POST', '/api/auth/signout', {}),
+  /** v1.4: 204; throws ApiError('reauth_required') when the last sign-in is older than 10 min. */
+  setPassword: (input: SetPasswordInput) => request<void>('PUT', '/api/auth/password', input),
   /** Irreversible: erases the account + all its data, then the session is gone (204). */
   deleteAccount: () => request<void>('DELETE', '/api/me', { confirm: 'DELETE' }),
   magicLink: (input: MagicLinkInput) =>

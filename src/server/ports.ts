@@ -57,7 +57,7 @@ export interface CatalogIndexRepository {
 /** Heavy per-title detail (live: TMDB with L1/L2 cache; demo: fixtures). */
 export type DetailFields = Omit<
   TitleDetail,
-  keyof TitleSummary | 'detailStatus' | 'fetchedAt' | 'worthIt'
+  keyof TitleSummary | 'detailStatus' | 'fetchedAt' | 'worthIt' | 'degraded'
 >;
 
 export interface CatalogDetailProvider {

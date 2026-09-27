@@ -130,7 +130,17 @@ export interface TitleDetail extends TitleSummary {
   worthIt: WorthIt;
   detailStatus: 'fresh' | 'stale' | 'index_only';
   fetchedAt: IsoDateTime | null;
+  /**
+   * v1.4 (ADR-011 §4): null = normal. 'catalog' = our DB was unreachable; the page is built from a
+   * last-good copy or from TMDB (IMDb chip hidden, stubs/reviews/watchlist paused). 'community' = only
+   * community stats are missing. The UI shows `data-testid="degraded-banner"` when non-null.
+   * Always set by `dal.getTitle`; optional in the type only so the frozen fixture schema
+   * (`src/fixtures/schema.ts`, an Omit of TitleDetail) needs no edit. Treat undefined as null.
+   */
+  degraded?: TitleDegraded;
 }
+
+export type TitleDegraded = null | 'community' | 'catalog';
 
 /* ------------------------------------------------------------------ */
 /* "Worth it?" (PRD §4.2, Epic F). Deterministic: stored data + rules  */

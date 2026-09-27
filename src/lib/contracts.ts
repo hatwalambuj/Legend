@@ -163,6 +163,9 @@ export const signInSchema = z.object({
   password: z.string().min(1).max(72),
 });
 
+/** PUT /api/auth/password (v1.4, ADR-010 ID-2): same length rule as sign-up. */
+export const setPasswordSchema = z.object({ password: passwordSchema });
+
 export const magicLinkSchema = z.object({
   email: emailSchema,
   next: z.string().max(500).optional(),
@@ -186,6 +189,7 @@ export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
 export type SignUpInput = z.input<typeof signUpSchema>;
 export type SignInInput = z.input<typeof signInSchema>;
 export type MagicLinkInput = z.input<typeof magicLinkSchema>;
+export type SetPasswordInput = z.input<typeof setPasswordSchema>;
 export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;
 
 /* ---------------- response types ---------------- */
@@ -222,9 +226,11 @@ export type WatchlistListResponse = Page<TitleSummary>;
 export interface ProfileResponse {
   profile: PublicProfile;
 }
-export interface AuthResponse {
-  session: Session;
-}
+/**
+ * Sign-up / sign-in result. v1.4 (ADR-010 ID-1): when Supabase "Confirm email" is ON, sign-up answers
+ * `202 { session: null, confirmEmail: true }` and sets no cookie. Sign-in and demo mode always carry a session.
+ */
+export type AuthResponse = { session: Session; confirmEmail?: never } | { session: null; confirmEmail: true };
 export interface MagicLinkResponse {
   sent: true;
   /** Demo mode only: the link that would have been emailed (shown in a dev toast). */
@@ -234,9 +240,23 @@ export interface HandleAvailableResponse {
   available: boolean;
   reason?: string;
 }
+export type HealthStatus = 'ok' | 'degraded' | 'down';
+export type HealthReason = 'db_unreachable' | 'sync_never' | 'sync_stale' | 'catalog_empty';
+/** GET/HEAD /api/health (v1.4, ADR-011 §3). Never contains error messages, hosts or stack traces. */
 export interface HealthResponse {
+  /** status === 'ok' (kept for v1.3 clients). */
   ok: boolean;
+  status: HealthStatus;
   mode: Pick<AppMode, 'catalog' | 'data' | 'isDemo'>;
-  catalogCount: number;
+  /** Listed titles; null when down. */
+  catalogCount: number | null;
+  /** Last FULL sync (discover applied, status ok); F1. */
   lastSyncAt: string | null;
+  /** Rounded to 0.1. */
+  syncAgeHours: number | null;
+  checks: {
+    db: 'ok' | 'fail' | 'skipped';
+    sync: 'ok' | 'stale' | 'never' | 'unknown' | 'skipped';
+  };
+  reasons: HealthReason[];
 }
