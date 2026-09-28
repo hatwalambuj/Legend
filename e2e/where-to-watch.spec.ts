@@ -383,10 +383,8 @@ test.describe('W3 right region (switcher)', () => {
     await expect(regionSelect(page)).toHaveValue('GB');
   });
 
-  // QA-WTW-1 (app bug, patch in QA_VERIFICATION.md): page.tsx permanentRedirect(titleHref(t)) drops the query.
-  test.fixme('?region= survives the slug redirect (slugless / stale-slug link)', async ({
-    page,
-  }) => {
+  // QA-WTW-1 (fixed): the slug redirect keeps ?region=.
+  test('?region= survives the slug redirect (slugless / stale-slug link)', async ({ page }) => {
     await page.goto('/title/movie/693134?region=GB');
     await expect(page).toHaveURL(/\/title\/movie\/693134-dune-part-two\?region=GB$/);
     await expect(block(page)).toHaveAttribute('data-region', 'GB');
@@ -585,20 +583,7 @@ test.describe('Placement, stub mark, a11y', () => {
         body: JSON.stringify(v, null, 2),
         contentType: 'application/json',
       });
-      // Known app finding QA-WTW-2 (reported with a patch, src/ not owned by QA): the aria-hidden brand
-      // monograms on the Prime Video (#0f79af) and Paramount+ (#0064ff) tiles are ~4.3–4.4:1 against --fg.
-      // Only that exact node set is exempted, and annotated so it stays visible in the report.
-      const known = (x: (typeof v)[number]) =>
-        x.id === 'color-contrast' &&
-        x.targets.every(
-          (t) => /data-monogram.*__mono$/.test(t) && /Prime Video|paramountplus/.test(t),
-        );
-      for (const x of v.filter(known))
-        info.annotations.push({
-          type: 'known-issue',
-          description: `QA-WTW-2 ${label}: ${x.targets.join(' | ')}`,
-        });
-      const bad = v.filter((x) => (x.impact === 'serious' || x.impact === 'critical') && !known(x));
+      const bad = v.filter((x) => x.impact === 'serious' || x.impact === 'critical');
       expect(bad, `${label}: ${JSON.stringify(v)}`).toEqual([]);
     };
     await gotoTitle(page, DUNE);

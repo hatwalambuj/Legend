@@ -113,7 +113,10 @@ export default async function TitlePage({
   const [{ type, slug }, sp] = await Promise.all([params, searchParams]);
   const t = await load(type, slug, firstParam(sp.region));
   if (!t) notFound();
-  if (parseTitleSlug(slug)?.slug !== t.slug) permanentRedirect(titleHref(t));
+  if (parseTitleSlug(slug)?.slug !== t.slug) {
+    const region = normalizeRegionCode(firstParam(sp.region));
+    permanentRedirect(region ? `${titleHref(t)}?region=${region}` : titleHref(t));
+  }
 
   const [stats, reviews] = await Promise.all([
     safe(dal.getTitleStats(t.key), null, 'getTitleStats'),

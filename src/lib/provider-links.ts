@@ -41,7 +41,7 @@ const primeVideo: ProviderLink = {
   home: 'https://www.primevideo.com/',
   search: 'https://www.primevideo.com/search/?phrase={title}',
   monogram: 'pv',
-  tile: '#0f79af',
+  tile: '#0b6a9a',
 };
 const appleTv: ProviderLink = {
   home: 'https://tv.apple.com/',
@@ -75,7 +75,7 @@ export const PROVIDER_LINKS: Readonly<Record<number, ProviderLink>> = {
     monogram: 'G',
     tile: '#01875f',
   },
-  531: { home: 'https://www.paramountplus.com/', monogram: 'P+', tile: '#0064ff' }, // Paramount Plus
+  531: { home: 'https://www.paramountplus.com/', monogram: 'P+', tile: '#0052d6' }, // Paramount Plus
   386: { home: 'https://www.peacocktv.com/', monogram: 'P', tile: '#2b2b2b' }, // Peacock
   73: {
     // Tubi
