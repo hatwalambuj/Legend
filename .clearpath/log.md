@@ -3,7 +3,7 @@ type: meta
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 8f05df682bbd42007fe1f63cf347391d5b3cbb15
+verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
 source: session
 confidence: high
 ---
@@ -42,3 +42,7 @@ confidence: high
 - done: WhereToWatch (+css, test), ProviderTile (tile, logo/monogram fallback, 16px ProviderMark, test), WatchRegionSelect (pill + Settings row, css, test); title page slot (under stubbed line, above Worth it?; hidden when watch null); Settings "Where to watch" region; About JustWatch credit; Ticket optional `hint`/`title.watchHint` → `ticket-providers` (grid/rail only).
 - deviations: title page honours `?region=` (switcher writes it via history.replaceState; ADR-012 §5 says query is API-only) — needs arch-review sign-off; setWatchRegion is called signed out too (cookie, W3-AC3); e2e/title.spec.ts F1 (QA-owned) now skips `where-to-watch` between stub line and slip.
 - verification: lint, typecheck, 531 unit, build, format:check, 169 E2E green. Screenshots docs/02-design/w2w-app-375.png, -1440.png. No commit.
+
+## 2026-09-28 · Where to watch + race fix
+- stub-count race fixed (orchestrator-approved), where-to-watch backend/frontend/review/E2E done; orchestrator fixed QA-WTW-1/2 directly.
+- verification: lint/typecheck/535 unit/build/format green; full E2E 212 passed, 8 skipped. HEAD 06e1627082bc240fb33c0d5e17c90fdeb0226f03.

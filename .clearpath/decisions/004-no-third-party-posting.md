@@ -3,7 +3,7 @@ type: decision
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 90b09e6a2232439a8034a5a4ad43d9314883ea0f
+verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
 source: docs/04-architecture/ADR-008-scope-change-no-third-party-posting.md
 confidence: high
 ---

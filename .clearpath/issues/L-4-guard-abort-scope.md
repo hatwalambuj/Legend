@@ -3,7 +3,7 @@ type: issue
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 3d279b102c50e01b68045bd3563b4a7c72007d8a
+verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
 source: docs/08-clearpath/NEXT_PHASE_PLAN.md
 confidence: high
 ---

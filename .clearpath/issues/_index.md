@@ -3,7 +3,7 @@ type: meta
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 8f05df682bbd42007fe1f63cf347391d5b3cbb15
+verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
 source: session
 confidence: high
 ---
@@ -16,5 +16,5 @@ confidence: high
 - [[issues/L-7-hosting-portability.md]] · closed
 - [[issues/founder-tasks.md]] · open
 - [[issues/should-later.md]] · open
-- [[issues/where-to-watch.md]] · open
-- [[issues/stub-count-race.md]] · in progress
+- [[issues/where-to-watch.md]] · done (P1 open)
+- [[issues/stub-count-race.md]] · closed

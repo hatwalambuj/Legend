@@ -3,29 +3,28 @@ type: meta
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 91d9085662416a6cf983f3f92907b4e7f52e40ee
+verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
 source: session
 confidence: high
 ---
 # Hot Cache  (≤600 words · expires 7 days / 20 commits after `updated`)
 
 ## Current Goal
-Close M1 launch-hardening items via the agent pipeline under ClearPath, keeping infra $0 (Supabase Free + Vercel Hobby or free alternates).
+M1 + Where to watch done. Next: founder launch tasks + staging smoke on real keys; then Phase 2 M2 (share, analytics, 404/308).
 
 ## Active Context
-- M1 launch hardening DONE: backend + frontend implemented, ClearPath code review SHIP (338 unit, 169 E2E green).
-- Open: stub-count race ([[issues/stub-count-race.md]]) awaiting founder decision; founder tasks (TMDB logo, trademark, SMTP, staging smoke M1-17).
-- Where to watch: backend W-00…W-07 merged; frontend W-10…W-12 implemented (uncommitted, full gate + E2E green); next code/arch review (check `?region=` on the title page, ADR-012 §5 deviation) + QA W-20. Migration 20260928120000 not applied.
-- Constraints: $0 infra, no AI, no third-party posting ([[meta/rules.md]]).
+- M1 launch hardening DONE and reviewed (SHIP). Stub-count race fixed ([[issues/stub-count-race.md]]).
+- Where to watch DONE ([[issues/where-to-watch.md]]): TMDB/JustWatch providers, region (URL/cookie/setting), allowlisted links; review SHIP; 212 E2E + 535 unit green at 06e1627.
+- Orchestrator holds standing approval for in-repo decisions ([[meta/rules.md]]).
+- Constraints: $0 infra, no AI, no third-party posting.
 
 ## Recent Changes
-- Architect (docs only): ADR-010, ADR-011, ADR-001 amendment, contract v1.4, WORK_SPLIT §5; no src/ edits.
-- ClearPath protocol + memory initialised; code-reviewer and arch-reviewer agents added.
-- QA fixed F3 (diary today+1) and F4 (review count after delete).
+- QA-WTW-1 region kept on slug redirect; QA-WTW-2 AA contrast for Prime Video/Paramount+ tiles.
+- WTW-1 32 KB watch cap; WTW-2 privacy copy for region cookie.
 
 ## Open Questions
-- Will the GitHub repo be public? (AR-6: scheduled workflows disabled after 60 days inactivity.)
-- Launch commercially later? (Vercel Hobby + TMDB/OMDb free are non-commercial.)
+- Repo public or private? (AR-6 scheduled workflows.)
+- Launch commercially later? (Vercel Hobby, TMDB, OMDb, JustWatch data are non-commercial.)
 
 ## Next Best Step
-Founder decision on stub-count race → frontend-dev applies QA §6a patch; then Where to watch W-00 (backend) → backend ∥ frontend → code-reviewer → QA → PM.
+Founder: TMDB logo, trademark, SMTP, keys, apply 5 migrations to Supabase, staging smoke (M1-17) + real-device provider-link check (W-21). Engineering: W-30/31/32 P1 (ticket watch hint, browse chips), then M2.
