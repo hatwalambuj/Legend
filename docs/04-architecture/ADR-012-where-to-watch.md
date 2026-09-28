@@ -255,3 +255,22 @@ Markup (frontend): `<a href target="_blank" rel="noopener noreferrer">`; the glo
 - One more job step (~4 min) and ~8 MB of storage, $0. Title pages add no network calls.
 - Availability can be up to 7 days old (1 day for rail titles); hidden after 30 days. Copy "Availability can change" covers it.
 - Exact-title one-tap deep links remain out of scope (v2 enricher). Founder expectation is set in PRD §13.2.
+
+## Amendment 1 (2026-09-28, code review of a1b98af..92b871d)
+
+Accepted deviations and one fix, recorded by the code-reviewer (details: docs/08-clearpath/CODE_REVIEW.md, "Where to watch review").
+
+1. **Title page reads `?region=`** (deviation from §5.1 "API only"). Accepted. The block's switcher writes `?region=GB` with
+   `history.replaceState`, so a reload or shared link shows what the user picked (W3-AC3). Safe for caching because the title page is
+   `force-dynamic` and `private, no-store` (§6.2); no shared cache stores it, so no `Vary` is needed. SEO-neutral because
+   `alternates.canonical` is `titleHref(t)` with no query, so `?region=` variants fold into one canonical URL. The value goes through
+   `normalizeRegionCode` and an unsupported code gets `fallback: true`, so it is never reflected unvalidated. Precedence on the page:
+   query → cookie → geo (trusted) → Accept-Language → default.
+2. **`PUT /api/me/watch-region` when signed out** (from the block's switcher). Accepted, as §7 and W3-AC3 intend. It stores only
+   `stubbed_region=<ISO code>` (HttpOnly, SameSite=Lax, Secure per request, Path=/, 1 year). No identifier, no server-side row, and
+   it is not readable by scripts. It is a functional preference, not tracking. The About privacy summary now says so (ADR-010 ID-6).
+3. **Fix: `catalog_watch_shape` cap raised from 4 KB to 32 KB, and `catalog_set_watch` skips oversized rows.** `pg_column_size` of
+   uncompressed jsonb is about 14 B per stored id. Ten regions of a well-covered title (~33 ids each) came to 4.6 KB (measured in
+   PGlite), so the old cap failed the RPC batch and, through `rpc()`, the whole nightly run. 32 KB covers the mapper worst case
+   (5 types × 30 ids × 10 regions ≈ 19 KB). A row that is still too big is skipped: it keeps its old data and stays due. §3's size estimate
+   (~200 B median) was low; storage is still well within the Free tier. Migration 20260928120000 had not been applied, so it was edited in place.

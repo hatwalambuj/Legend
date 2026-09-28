@@ -178,3 +178,75 @@ M1-16/17 QA work (live amr refresh, spoofed-XFF, restore rehearsal), and the App
 
 — clearpath: mode=review · evidence=labeled · verify=SHIP
    memory=unchanged · unverified=live GoTrue amr on refresh, restore with session_replication_role, VERCEL/NETLIFY runtime detection, live health probe latency
+
+---
+
+# Where to watch review (a1b98af^..92b871d)
+
+Scope (Observed, `git diff --stat d9c964a 92b871d -- src scripts supabase tests .github`): 62 files. Judged: `src/lib/provider-links.ts`, `src/server/region.ts`,
+`src/server/watch.ts`, `src/server/jobs/watch-map.ts`, `src/server/jobs/watch-refresh.ts`, `scripts/sync-catalog.ts` (enrich + watch steps),
+`supabase/migrations/20260928120000_where_to_watch.sql`, both new routes, the signin and `/auth/callback` hunks, `dal.ts`, `http.ts`, `rate-limit.ts`,
+`env.ts` (`parseWatchConfig`), the Supabase and memory settings/provider repos, export, `WhereToWatch.tsx`, `ProviderTile.tsx`, `WatchRegionSelect.tsx`,
+the title page, About and Settings. Fixtures JSON were only sanity-checked (`tests/server/fixtures/tmdb-watch-providers.json`, small by design). Skipped: docs/, screenshots,
+`e2e/` (QA is writing it), and `src/components/AppProvider.tsx` (frontend is fixing it).
+Rules: ADR-012, API_CONTRACT v1.5 §5.21/§5.22, PRD §13 W1–W8, DESIGN §7.4.2, ADR-010 ID-6, ADR-001 §A3, and the `sync-runner.ts:7` failure rule.
+
+## Findings (confidence ≥ 80)
+
+| id | sev | category | file:line | evidence | conf | recommendation | status |
+|---|---|---|---|---|---|---|---|
+| WTW-1 | high | reliability / data | `supabase/migrations/20260928120000_where_to_watch.sql:22-23` (was), `:99` | **Observed:** `pg_column_size(watch) <= 4096`. **Observed (PGlite measure):** 10 regions × 33 ids (s4 a2 r12 b15) come to 4628 B, about 14 B per id; the mapper's own cap (`watch-map.ts:32`, 30 × 5 types × 10 regions) is ~19 KB. **Observed:** a violating row raises 23514 for the whole `catalog_set_watch` batch of 200. `rpc()` throws (`sync-catalog.ts:215-218`), and `sync-runner.ts:7` says "a thrown error ends the run `failed` and skips the remaining steps". The title stays due and first in order, so it recurs every night. That means no IMDb, palettes, purge or revalidate. **Inferred:** well-covered titles (DE/US/FR rent+buy lists) reach it. ADR §3's ~200 B median estimate is low. | 85 | Raise the cap to 32 KB. The RPC skips any row over the cap, so it can't fail the batch. | **Fixed:** migration `:22-25` and `:99-103` (unapplied per `.clearpath/hot.md`, so edited in place). New test `tests/db/watch.test.ts` "a realistic 10-region payload (> 4 KB) is stored; an oversized row is skipped, not fatal". It fails on the old cap. The existing constraint test now uses 10 000 ids. |
+| WTW-2 | medium | project rule / privacy | `src/app/about/page.tsx:111` (was) | Rule ADR-010 ID-6: "Privacy wording: what we store". **Observed:** the copy said "We store your email, handle, stubs, ratings, reviews and watchlist. That's it." But v1.5 stores `user_settings.watch_region` (migration `:50-54`) and sets the `stubbed_region` cookie for everyone (`region.ts:333-336`). | 90 | Disclose the saved country and the cookie, and add "settings" to the deletion line. | **Fixed:** `src/app/about/page.tsx`. New test `src/app/about/page.test.tsx`. |
+
+No other findings ≥ 80.
+
+## Architecture calls
+
+1. **Title page reads `?region=` (ADR-012 §5.1 said API only): ACCEPTED.** Observed: `page.tsx` `pageRegion()` normalises with `normalizeRegionCode`, and an unsupported code
+   gets `fallback: true`. The page is `force-dynamic`, so its HTML is `private, no-store` and never stored by a shared cache. `Vary` is therefore moot. Only the public
+   `/api/.../watch` needs URL keying, and it has that (`watch/route.ts` reads no cookie or header, and `watch-routes.test.ts:104-108` asserts `public` with no `Vary`).
+   SEO: `alternates.canonical: titleHref(t)` has no query, so `?region=` variants fold into one canonical URL, with no duplicate-content risk. Recorded as ADR-012 Amendment 1.1.
+2. **`setWatchRegion` when signed out: ACCEPTED.** Observed: `watch-region/route.ts:33-35`. Signed out, it writes the cookie only. `requestCookieJar` sets
+   `HttpOnly; SameSite=Lax; Path=/; Secure` per `isSecureRequest` and `Max-Age=31536000` (`cookies.ts:29-35`, `region.ts:223`). The value is strictly `^[A-Z]{2}$`. No server row,
+   no identifier, not script-readable. It is a functional preference as W3-AC3 intends, not tracking. Disclosure was missing, which is WTW-2 (fixed). Recorded as Amendment 1.2.
+
+## Not flagged (checked)
+
+- Links (Observed): every `href` comes from `providerHref`/`tmdbWatchHref` on the server (`watch.ts:86,95`). The upstream `link` is only compared, never stored or rendered (`watch-map.ts:126-140`).
+  Checks: https only, no credentials or port, exact host allowlist, banned-key regex, `encodeURIComponent`, and dot-segment reject (`provider-links.ts:140-184`). Hostile titles are tested.
+  All anchors use `target=_blank rel="noopener noreferrer"` (`ProviderTile.tsx`, `WhereToWatch.tsx:207-225`). There is no redirect route. `trackEvent` is fire-and-forget.
+- Region: the geo header is honoured only if `WATCH_GEO_HEADER` is set and `TRUSTED_PROXY≠none` (`region.ts:247`). Placeholders are dropped. Accept-Language parsing is bounded
+  (1000 chars / 10 entries), q-sorted and stable. Invalid query gets zod 400; an unsupported region gets fallback. Env is boot-validated (`parseWatchConfig`).
+- Caching: the cached layers hold region-agnostic `watch` only, and the block is built per request (`dal.ts` `watchBlock`). `PUT` is `private, no-store` + `Vary: Cookie` (`http.ts:32-36`).
+  The provider directory is a cookie-less anon client.
+- Migration: `user_settings` has owner-only select/insert/update, nothing for anon, and column grants. `user_settings_set_watch_region` is SECURITY INVOKER with an `auth.uid()` guard, and execute
+  is revoked from public/anon. The job RPCs are security definer with `search_path` set, and execute is revoked (PGlite tests pass).
+- Nightly: a missing or malformed append gives `null`, which is not written and is counted `watch_missing`. A failed fetch leaves stored data alone. Dry run makes 0 calls because the client is never built.
+  A partial provider-list failure keeps the old priorities. The budget accounts for enriched ids.
+- Export includes `settings.watchRegion`. Account delete cascades from `auth.users`, and the demo mirror filters `settings`.
+- a11y: text group headings, tile names "Open X (type) — opens in a new tab", `alt=""` logos, native `<select>` with aria-label, `aria-busy`, and focus moves to the first revealed tile on "+N".
+- Out of scope / not reportable: sign-out leaves the `stubbed_region` cookie (functional, same as signed-out behaviour). A title still over 32 KB is re-fetched nightly
+  (ceiling: 1 call per such title; upgrade trigger: `catalog_set_watch` count < rows sent).
+
+## Verifier checklist
+
+- [x] Read every judged file (hunks + callers: `rpc()`, `sync-runner.ts`, `requestCookieJar`, `json()`, `titleHref` canonical).
+- [x] Project rules quoted (ADR-010 ID-6, ADR-012 §3/§5/§6.2/§7/§10, sync-runner rule).
+- [x] Memory: `.clearpath/hot.md` said "migration not applied" and flagged the `?region=` deviation. Both were checked against live files and `supabase/migrations/`.
+- [x] Git history: `f7adc9e` (ADR-012) set the 4 KB cap and "API only". Both are amended in writing, not silently overridden.
+- [x] No speculative code: one SQL predicate, one constant, copy lines, two tests.
+- [x] Security, validation, a11y and data safety intact.
+- [x] Gate run (below).
+
+## Gate
+
+`npm run lint && npm run typecheck && npm test && npm run build`: green (64 files, 535 tests; build compiled).
+`npm run format:check`: fails **only** on `e2e/where-to-watch.spec.ts` (QA's in-progress file, SyntaxError at 14:11, off-limits to this review). Every file this review touched is Prettier-clean.
+E2E not run (QA owns W-20). Migration not applied to any live project, which is gated (needs founder approval).
+
+**Rollback:** `git checkout -- supabase/migrations/20260928120000_where_to_watch.sql tests/db/watch.test.ts src/app/about/page.tsx docs/04-architecture/ADR-012-where-to-watch.md docs/08-clearpath/CODE_REVIEW.md && rm src/app/about/page.test.tsx`.
+
+**Verdict: SHIP** (after the fixes above). WTW-1 (high) and WTW-2 (medium) are fixed and tested. Open items: QA's e2e spec must parse and be formatted before the full gate is green, W2-AC5 device check, and applying the migration.
+
+— clearpath: mode=review · evidence=labeled · verify=SHIP
+   memory=unchanged · unverified=real TMDB payload sizes (measured synthetic only), live Postgres TOAST behaviour vs PGlite, W2-AC5 link templates, e2e (QA)

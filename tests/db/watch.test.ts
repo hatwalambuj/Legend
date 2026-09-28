@@ -129,14 +129,14 @@ describe('job RPCs are service-only; watch_provider is public read, no API write
     }
   });
 
-  it('check constraints: provider id > 0, name 1..80, logo path shape, watch is an object <= 4 KB', async () => {
+  it('check constraints: provider id > 0, name 1..80, logo path shape, watch is an object <= 32 KB', async () => {
     for (const sql of [
       `insert into public.watch_provider (provider_id, name) values (0, 'x')`,
       `insert into public.watch_provider (provider_id, name) values (5, '')`,
       `insert into public.watch_provider (provider_id, name, logo_path) values (6, 'x', 'https://evil/x.png')`,
       `update public.catalog_index set watch = '[1]'::jsonb where id = (select min(id) from public.catalog_index)`,
       `update public.catalog_index set watch = jsonb_build_object('US', jsonb_build_object('b',
-         (select jsonb_agg(g) from generate_series(1, 3000) g))) where id = (select min(id) from public.catalog_index)`,
+         (select jsonb_agg(g) from generate_series(1, 10000) g))) where id = (select min(id) from public.catalog_index)`,
     ])
       expect((await err(db.query(sql)))?.code).toBe('23514');
   });
@@ -185,6 +185,43 @@ describe('catalog_set_watch / catalog_watch_due / watch_provider_set_priorities 
       { provider_id: 73, logo_path: null, priorities: {} },
       { provider_id: 1899, logo_path: '/max.jpg', priorities: {} },
     ]);
+  });
+
+  it('a realistic 10-region payload (> 4 KB) is stored; an oversized row is skipped, not fatal', async () => {
+    const ids = (n: number, base: number) => Array.from({ length: n }, (_, i) => base + i * 37);
+    const big: Record<string, unknown> = {};
+    for (const R of ['US', 'GB', 'IN', 'CA', 'AU', 'DE', 'FR', 'ES', 'BR', 'MX'])
+      big[R] = { s: ids(4, 8), a: ids(2, 300), r: ids(12, 2), b: ids(15, 2) };
+    const huge = { US: { b: ids(10_000, 1) } };
+    const [a, b] = [await titleId(db, 'movie:278'), await titleId(db, 'movie:693134')];
+    const before = await db.query<{ watch: unknown }>(
+      `select watch from public.catalog_index where id = $1`,
+      [b],
+    );
+    const n = await db.query<{ n: number; sz: number }>(
+      `select public.catalog_set_watch($1::jsonb) as n, pg_column_size($2::jsonb) as sz`,
+      [
+        JSON.stringify([
+          { id: a, watch: big, providers: [] },
+          { id: b, watch: huge, providers: [] },
+        ]),
+        JSON.stringify(big),
+      ],
+    );
+    expect(n.rows[0]!.sz).toBeGreaterThan(4096);
+    expect(n.rows[0]!.n).toBe(1);
+    const rows = await db.query<{ id: number; watch: unknown }>(
+      `select id, watch from public.catalog_index where id in ($1, $2)`,
+      [a, b],
+    );
+    const byId = new Map(rows.rows.map((r) => [Number(r.id), r.watch]));
+    expect(byId.get(a)).toEqual(big);
+    expect(byId.get(b)).toEqual(before.rows[0]!.watch);
+    // Leave movie:278 never-checked for the due-order test below.
+    await db.query(
+      `update public.catalog_index set watch = null, watch_checked_at = null, watch_tags = '{}' where id = $1`,
+      [a],
+    );
   });
 
   it('due: never-checked first, fresh rows not due, old rows due after the TTL', async () => {

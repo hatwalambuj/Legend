@@ -341,13 +341,16 @@ test.describe('W3 right region (switcher)', () => {
 });
 
 test.describe('W3 region defaults (Accept-Language, geo header)', () => {
-  const cases: { header: Record<string, string>; region: string; label: string }[] = [
-    { label: 'en-GB,en;q=0.8 → GB', header: { 'Accept-Language': 'en-GB,en;q=0.8' }, region: 'GB' },
-    { label: 'hi-IN → IN', header: { 'Accept-Language': 'hi-IN' }, region: 'IN' },
-    { label: 'bare en → US', header: { 'Accept-Language': 'en' }, region: 'US' },
+  // The runner's contexts default to locale en-US, which overrides an Accept-Language extra header
+  // (observed on the navigation request), so Accept-Language is driven through `locale`.
+  const cases: { locale: string; header?: Record<string, string>; region: string; label: string }[] = [
+    { label: 'en-GB → GB', locale: 'en-GB', region: 'GB' },
+    { label: 'hi-IN → IN', locale: 'hi-IN', region: 'IN' },
+    { label: 'bare en → US', locale: 'en', region: 'US' },
     {
       label: 'spoofed geo headers ignored (WATCH_GEO_HEADER off) → US',
-      header: { 'Accept-Language': 'en', 'CF-IPCountry': 'IN', 'X-Vercel-IP-Country': 'GB' },
+      locale: 'en',
+      header: { 'CF-IPCountry': 'IN', 'X-Vercel-IP-Country': 'GB' },
       region: 'US',
     },
   ];
@@ -356,7 +359,8 @@ test.describe('W3 region defaults (Accept-Language, geo header)', () => {
       const ctx = await browser.newContext({
         ...info.project.use,
         baseURL,
-        extraHTTPHeaders: c.header,
+        locale: c.locale,
+        extraHTTPHeaders: c.header ?? {},
       });
       try {
         const page = await ctx.newPage();
@@ -376,7 +380,7 @@ test.describe('W3 region defaults (Accept-Language, geo header)', () => {
     const ctx = await browser.newContext({
       ...info.project.use,
       baseURL,
-      extraHTTPHeaders: { 'Accept-Language': 'ja-JP' },
+      locale: 'ja-JP',
     });
     try {
       const page = await ctx.newPage();

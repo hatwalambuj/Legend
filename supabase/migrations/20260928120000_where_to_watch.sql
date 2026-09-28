@@ -19,8 +19,10 @@ alter table public.catalog_index
   -- 'US:8' for every provider in s|f|a of region US (P1 browse filter)
   add column watch_tags       text[] not null default '{}';
 
+-- 32 KB (uncompressed jsonb): ~14 B per stored id, so 10 regions of a well-covered title (~33 ids each)
+-- is already ~4.6 KB; the mapper's worst case (5 types x 30 ids x 10 regions) is ~19 KB.
 alter table public.catalog_index add constraint catalog_watch_shape
-  check (watch is null or (jsonb_typeof(watch) = 'object' and pg_column_size(watch) <= 4096));
+  check (watch is null or (jsonb_typeof(watch) = 'object' and pg_column_size(watch) <= 32768));
 
 create index catalog_watch_due  on public.catalog_index (watch_checked_at nulls first, id)
   where source_status = 'active';
@@ -71,6 +73,8 @@ $$;
 -- p_rows = [{ id, watch: {...}, providers: [{ provider_id, name, logo_path }] }, ...]
 -- Sets watch + watch_checked_at = now() + watch_tags; upserts provider names/logos (priorities untouched).
 -- A row whose `watch` is not a JSON object is skipped (a failed/absent fetch never wipes stored data).
+-- An oversized row (> the catalog_watch_shape cap) is skipped too, so one title can't fail the batch
+-- (and with it the nightly run); it keeps its old data and stays due.
 create or replace function public.catalog_set_watch(p_rows jsonb)
 returns integer language plpgsql security definer set search_path = public as $$
 declare
@@ -96,7 +100,7 @@ begin
     watch_checked_at = now(),
     watch_tags       = public.watch_tags_of(r.watch)
   from jsonb_to_recordset(coalesce(p_rows, '[]'::jsonb)) as r(id bigint, watch jsonb, providers jsonb)
-  where c.id = r.id and jsonb_typeof(r.watch) = 'object';
+  where c.id = r.id and jsonb_typeof(r.watch) = 'object' and pg_column_size(r.watch) <= 32768;
   get diagnostics v_count = row_count;
   return v_count;
 end $$;

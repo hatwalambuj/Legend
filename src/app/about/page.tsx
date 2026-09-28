@@ -108,7 +108,13 @@ export default function AboutPage() {
             <h2 id="privacy-h">Your data &amp; privacy</h2>
             <ul>
               <li>
-                We store your email, handle, stubs, ratings, reviews and watchlist. That&apos;s it.
+                We store your email, handle, stubs, ratings, reviews, watchlist and, if you pick
+                one, your &ldquo;Where to watch&rdquo; country. That&apos;s it.
+              </li>
+              <li>
+                Your &ldquo;Where to watch&rdquo; country is also kept in a small cookie on this
+                device, even when you&apos;re signed out, only to show the right services. It&apos;s
+                never used for tracking.
               </li>
               <li>
                 Where it lives: your email and password (hashed, never readable) sit in our sign-in
@@ -128,9 +134,9 @@ export default function AboutPage() {
                 in Settings.
               </li>
               <li>
-                Deleting your account erases it right away: profile, stubs, ratings, reviews and
-                watchlist. Encrypted backups may still hold a copy for up to 14 days, then it&apos;s
-                gone for good.
+                Deleting your account erases it right away: profile, stubs, ratings, reviews,
+                watchlist and settings. Encrypted backups may still hold a copy for up to 14 days,
+                then it&apos;s gone for good.
               </li>
             </ul>
           </section>
