@@ -5,7 +5,15 @@
  * the auth sheet with resume-after-login, the stub flow (DESIGN §5.1) and watchlist toggles.
  */
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 import { api, ApiError } from '@/lib/api-client';
 import { ERROR_COPY } from '@/lib/errors';
 import type { AppMode, Session, TitleKey, TitleState } from '@/lib/types';
@@ -69,6 +77,10 @@ export function AppProvider({
   const toastSeq = useRef(0);
   const stubSeq = useRef(0);
   const stubRef = useRef<((t: StubTarget, o?: StubOptions) => Promise<void>) | null>(null);
+  // Write counters: a read (batched GET / GET /api/me) that started before a local write must not
+  // overwrite it when it resolves late (QA_VERIFICATION §6a, B2-AC3).
+  const titleWrites = useRef(new Map<TitleKey, number>());
+  const walletWrites = useRef(0);
 
   useEffect(() => {
     statesRef.current = states;
@@ -97,6 +109,7 @@ export function AppProvider({
 
   /* ---------------- title states (batched) ---------------- */
   const setTitleState = useCallback((key: TitleKey, update: (s: TitleState) => TitleState) => {
+    titleWrites.current.set(key, (titleWrites.current.get(key) ?? 0) + 1);
     setStates((prev) => {
       const next = { ...prev, [key]: update(prev[key] ?? EMPTY_STATE) };
       statesRef.current = next;
@@ -117,10 +130,14 @@ export function AppProvider({
     await Promise.all(
       chunks(keys, MAX_KEYS_PER_CALL).map(async (chunk) => {
         try {
+          const seen = chunk.map((k) => titleWrites.current.get(k));
           const res = await api.titleStates(chunk);
           setStates((prev) => {
             const next = { ...prev };
-            for (const k of chunk) next[k] = res.states[k] ?? prev[k] ?? EMPTY_STATE;
+            chunk.forEach((k, i) => {
+              if (titleWrites.current.get(k) !== seen[i]) return; // written since: keep it
+              next[k] = res.states[k] ?? prev[k] ?? EMPTY_STATE;
+            });
             statesRef.current = next;
             return next;
           });
@@ -149,12 +166,23 @@ export function AppProvider({
 
   /* ---------------- session ---------------- */
   /** Wallet badge = MeResponse.stubCount (one indexed count on the server; contract v1.2). */
+  const writeWallet = useCallback((v: SetStateAction<number | null>) => {
+    walletWrites.current++;
+    setWalletCount(v);
+  }, []);
+
+  /** A count read while a stub write was in flight is stale: re-read (bounded) instead of applying it. */
   const loadWalletCount = useCallback(async () => {
-    try {
-      const me = await api.me();
-      setWalletCount(me.session ? me.stubCount : null);
-    } catch {
-      setWalletCount(null);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const seen = walletWrites.current;
+      try {
+        const me = await api.me();
+        if (walletWrites.current !== seen) continue;
+        setWalletCount(me.session ? me.stubCount : null);
+      } catch {
+        if (walletWrites.current === seen) setWalletCount(null);
+      }
+      return;
     }
   }, []);
 
@@ -168,16 +196,16 @@ export function AppProvider({
       if (s) {
         known.current.forEach((k) => queue.current.add(k));
         schedule();
-        if (typeof stubCount === 'number') setWalletCount(stubCount);
+        if (typeof stubCount === 'number') writeWallet(stubCount);
         else void loadWalletCount();
       } else {
         queue.current.clear();
         setStates({});
         statesRef.current = {};
-        setWalletCount(null);
+        writeWallet(null);
       }
     },
-    [schedule, loadWalletCount],
+    [schedule, loadWalletCount, writeWallet],
   );
 
   useEffect(() => {
@@ -251,18 +279,19 @@ export function AppProvider({
     async (target: StubTarget, stubId: string) => {
       const prev = statesRef.current[target.key] ?? EMPTY_STATE;
       setTitleState(target.key, (s) => ({ ...s, stubCount: Math.max(0, s.stubCount - 1) }));
-      setWalletCount((c) => (c === null ? c : Math.max(0, c - 1)));
+      writeWallet((c) => (c === null ? c : Math.max(0, c - 1)));
       try {
         const res = await api.deleteStub(stubId);
+        walletWrites.current++;
         setTitleState(target.key, () => res.state);
         toast({ message: 'Stub removed' });
       } catch {
         setTitleState(target.key, () => prev);
-        setWalletCount((c) => (c === null ? c : c + 1));
+        writeWallet((c) => (c === null ? c : c + 1));
         toast({ message: "Couldn't undo that stub. Try again." });
       }
     },
-    [setTitleState, toast],
+    [setTitleState, toast, writeWallet],
   );
 
   const stub = useCallback(
@@ -293,7 +322,7 @@ export function AppProvider({
         hasStubToday: s.hasStubToday || date === today,
         lastWatchedOn: !s.lastWatchedOn || date > s.lastWatchedOn ? date : s.lastWatchedOn,
       }));
-      setWalletCount((c) => (c === null ? c : c + 1));
+      writeWallet((c) => (c === null ? c : c + 1));
       setLastStub({ key: target.key, seq: ++stubSeq.current });
       haptic(prev.stubCount ? [10, 40, 18] : 14);
       const { ticket, stub: stubEl } = findTicket(target.key, source);
@@ -308,6 +337,7 @@ export function AppProvider({
           watchedWhere: opts.watchedWhere ?? null,
           note: opts.note ?? '',
         });
+        walletWrites.current++; // settled: a count read started before now may predate this write
         setTitleState(target.key, () => res.state);
         if (prev.watchlisted && res.state.watchlisted) {
           toast({
@@ -330,7 +360,7 @@ export function AppProvider({
         }
       } catch (e) {
         setTitleState(target.key, () => prev);
-        setWalletCount((c) => (c === null ? c : Math.max(0, c - 1)));
+        writeWallet((c) => (c === null ? c : Math.max(0, c - 1)));
         shake(ticket);
         const err = e instanceof ApiError ? e : null;
         if (err?.code === 'unauthenticated') {
@@ -353,7 +383,17 @@ export function AppProvider({
         }
       }
     },
-    [today, openAuth, confirm, setTitleState, toast, setWatchlist, undoStub, applySession],
+    [
+      today,
+      openAuth,
+      confirm,
+      setTitleState,
+      toast,
+      setWatchlist,
+      undoStub,
+      applySession,
+      writeWallet,
+    ],
   );
 
   useEffect(() => {

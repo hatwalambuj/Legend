@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session, TitleState } from '@/lib/types';
-import { DEFAULT_MODE } from '@/hooks/useApp';
+import { DEFAULT_MODE, useApp } from '@/hooks/useApp';
 import { AppProvider } from './AppProvider';
 import { Ticket } from './Ticket';
 import { makeTitle } from './test-utils';
@@ -60,9 +60,25 @@ const bear = makeTitle({
   slug: 'the-bear',
 });
 
+function Probe() {
+  const { walletCount, onAuthed, refreshWallet } = useApp();
+  return (
+    <>
+      <output data-testid="wallet">{String(walletCount)}</output>
+      <button type="button" onClick={() => onAuthed(SESSION, null)}>
+        probe-auth
+      </button>
+      <button type="button" onClick={() => void refreshWallet()}>
+        probe-refresh
+      </button>
+    </>
+  );
+}
+
 function renderApp() {
   return render(
     <AppProvider mode={DEFAULT_MODE} today="2026-09-26">
+      <Probe />
       <Ticket title={dune} />
       <Ticket title={bear} />
     </AppProvider>,
@@ -198,5 +214,98 @@ describe('AppProvider stub flow (DESIGN §5.1)', () => {
     await act(async () => {});
     expect(calls.some((c) => c.url === '/api/stubs')).toBe(false);
     expect(btn.getAttribute('data-count')).toBe('1');
+  });
+});
+
+type Reply = { status: number; body?: unknown };
+function held() {
+  let release: (v: Reply) => void = () => {};
+  const promise = new Promise<Reply>((r) => {
+    release = r;
+  });
+  return { promise, release: (v: Reply) => act(async () => release(v)) };
+}
+const STUBBED = { ...EMPTY, stubCount: 1, hasStubToday: true, lastWatchedOn: '2026-09-26' };
+const POSTED: Reply = { status: 201, body: { stub: { id: 'stub-1', number: 1 }, state: STUBBED } };
+
+describe('AppProvider stale reads vs local writes (QA §6a, B2-AC3)', () => {
+  it('after sign-up, a late batched title-states GET and wallet read do not undo a stub', async () => {
+    const statesGet = held();
+    const walletGet = held();
+    let meCalls = 0;
+    let serverStubs = 0;
+    mockFetch((url, init) => {
+      if (url === '/api/me') {
+        meCalls++;
+        if (meCalls === 1) return { status: 200, body: { session: null, mode: DEFAULT_MODE } };
+        if (meCalls === 2) return walletGet.promise;
+        return {
+          status: 200,
+          body: { session: SESSION, mode: DEFAULT_MODE, stubCount: serverStubs },
+        };
+      }
+      if (url.startsWith('/api/me/title-states')) return statesGet.promise;
+      if (url === '/api/stubs' && init?.method === 'POST') {
+        serverStubs = 1;
+        return POSTED;
+      }
+      return { status: 404, body: { error: { code: 'not_found', message: 'x' } } };
+    });
+    renderApp();
+    await waitFor(() => expect(meCalls).toBe(1));
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('button', { name: 'probe-auth' }));
+    await waitFor(() =>
+      expect(calls.some((c) => c.url.startsWith('/api/me/title-states'))).toBe(true),
+    );
+    const btn = screen.getAllByTestId('stub-button')[0]!;
+    fireEvent.click(btn);
+    await waitFor(() =>
+      expect(
+        screen.getAllByTestId('toast').some((t) => t.textContent?.includes('1× stubbed')),
+      ).toBe(true),
+    );
+    expect(btn.getAttribute('data-count')).toBe('1');
+
+    await statesGet.release({ status: 200, body: { states: { 'movie:693134': EMPTY } } });
+    await walletGet.release({
+      status: 200,
+      body: { session: SESSION, mode: DEFAULT_MODE, stubCount: 0 },
+    });
+    await waitFor(() => expect(screen.getByTestId('wallet').textContent).toBe('1'));
+    expect(btn.getAttribute('data-count')).toBe('1');
+    expect(meCalls).toBe(3); // stale wallet read discarded and re-read once
+  });
+
+  it('a wallet refresh that started before a stub does not overwrite the optimistic +1', async () => {
+    const walletGet = held();
+    let meCalls = 0;
+    mockFetch((url, init) => {
+      if (url === '/api/me') {
+        meCalls++;
+        if (meCalls === 2) return walletGet.promise;
+        return {
+          status: 200,
+          body: { session: SESSION, mode: DEFAULT_MODE, stubCount: meCalls === 1 ? 0 : 1 },
+        };
+      }
+      if (url.startsWith('/api/me/title-states')) return { status: 200, body: { states: {} } };
+      if (url === '/api/stubs' && init?.method === 'POST') return POSTED;
+      return { status: 404, body: { error: { code: 'not_found', message: 'x' } } };
+    });
+    renderApp();
+    await waitFor(() => expect(screen.getByTestId('wallet').textContent).toBe('0'));
+    fireEvent.click(screen.getByRole('button', { name: 'probe-refresh' }));
+    await waitFor(() => expect(meCalls).toBe(2));
+    fireEvent.click(screen.getAllByTestId('stub-button')[0]!);
+    await waitFor(() => expect(screen.getByTestId('toast').textContent).toContain('1× stubbed'));
+    expect(screen.getByTestId('wallet').textContent).toBe('1');
+    await walletGet.release({
+      status: 200,
+      body: { session: SESSION, mode: DEFAULT_MODE, stubCount: 0 },
+    });
+    await waitFor(() => expect(meCalls).toBe(3));
+    await act(async () => {});
+    expect(screen.getByTestId('wallet').textContent).toBe('1');
   });
 });
