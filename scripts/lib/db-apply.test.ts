@@ -91,7 +91,9 @@ describe('db-apply on PGlite', () => {
     const out = capture();
     expect(await run(d, [...edited, extra], { yes: true, log: out.log })).toBe(1);
     expect(out.lines.join('\n')).toMatch(/changed after it was applied/);
-    const t = await db.query<{ ok: boolean }>("select to_regclass('public.zz_never') is null as ok");
+    const t = await db.query<{ ok: boolean }>(
+      "select to_regclass('public.zz_never') is null as ok",
+    );
     expect(t.rows[0]!.ok).toBe(true);
   });
 
@@ -125,7 +127,9 @@ describe('db-apply on PGlite', () => {
 
   it('--baseline refuses on an empty database', async () => {
     const db = await freshDb();
-    expect(await run(pgliteDriver(db), FILES, { yes: true, baseline: true, log: () => undefined })).toBe(1);
+    expect(
+      await run(pgliteDriver(db), FILES, { yes: true, baseline: true, log: () => undefined }),
+    ).toBe(1);
   });
 });
 
@@ -137,7 +141,14 @@ describe('plan (pure)', () => {
     expect(p.errors.join()).toMatch(/sorts before/);
   });
   it('refuses an applied file missing on disk', () => {
-    const p = plan([a], [{ name: a.name, checksum: a.checksum }, { name: b.name, checksum: 'x' }], true);
+    const p = plan(
+      [a],
+      [
+        { name: a.name, checksum: a.checksum },
+        { name: b.name, checksum: 'x' },
+      ],
+      true,
+    );
     expect(p.errors.join()).toMatch(/not in supabase\/migrations/);
   });
   it('checksums ignore CRLF vs LF', () => {

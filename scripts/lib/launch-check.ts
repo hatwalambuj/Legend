@@ -196,7 +196,11 @@ export function checkEnv(env: Env): CheckResult[] {
     ['DEMO_RESET_ON_BOOT', truthy(val(env, 'DEMO_RESET_ON_BOOT')), 'wipes demo data at boot'],
     ['DEMO_TODAY', Boolean(val(env, 'DEMO_TODAY')), 'freezes the clock'],
     ['IMAGE_MODE', val(env, 'IMAGE_MODE') === 'off', '=off hides real posters'],
-    ['CATALOG_MODE', val(env, 'CATALOG_MODE') === 'fixtures', '=fixtures forces the demo catalogue'],
+    [
+      'CATALOG_MODE',
+      val(env, 'CATALOG_MODE') === 'fixtures',
+      '=fixtures forces the demo catalogue',
+    ],
     ['DATA_MODE', val(env, 'DATA_MODE') === 'local', '=local forces the demo store'],
   ];
   const bad = forbidden.filter(([, on]) => on);
@@ -226,7 +230,8 @@ export function checkEnv(env: Env): CheckResult[] {
     .flatMap((pub) =>
       secrets.filter(([, v]) => val(env, pub) === v).map(([k]) => `${k} in ${pub}`),
     );
-  if (service && anon && service === anon) leaks.push('the service_role key is used as the anon key');
+  if (service && anon && service === anon)
+    leaks.push('the service_role key is used as the anon key');
   r.push(
     leaks.length
       ? {
@@ -393,7 +398,9 @@ export async function probeLive(
   const omdb = val(env, 'OMDB_API_KEY');
   if (omdb) {
     await probe('live-omdb', 'OMDb accepts the key', async () => {
-      const res = await get(`https://www.omdbapi.com/?i=tt0111161&apikey=${encodeURIComponent(omdb)}`);
+      const res = await get(
+        `https://www.omdbapi.com/?i=tt0111161&apikey=${encodeURIComponent(omdb)}`,
+      );
       const body = (await res.json().catch(() => ({}))) as { Response?: string; Error?: string };
       if (body.Response === 'True') return { status: 'pass' };
       if (/limit/i.test(body.Error ?? ''))
@@ -411,45 +418,56 @@ export async function probeLive(
   if (sbUrl && anon && isHttpsPublic(sbUrl)) {
     const base = sbUrl.replace(/\/+$/, '');
     const headers = { apikey: anon, Authorization: `Bearer ${anon}` };
-    await probe('live-supabase-auth', 'Supabase Auth: email sign-up on, Confirm email OFF', async () => {
-      const res = await get(`${base}/auth/v1/settings`, { headers });
-      if (!res.ok) return { status: 'fail', fix: `Supabase Auth answered HTTP ${res.status}.` };
-      const s = (await res.json()) as {
-        external?: { email?: boolean };
-        disable_signup?: boolean;
-        mailer_autoconfirm?: boolean;
-      };
-      const issues = [
-        s.external?.email === false ? 'turn ON Authentication → Providers → Email' : null,
-        s.disable_signup ? 'allow new sign-ups (Authentication → Sign In / Providers)' : null,
-        s.mailer_autoconfirm === false
-          ? 'turn Confirm email OFF (Authentication → Providers → Email)'
-          : null,
-      ].filter(Boolean);
-      return issues.length ? { status: 'fail', fix: `${issues.join('; ')} (§3).` } : { status: 'pass' };
-    });
+    await probe(
+      'live-supabase-auth',
+      'Supabase Auth: email sign-up on, Confirm email OFF',
+      async () => {
+        const res = await get(`${base}/auth/v1/settings`, { headers });
+        if (!res.ok) return { status: 'fail', fix: `Supabase Auth answered HTTP ${res.status}.` };
+        const s = (await res.json()) as {
+          external?: { email?: boolean };
+          disable_signup?: boolean;
+          mailer_autoconfirm?: boolean;
+        };
+        const issues = [
+          s.external?.email === false ? 'turn ON Authentication → Providers → Email' : null,
+          s.disable_signup ? 'allow new sign-ups (Authentication → Sign In / Providers)' : null,
+          s.mailer_autoconfirm === false
+            ? 'turn Confirm email OFF (Authentication → Providers → Email)'
+            : null,
+        ].filter(Boolean);
+        return issues.length
+          ? { status: 'fail', fix: `${issues.join('; ')} (§3).` }
+          : { status: 'pass' };
+      },
+    );
     r.push({
       id: 'live-supabase-urls',
       status: 'manual',
       title: 'Supabase Auth redirect URLs and custom SMTP (not readable with the anon key)',
       fix: 'Authentication → URL Configuration: Site URL + <domain>/auth/callback; Emails → SMTP: custom SMTP (§3, F4). Then send yourself a magic link.',
     });
-    await probe('live-supabase-db', 'Supabase database answers health_probe() (migrations applied)', async () => {
-      const res = await get(`${base}/rest/v1/rpc/health_probe`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: '{}',
-      });
-      if (res.ok) return { status: 'pass' };
-      return {
-        status: 'fail',
-        fix:
-          res.status === 404
-            ? 'health_probe() not found: apply the migrations (`npm run db:apply -- --yes`).'
-            : `Supabase REST answered HTTP ${res.status}.`,
-      };
-    });
-  } else r.push({ id: 'live-supabase', status: 'skip', title: 'Supabase probe (no URL / anon key)' });
+    await probe(
+      'live-supabase-db',
+      'Supabase database answers health_probe() (migrations applied)',
+      async () => {
+        const res = await get(`${base}/rest/v1/rpc/health_probe`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        if (res.ok) return { status: 'pass' };
+        return {
+          status: 'fail',
+          fix:
+            res.status === 404
+              ? 'health_probe() not found: apply the migrations (`npm run db:apply -- --yes`).'
+              : `Supabase REST answered HTTP ${res.status}.`,
+        };
+      },
+    );
+  } else
+    r.push({ id: 'live-supabase', status: 'skip', title: 'Supabase probe (no URL / anon key)' });
 
   const site = val(env, 'NEXT_PUBLIC_SITE_URL');
   if (isHttpsPublic(site)) {
@@ -461,7 +479,12 @@ export async function probeLive(
         return { status: 'warn', fix: 'Health is "degraded": run the first catalogue sync (§6).' };
       return { status: 'fail', fix: `/api/health answered HTTP ${res.status}.` };
     });
-  } else r.push({ id: 'live-site', status: 'skip', title: 'Site probe (no https NEXT_PUBLIC_SITE_URL)' });
+  } else
+    r.push({
+      id: 'live-site',
+      status: 'skip',
+      title: 'Site probe (no https NEXT_PUBLIC_SITE_URL)',
+    });
 
   return r;
 }

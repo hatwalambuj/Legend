@@ -13,7 +13,14 @@
  */
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { pgliteDriver, psqlAvailable, psqlDriver, readMigrations, run, type Driver } from './lib/db-apply';
+import {
+  pgliteDriver,
+  psqlAvailable,
+  psqlDriver,
+  readMigrations,
+  run,
+  type Driver,
+} from './lib/db-apply';
 
 async function main(): Promise<number> {
   const args = new Set(process.argv.slice(2));
@@ -55,7 +62,9 @@ async function main(): Promise<number> {
     driver = psqlDriver(url);
     target = `${new URL(url).hostname} (SUPABASE_DB_URL)`;
   }
-  console.log(`Migrations: ${files.length} file(s) → ${target}${args.has('--yes') ? '' : ' [dry run]'}`);
+  console.log(
+    `Migrations: ${files.length} file(s) → ${target}${args.has('--yes') ? '' : ' [dry run]'}`,
+  );
   return run(driver, files, { yes: args.has('--yes'), baseline: args.has('--baseline') });
 }
 

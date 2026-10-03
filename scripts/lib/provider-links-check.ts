@@ -58,7 +58,10 @@ const BOT_BLOCK = new Set([401, 403, 405, 429, 451, 999]);
 const DNS = /^(ENOTFOUND|EAI_AGAIN|EAI_NONAME|EAI_FAIL)$/;
 const TLS = /CERT|SSL|TLS|SELF_SIGNED|UNABLE_TO_VERIFY|ERR_TLS/i;
 
-export function classifyStatus(status: number, finalUrl: string): { verdict: Verdict; detail: string } {
+export function classifyStatus(
+  status: number,
+  finalUrl: string,
+): { verdict: Verdict; detail: string } {
   let finalProto = 'https:';
   try {
     finalProto = new URL(finalUrl).protocol;
@@ -69,7 +72,10 @@ export function classifyStatus(status: number, finalUrl: string): { verdict: Ver
   if (finalProto !== 'https:') return { verdict: 'fail', detail: 'redirected to non-https' };
   if (status >= 200 && status < 400) return { verdict: 'ok', detail: '' };
   if (BOT_BLOCK.has(status)) return { verdict: 'blocked', detail: 'bot-block (tolerated)' };
-  return { verdict: 'warn', detail: status === 404 || status === 410 ? 'not found' : 'client error' };
+  return {
+    verdict: 'warn',
+    detail: status === 404 || status === 410 ? 'not found' : 'client error',
+  };
 }
 
 export function classifyError(e: unknown): { verdict: Verdict; detail: string } {
@@ -98,7 +104,11 @@ export async function checkTarget(
     const res = await fetchImpl(t.url, {
       method: 'GET',
       redirect: 'follow',
-      headers: { 'User-Agent': UA, Accept: 'text/html,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.8' },
+      headers: {
+        'User-Agent': UA,
+        Accept: 'text/html,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.8',
+      },
       signal: AbortSignal.timeout(timeoutMs),
     });
     // We only need the status: drop the body.

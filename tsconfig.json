@@ -32,5 +32,13 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", ".data", "playwright-report", "test-results", "playwright-report-live", "test-results-live"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    ".data",
+    "playwright-report",
+    "test-results",
+    "playwright-report-live",
+    "test-results-live"
+  ]
 }

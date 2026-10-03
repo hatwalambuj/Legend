@@ -99,12 +99,21 @@ export function plan(files: MigrationFile[], applied: AppliedRow[], hasSchema: b
 export interface RunOptions {
   yes: boolean;
   baseline?: boolean;
-  log?: (line: string) => void;
+  /** One line per argument. */
+  log?: (...lines: string[]) => void;
 }
 
 /** Plans, prints and (with `yes`) applies. Returns the process exit code. */
-export async function run(driver: Driver, files: MigrationFile[], opts: RunOptions): Promise<number> {
-  const log = opts.log ?? console.log;
+export async function run(
+  driver: Driver,
+  files: MigrationFile[],
+  opts: RunOptions,
+): Promise<number> {
+  const log =
+    opts.log ??
+    ((...lines: string[]) => {
+      for (const l of lines) console.log(l);
+    });
   const [applied, hasSchema] = await Promise.all([driver.applied(), driver.hasSchema()]);
   const p = plan(files, applied, opts.baseline ? false : hasSchema);
   for (const name of p.applied) log(`  applied   ${name}`);
@@ -230,12 +239,16 @@ export function psqlAvailable(): boolean {
 export function psqlDriver(url: string): Driver {
   const pgEnv = pgEnvFromUrl(url);
   const psql = (input: string): string => {
-    const r = spawnSync('psql', ['-X', '-q', '-t', '-A', '-F', '\t', '-v', 'ON_ERROR_STOP=1', '-f', '-'], {
-      input,
-      encoding: 'utf8',
-      env: { ...process.env, ...pgEnv },
-      maxBuffer: 64 * 1024 * 1024,
-    });
+    const r = spawnSync(
+      'psql',
+      ['-X', '-q', '-t', '-A', '-F', '\t', '-v', 'ON_ERROR_STOP=1', '-f', '-'],
+      {
+        input,
+        encoding: 'utf8',
+        env: { ...process.env, ...pgEnv },
+        maxBuffer: 64 * 1024 * 1024,
+      },
+    );
     if (r.error) throw new Error(`Could not start psql (${r.error.message}).`);
     if (r.status !== 0) {
       // psql errors never contain the password (it travels in PGPASSWORD); strip it anyway.
@@ -246,7 +259,8 @@ export function psqlDriver(url: string): Driver {
   };
   const flag = (sql: string) => psql(`${sql};`).trim() === 't';
   const row = (f: MigrationFile) => {
-    if (!NAME.test(f.name) || !/^[0-9a-f]{64}$/.test(f.checksum)) throw new Error('Bad tracking row.');
+    if (!NAME.test(f.name) || !/^[0-9a-f]{64}$/.test(f.checksum))
+      throw new Error('Bad tracking row.');
     return `insert into ${TRACKING_TABLE} (name, checksum) values ('${f.name}', '${f.checksum}');`;
   };
   return {

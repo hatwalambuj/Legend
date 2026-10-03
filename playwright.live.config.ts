@@ -6,7 +6,8 @@ import { defineConfig, devices } from '@playwright/test';
  * Run: `npm run smoke:live -- --url https://<deploy>` (sets SMOKE_URL) or .github/workflows/smoke-live.yml.
  */
 const baseURL = process.env.SMOKE_URL;
-if (!baseURL) throw new Error('SMOKE_URL is not set: run `npm run smoke:live -- --url https://<deploy>`.');
+if (!baseURL)
+  throw new Error('SMOKE_URL is not set: run `npm run smoke:live -- --url https://<deploy>`.');
 
 export default defineConfig({
   testDir: './e2e-live',

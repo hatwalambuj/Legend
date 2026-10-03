@@ -12,7 +12,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type APIResponse, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type APIResponse, type TestInfo } from '@playwright/test';
 import { enrichmentAppends } from '../src/server/jobs/enrich';
 
 const [TYPE = 'movie', ID = '693134'] = (process.env.SMOKE_TITLE ?? 'movie:693134').split(':');
@@ -44,8 +44,6 @@ function throwawayAccount() {
   };
 }
 
-test.describe.configure({ mode: 'serial' });
-
 test('GET /api/health answers 200 with status "ok"', async ({ request }, info) => {
   const res = await request.get('/api/health', { headers: { 'Cache-Control': 'no-cache' } });
   const body = (await res.json()) as { ok?: boolean; status?: string; mode?: unknown };
@@ -64,7 +62,8 @@ test('home is live (no demo pill) and loads real TMDB posters', async ({ page },
     .poll(
       () =>
         posters.evaluateAll(
-          (imgs) => (imgs as HTMLImageElement[]).filter((i) => i.complete && i.naturalWidth > 0).length,
+          (imgs) =>
+            (imgs as HTMLImageElement[]).filter((i) => i.complete && i.naturalWidth > 0).length,
         ),
       { message: 'no TMDB poster finished loading', timeout: 20_000 },
     )
@@ -108,7 +107,10 @@ test('title page shows TMDB + IMDb ratings and Where to watch', async ({ page },
   await expect(page).toHaveURL(new RegExp(`/title/${TYPE}/${TMDB_ID}-`));
   const chips = page.getByRole('list', { name: 'Ratings' });
   await expect(chips.getByTestId('tmdb-rating')).toBeVisible();
-  await expect(chips.getByTestId('imdb-rating'), 'IMDb chip (needs the OMDb nightly step)').toBeVisible();
+  await expect(
+    chips.getByTestId('imdb-rating'),
+    'IMDb chip (needs the OMDb nightly step)',
+  ).toBeVisible();
   const wtw = page.getByTestId('where-to-watch');
   await expect(wtw, 'Where to watch block (needs the watch step of the sync)').toBeVisible();
   await evidence(info, 'title-page', {
@@ -119,29 +121,16 @@ test('title page shows TMDB + IMDb ratings and Where to watch', async ({ page },
   });
 });
 
-test.describe('throwaway account: sign-up → stub → review → export → delete', () => {
+test('throwaway account: sign-up → stub → review → export → delete', async ({ page }, info) => {
   const acc = throwawayAccount();
-  let page: Page;
-  let deleted = false;
   let created = false;
-
-  test.beforeAll(async ({ browser }) => {
-    page = await (await browser.newContext()).newPage();
-  });
-
-  test.afterAll(async () => {
-    // Cleanup even when a step failed: the account must not outlive the run.
-    if (created && !deleted)
-      await page.request
-        .delete('/api/me', { data: { confirm: 'DELETE' } })
-        .catch(() => undefined);
-    await page.context().close();
-  });
-
-  test('flow', async ({}, info) => {
+  let deleted = false;
+  try {
     const signup = await page.request.post('/api/auth/signup', { data: acc });
     if (signup.status() === 202)
-      throw new Error('Sign-up needs email confirmation: turn "Confirm email" OFF in Supabase (README §3).');
+      throw new Error(
+        'Sign-up needs email confirmation: turn "Confirm email" OFF in Supabase (README §3).',
+      );
     await ok(signup, 'sign-up', 201);
     created = true;
 
@@ -185,9 +174,20 @@ test.describe('throwaway account: sign-up → stub → review → export → del
     expect(signin.ok(), 'deleted account can no longer sign in').toBe(false);
 
     await evidence(info, 'account-flow', {
-      steps: ['signup 201', 'stub 201', `review ${review.status()}`, 'export 200', 'delete 204', 'signin refused'],
+      steps: [
+        'signup 201',
+        'stub 201',
+        `review ${review.status()}`,
+        'export 200',
+        'delete 204',
+        'signin refused',
+      ],
       stubTitleKey: stub.titleKey,
       exportRows: csv.split('\n').filter(Boolean).length - 1,
     });
-  });
+  } finally {
+    // Cleanup even when a step failed: the account must not outlive the run.
+    if (created && !deleted)
+      await page.request.delete('/api/me', { data: { confirm: 'DELETE' } }).catch(() => undefined);
+  }
 });

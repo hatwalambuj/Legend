@@ -60,16 +60,21 @@ describe('checkEnv', () => {
   });
 
   it('never echoes secret values, even for bad ones', () => {
-    const env = { ...LIVE, REVALIDATE_SECRET: 'short-secret', NEXT_PUBLIC_SITE_URL: 'http://localhost:3000' };
+    const env = {
+      ...LIVE,
+      REVALIDATE_SECRET: 'short-secret',
+      NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
+    };
     const text = allText(checkEnv(env));
     for (const v of Object.values(env)) if (v.length > 3) expect(text).not.toContain(v);
   });
 
   it('F9: fails on the placeholder or an invalid contact email', () => {
     for (const v of ['contact@example.com', 'not-an-email', ''])
-      expect(byId(checkEnv({ ...LIVE, NEXT_PUBLIC_CONTACT_EMAIL: v }), 'NEXT_PUBLIC_CONTACT_EMAIL')?.status).toBe(
-        'fail',
-      );
+      expect(
+        byId(checkEnv({ ...LIVE, NEXT_PUBLIC_CONTACT_EMAIL: v }), 'NEXT_PUBLIC_CONTACT_EMAIL')
+          ?.status,
+      ).toBe('fail');
   });
 
   it('accepts TMDB_API_KEY and the publishable key name as alternatives', () => {
@@ -79,7 +84,12 @@ describe('checkEnv', () => {
   });
 
   it('fails on demo / E2E switches and names them', () => {
-    const r = checkEnv({ ...LIVE, DEMO_MODE_PUBLIC: 'true', IMAGE_MODE: 'off', DEMO_DEV_LINKS: 'any' });
+    const r = checkEnv({
+      ...LIVE,
+      DEMO_MODE_PUBLIC: 'true',
+      IMAGE_MODE: 'off',
+      DEMO_DEV_LINKS: 'any',
+    });
     const x = byId(r, 'demo-switches')!;
     expect(x.status).toBe('fail');
     expect(x.fix).toMatch(/DEMO_MODE_PUBLIC.*DEMO_DEV_LINKS.*IMAGE_MODE/);
@@ -87,10 +97,15 @@ describe('checkEnv', () => {
 
   it('fails when a secret sits in a NEXT_PUBLIC_ variable or service = anon', () => {
     expect(
-      byId(checkEnv({ ...LIVE, NEXT_PUBLIC_SENTRY_DSN: LIVE.SUPABASE_SERVICE_ROLE_KEY! }), 'secret-leaks')
-        ?.status,
+      byId(
+        checkEnv({ ...LIVE, NEXT_PUBLIC_SENTRY_DSN: LIVE.SUPABASE_SERVICE_ROLE_KEY! }),
+        'secret-leaks',
+      )?.status,
     ).toBe('fail');
-    const same = checkEnv({ ...LIVE, SUPABASE_SERVICE_ROLE_KEY: LIVE.NEXT_PUBLIC_SUPABASE_ANON_KEY! });
+    const same = checkEnv({
+      ...LIVE,
+      SUPABASE_SERVICE_ROLE_KEY: LIVE.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    });
     expect(byId(same, 'secret-leaks')?.fix).toMatch(/service_role key is used as the anon key/);
     expect(allText(same)).not.toContain(LIVE.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   });
@@ -144,9 +159,9 @@ describe('checkMigrations', () => {
   it('fails on bad names, duplicate timestamps and missing baseline files', () => {
     const base = [...BASELINE_MIGRATIONS];
     expect(byId(checkMigrations([...base, 'oops.sql']), 'migrations')?.fix).toMatch(/badly named/);
-    expect(
-      byId(checkMigrations([...base, '20260928120000_again.sql']), 'migrations')?.fix,
-    ).toMatch(/duplicate/);
+    expect(byId(checkMigrations([...base, '20260928120000_again.sql']), 'migrations')?.fix).toMatch(
+      /duplicate/,
+    );
     expect(byId(checkMigrations(base.slice(1)), 'migrations')?.fix).toMatch(/missing baseline/);
     expect(byId(checkMigrations([...base, 'README.md']), 'migrations')?.status).toBe('pass');
   });
@@ -162,7 +177,8 @@ describe('probeLive (mocked fetch, no network)', () => {
       const key = `${u.host}${u.pathname}`;
       for (const [k, f] of Object.entries(over)) if (key.includes(k)) return f!();
       if (key.endsWith('/3/configuration')) return json({ images: {} });
-      if (key.includes('/3/movie/')) return json({ id: 693134, 'watch/providers': { results: { US: {} } } });
+      if (key.includes('/3/movie/'))
+        return json({ id: 693134, 'watch/providers': { results: { US: {} } } });
       if (u.host === 'www.omdbapi.com') return json({ Response: 'True' });
       if (key.endsWith('/auth/v1/settings'))
         return json({ external: { email: true }, disable_signup: false, mailer_autoconfirm: true });

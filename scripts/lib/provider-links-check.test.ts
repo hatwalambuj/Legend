@@ -20,7 +20,9 @@ describe('linkTargets', () => {
       expect(t.url.startsWith('https://')).toBe(true);
       expect(t.url).not.toContain('{title}');
     }
-    expect(targets.find((t) => t.url === 'https://www.netflix.com/')?.providerIds).toEqual([8, 1796]);
+    expect(targets.find((t) => t.url === 'https://www.netflix.com/')?.providerIds).toEqual([
+      8, 1796,
+    ]);
     expect(targets.some((t) => t.url.includes('Dune%3A%20Part%20Two'))).toBe(true);
     expect(targets.some((t) => t.label === '10 home (GB)')).toBe(true);
   });
@@ -54,12 +56,16 @@ describe('checkTarget / checkAll (mocked fetch)', () => {
       return r;
     });
     expect((await checkTarget(t, f)).verdict).toBe('blocked');
-    expect(f).toHaveBeenCalledWith(t.url, expect.objectContaining({ method: 'GET', redirect: 'follow' }));
+    expect(f).toHaveBeenCalledWith(
+      t.url,
+      expect.objectContaining({ method: 'GET', redirect: 'follow' }),
+    );
   });
   it('exit 1 only when something fails', async () => {
     const targets = [t, { ...t, url: 'https://broken.example/', label: 'x home' }];
     const res = await checkAll(targets, async (url) => {
-      if (url.includes('broken')) throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } });
+      if (url.includes('broken'))
+        throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } });
       return new Response('', { status: 429 });
     });
     expect(res.map((r) => r.verdict)).toEqual(['blocked', 'fail']);
