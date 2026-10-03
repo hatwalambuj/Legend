@@ -23,13 +23,24 @@ export function profileHref(handle: string): string {
 export const DEFAULT_SORT: SortKey = 'release_desc';
 export const DEFAULT_TYPE: TypeFilter = 'all';
 
-/** Browse URL with defaults dropped, params in a stable order (cache-key normalisation). */
+/**
+ * Browse URL with defaults dropped, params in a stable order (cache-key normalisation).
+ * v1.6 (ADR-013 C-02): `provider` (a positive TMDB provider id) is kept with type/sort; callers that
+ * switch the provider drop `cursor`.
+ */
 export function browseHref(
-  opts: { type?: TypeFilter; sort?: SortKey; cursor?: string | null } = {},
+  opts: {
+    type?: TypeFilter;
+    sort?: SortKey;
+    provider?: number | null;
+    cursor?: string | null;
+  } = {},
 ): string {
   const p = new URLSearchParams();
   if (opts.type && opts.type !== DEFAULT_TYPE) p.set('type', opts.type);
   if (opts.sort && opts.sort !== DEFAULT_SORT) p.set('sort', opts.sort);
+  if (opts.provider && Number.isInteger(opts.provider) && opts.provider > 0)
+    p.set('provider', String(opts.provider));
   if (opts.cursor) p.set('cursor', opts.cursor);
   const qs = p.toString();
   return qs ? `/browse?${qs}` : '/browse';
@@ -59,4 +70,19 @@ export function safeNext(next: string | null | undefined, fallback = '/'): strin
  */
 export function imdbTitleHref(imdbId: string | null | undefined): string | null {
   return imdbId && /^tt\d{7,10}$/.test(imdbId) ? `https://www.imdb.com/title/${imdbId}/` : null;
+}
+
+/** v1.6 (ADR-013 C-07/C-08): public landing of one shared stub. */
+export function shareStubHref(stubId: string): string {
+  return `/share/stub/${encodeURIComponent(stubId)}`;
+}
+
+/** v1.6 (ADR-013 C-08): the 1080×1920 story PNG of a stub; `download` → attachment. */
+export function storyHref(stubId: string, opts: { download?: boolean } = {}): string {
+  return `${shareStubHref(stubId)}/story${opts.download ? '?download=1' : ''}`;
+}
+
+/** v1.6 (ADR-013 C-11): the owner-only import page. */
+export function importHref(): string {
+  return '/me/import';
 }

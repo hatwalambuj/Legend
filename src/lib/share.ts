@@ -4,7 +4,7 @@
  * and carries `?ref=share`. OWNER: Backend (C-00).
  */
 import { BRAND_NAME } from './brand';
-import { profileHref, titleHref } from './routes';
+import { profileHref, shareStubHref, titleHref } from './routes';
 import type { TitleSummary } from './types';
 
 type ShareTitle = Pick<TitleSummary, 'mediaType' | 'tmdbId' | 'slug' | 'title' | 'year'>;
@@ -19,11 +19,6 @@ export interface ShareData {
   url: string;
   title: string;
   text: string;
-}
-
-/** `/share/stub/{id}` (public landing of one stub). */
-export function shareStubPath(stubId: string): string {
-  return `/share/stub/${encodeURIComponent(stubId)}`;
 }
 
 function absolute(siteUrl: string, path: string): string {
@@ -59,7 +54,7 @@ export function shareData(target: ShareTarget, siteUrl: string): ShareData {
     }
     case 'stub':
       return {
-        url: absolute(siteUrl, shareStubPath(target.stubId)),
+        url: absolute(siteUrl, shareStubHref(target.stubId)),
         title: `${label(target.title)} on ${BRAND_NAME}`,
         text: `I stubbed ${label(target.title)} on ${BRAND_NAME}`,
       };
