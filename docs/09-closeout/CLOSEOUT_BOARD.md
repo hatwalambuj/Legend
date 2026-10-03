@@ -39,3 +39,5 @@ Goal: close every engineering item; leave only FOUNDER_INPUTS.md. Constraints: $
 | C-16 | Docs: README, LAUNCH.md runbook, RELEASE_NOTES | Tech writer | open |
 | C-17 | Security + code + arch review of close-out; fix all ≥80 | Reviewers | open |
 | C-18 | Full gate + full E2E green; PM acceptance | QA + PM | open |
+
+Orchestrator decisions (2026-10-03): accept ADR-013 calls — BUG-03 via removing root/title/profile loading.tsx; imports match catalogue only; OG uses bundled Geist-Regular.ttf (static cuts of brand fonts optional later); isProfileShareable = true (all profiles public).

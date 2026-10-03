@@ -1,6 +1,6 @@
 # Work split: Frontend ∥ Backend
 
-Owner: Architect · Date: 2026-09-26 (v1.1: ADR-008 IMDb everywhere + no posting, ADR-009 "Worth it?", no AI · v1.2 2026-09-27: §5 M1 task list for ADR-010/011 and ADR-001 Amendment A)
+Owner: Architect · Date: 2026-09-26 (v1.3 2026-10-03: §7 close-out, ADR-013 · v1.1: ADR-008 IMDb everywhere + no posting, ADR-009 "Worth it?", no AI · v1.2 2026-09-27: §5 M1 task list for ADR-010/011 and ADR-001 Amendment A)
 Applies to: Frontend Dev, Backend Dev, Reviewer, QA
 
 Two agents work at the same time with **zero file conflicts**. Every path in the repo has exactly one owner.
@@ -197,3 +197,56 @@ arch-reviewer after W-07 and W-12 (ADR-012 §10 checklist), then QA W-20.
 
 Gate for every task: `npm run lint && npm run typecheck && npm test && npm run build && npm run format:check`
 (+ `npm run test:e2e` for W-12, W-20, W-31, W-32).
+
+## 7. Close-out task list (ADR-013 · API_CONTRACT v1.6 · CLOSEOUT_BOARD C-01…C-15)
+
+**Start condition:** the tree is green at `b4287cd`. **Single writer for the shared layer = backend-dev in C-00**, with the same waiver as §5/§6. After C-00:
+- frontend-dev never edits `src/lib/**`, `src/server/**` or `src/app/api/**`;
+- backend-dev never edits `src/components/**`, `src/hooks/**`, `src/og/*.tsx` or any `page.tsx`/`layout.tsx`/`loading.tsx`/`error.tsx`/`opengraph-image.tsx` (exception: `story/route.tsx` is FE, see C-08b);
+- qa-engineer owns `e2e/**` and `docs/06-qa/**` only.
+Close-out waivers of §1 frozen files: `next.config.ts`, `tests/lib/**` → backend-dev (C-00 only); `src/styles/tokens.css` → frontend-dev (append `--avatar-*` only, C-12b);
+`.env.example`, `package.json`, `.github/workflows/**` → **devops-release** (C-14). BE and FE send env lines in hand-off notes (ADR-013 §16). No new dependencies and no new npm scripts.
+
+| id | Task (spec) | Owner | Exact files | After |
+|---|---|---|---|---|
+| **C-00** | Shared types/contracts, no behaviour: `WatchHint`, `TitleSummary.watchHint?`, `Stub.season`, `AvatarColor`/`PublicProfile.avatarColor`, `WatchProviderChip`, `StubShareCard`, `ImportRow`/`ImportSource` + preview/commit schemas and responses, `trackEventsSchema`, `clientLogSchema`, `signUpSchema.ref`, `createStub/updateStub.season`, `updateProfile.avatarColor`, `CatalogQuery.region/provider`; `payload_too_large` (413) + `ERROR_COPY` using `BRAND_NAME`; `api.importPreview/importCommit/watchProviders`, region args on `api.catalog/search/watchlist`; DAL `resolveTitle`, `listWatchProviders`, `getStubShare`, `{region}` opts; `brand.ts`, `share.ts` (`shareData`), `avatar.ts`, `report-error.ts`, `analytics.ts` (allowlist + beacon queue + GPC/DNT); `format.ts` (`seasonLabel`, hint in `ticketAccessibleName`); `routes.ts` (`browseHref` provider, `shareStubHref`, `storyHref`, `importHref`); guard tests (vendor ban, no fetch in `src/lib/import`); `next.config.ts` `outputFileTracingIncludes`; copy `src/og/fonts/Geist-Regular.ttf` + `LICENSE-Geist-og.txt` from `node_modules/next/dist/compiled/@vercel/og/` | backend-dev | `src/lib/{types,contracts,errors,api-client,data-access,format,routes,analytics}.ts`, new `src/lib/{brand,share,avatar,report-error}.ts` (+ `*.test.ts`), `tests/lib/guards.test.ts`, `tests/lib/format.test.ts`, `next.config.ts`, new `src/og/fonts/*` | — |
+| C-01a | `watchHintFor`; `region` on catalog/search/watchlist/trending repos + routes; echo `region` | backend-dev | `src/server/watch.ts`, `tests/server/watch.test.ts`, `src/server/dal.ts`, `src/server/ports.ts`, `src/server/repositories/{supabase/index,memory/catalog,memory/user-data}.ts`, `src/app/api/{catalog,search,me/watchlist}/route.ts`, `tests/server/routes.test.ts` | C-00 |
+| C-02a | Migration `20261003090000_watch_filter.sql` (recreated `catalog_page`/`catalog_count` + `p_watch_tag`, `watch_provider_counts`); `provider` filter; `GET /api/watch/providers`; `dal.listWatchProviders` | backend-dev | new migration, `tests/db/watch.test.ts`, new `src/app/api/watch/providers/route.ts`, repositories (as C-01a), `src/server/dal.ts` | C-01a |
+| C-03a | `dal.resolveTitle` (index-only, `cache()`-shared with `getTitle`) | backend-dev | `src/server/dal.ts`, `tests/server/dal.test.ts` | C-00 |
+| C-05 | `getClaims()` in `getSession` + proxy | backend-dev | `src/server/auth/supabase.ts`, `src/server/auth/supabase.test.ts`, `src/proxy.ts`, `tests/server/proxy.test.ts` | C-00 |
+| C-06 | Migration `20261003092000_enrich_core_refresh.sql`; enrich core mapping; `catalog_mark_gone`; stats counter | backend-dev | new migration, `src/server/jobs/enrich.ts`, `src/server/jobs/sync-runner.ts`, `scripts/sync-catalog.ts`, `tests/server/jobs.test.ts`, `tests/server/sync-dry-run.test.ts`, `tests/db/migrations.test.ts` | C-00 |
+| C-10a | Migration `20261003091000_stub_season.sql`; `season` in stub create/update/repos/export; 400 rules | backend-dev | new migration, `src/server/services/stubs.ts`, `src/server/services/export.ts`, repositories, `src/app/api/stubs/route.ts`, `src/app/api/stubs/[id]/route.ts`, `tests/db/user-data.test.ts`, `tests/server/routes.test.ts` | C-00 |
+| C-12a | Migration `20261003093000_profile_avatar_color.sql`; profile route + repos; `review_details.author.avatarColor` | backend-dev | new migration, `src/app/api/me/profile/route.ts`, repositories, `tests/db/user-data.test.ts` | C-10a (shared repo files) |
+| C-09a | Migration `20261003094000_events.sql`; `src/server/events.ts` (`recordEvent` via `after()`, service-role client, memory counter); `POST /api/events`; server emits in signup/stubs/reviews/watchlist/export; `events_purge` in nightly job; `scripts/metrics.ts` | backend-dev | new migration, new `src/server/events.ts` (+test), new `src/app/api/events/route.ts`, `src/app/api/{auth/signup,stubs,reviews,watchlist/[type]/[tmdbId],me/export}/route.ts`, `src/server/repositories/memory/store.ts`, `src/server/container.ts`, `src/server/jobs/sync-runner.ts`, new `scripts/metrics.ts`, `tests/db/migrations.test.ts` | C-12a |
+| C-13a | `src/server/log.ts` (+ `redact`), use in `http.ts`/`dal.ts`; `src/instrumentation.ts` `onRequestError`; `POST /api/log` | backend-dev | new `src/server/log.ts` (+test), `src/server/http.ts`, `src/server/dal.ts`, new `src/instrumentation.ts`, new `src/app/api/log/route.ts`, `tests/server/routes.test.ts` | C-09a |
+| C-11a | Parsers `src/lib/import/{csv,zip,letterboxd,imdb,tvtime,index}.ts`; matcher + commit service; migration `20261003095000_imports.sql`; preview/commit routes; `import_completed` | backend-dev | new `src/lib/import/*` (+tests), new `tests/fixtures/imports/*`, new `src/server/imports/{match,commit}.ts` (+tests), new migration, new `src/app/api/me/imports/route.ts`, new `src/app/api/me/imports/preview/route.ts`, repositories, `tests/db/user-data.test.ts` | C-10a, C-09a |
+| C-08a | `dal.getStubShare`, `src/server/share.ts` (`isProfileShareable`), `src/server/og-assets.ts` (`loadOgFonts`, `loadPosterDataUrl`: 1.5 s, 1.5 MB, no fetch in demo) | backend-dev | `src/server/dal.ts`, new `src/server/share.ts`, new `src/server/og-assets.ts` (+tests), repositories | C-10a, C-12a |
+| C-15a | Brand in server-side copy (`ERROR_COPY` done in C-00; export/email copy); then add the `Stubbed`-literal guard to `tests/lib/guards.test.ts` (it must pass on landing) | backend-dev | `src/server/services/export.ts`, `src/server/auth/*` copy only, `tests/lib/guards.test.ts` | C-15b |
+| C-01b | Ticket stub logo `ticket-providers` (decorative); pass `region` on Load more | frontend-dev | `src/components/Ticket.tsx` (+css, test), `src/components/TicketGrid.tsx`, `src/components/LoadMore.tsx`, `src/components/BrowseSection.tsx` | C-00 (mock), C-01a (live) |
+| C-02b | `ProviderFilter` chips on browse | frontend-dev | new `src/components/ProviderFilter.tsx` (+css, test), `src/components/BrowseToolbar.tsx`, `src/app/browse/page.tsx` | C-01b |
+| C-03b | Delete `src/app/loading.tsx`, `src/app/title/[type]/[slug]/loading.tsx`, `src/app/u/[handle]/loading.tsx`; add `browse/`, `search/`, `me/stubs/` `loading.tsx`; existence/slug check before `<Suspense>` in title and profile pages; `TitleSkeleton`/`ProfileSkeleton` | frontend-dev | those files, `src/app/title/[type]/[slug]/page.tsx`, `src/app/u/[handle]/page.tsx`, new `src/components/TitleSkeleton.tsx`, new `src/components/ProfileSkeleton.tsx` | C-03a |
+| C-04 | R10 count +1 on a first review | frontend-dev | `src/components/Reviews.tsx` (+test) | C-00 |
+| C-07 | `ShareButton` (native → copy → fallback sheet) on title, wallet, own review, stub menus; `ref=share` capture; signup sends `ref` | frontend-dev | new `src/components/ShareButton.tsx` (+css, test), `src/components/{TitleActions,ReviewCard,WalletStub,DiaryRowMenu,AppProvider,AuthForm}.tsx`, `src/app/u/[handle]/page.tsx` | C-03b (same page files) |
+| C-08b | OG/story JSX from the UX arena winner; routes; share landing; "Story image" action | frontend-dev (+ ux-designer) | new `src/og/{TitleCard,StoryCard,StubCard}.tsx`, new `src/app/title/[type]/[slug]/opengraph-image.tsx`, new `src/app/share/stub/[id]/{page.tsx,opengraph-image.tsx}`, new `src/app/share/stub/[id]/story/route.tsx`, `src/components/{WalletStub,DiaryRowMenu}.tsx`; remove `openGraph.images` from the title `generateMetadata` | C-08a, C-07 |
+| C-09b | `worth_it_viewed` observer; About "What we count" | frontend-dev | `src/components/WorthIt.tsx` (+test), `src/app/about/page.tsx` | C-00 |
+| C-10b | Season `<select>` in `StubSheet`; `S03` on diary, wallet, ticket | frontend-dev | `src/components/{StubSheet,Diary,WalletStub}.tsx` (+tests) | C-00 |
+| C-11b | `/me/import` page: source → file → parse → preview → toggles → chunked commit → summary; links from Settings and empty diary | frontend-dev | new `src/app/me/import/page.tsx` (+css), new `src/components/ImportFlow.tsx` (+css, test), `src/app/me/settings/page.tsx`, `src/components/Diary.tsx` | C-11a (parsers), C-10b (Diary) |
+| C-12b | `AvatarColorPicker` in Settings; `Avatar` gradient; `--avatar-*` tokens | frontend-dev | new `src/components/AvatarColorPicker.tsx` (+css, test), `src/components/Avatar.tsx` (+css), `src/styles/tokens.css` (append only), `src/app/me/settings/page.tsx` | C-11b (settings page) |
+| C-13b | `global-error.tsx`; `reportError` in `error.tsx`; window listeners | frontend-dev | `src/app/error.tsx`, new `src/app/global-error.tsx`, `src/components/AppProvider.tsx` | C-07 (AppProvider) |
+| C-15b | Replace user-visible `Stubbed` literals with `BRAND_NAME` (`grep -rn "Stubbed" src/app src/components` is clean except comments; C-15a then locks it with a guard) | frontend-dev | `src/app/layout.tsx`, `src/components/{Header,Footer,SearchPanel,Reviews,EmptyState,AuthPage,AuthForm}.tsx`, `src/app/about/page.tsx`, any other file the guard lists | **last FE task** (touches files of earlier tasks) |
+| C-Q1 | E2E: `ticket-providers` W7-AC1; chips W-32 | qa-engineer | `e2e/where-to-watch.spec.ts`, `e2e/support/fixtures.ts` | C-01b, C-02b |
+| C-Q2 | E2E: 404/308 by status (`maxRedirects: 0`); replace the soft-404 asserts | qa-engineer | new `e2e/seo-status.spec.ts`, `e2e/title.spec.ts`, `e2e/clearpath.spec.ts` | C-03b |
+| C-Q3 | E2E: R10; season; avatar | qa-engineer | `e2e/reviews.spec.ts`, new `e2e/season.spec.ts`, `e2e/profile.spec.ts` | C-04, C-10b, C-12b |
+| C-Q4 | E2E: share (native stubbed, clipboard, fallback, `og:image`, story 1080×1920 PNG, 404 for a deleted stub, no note/review text in the landing HTML) | qa-engineer | new `e2e/share.spec.ts` | C-08b |
+| C-Q5 | E2E: analytics + errors (intercept `/api/events` and `/api/log`; GPC header → nothing; no non-origin request on any page) | qa-engineer | new `e2e/analytics.spec.ts` | C-09b, C-13b |
+| C-Q6 | E2E: imports (Letterboxd CSV, our export round-trip, IMDb CSV, oversize file message, re-upload → all duplicate) | qa-engineer | new `e2e/imports.spec.ts`, new `e2e/fixtures/imports/*` | C-11b |
+| C-Q7 | Full suite + brand build check (`NEXT_PUBLIC_BRAND_NAME=Reel` header text) | qa-engineer | `docs/06-qa/CLOSEOUT_QA.md` | C-15b, all |
+
+**Order and parallelism.** C-00 lands first; review it, then both lanes start.
+BE lane (serial where files are shared): C-01a → C-02a; C-03a ∥ C-05 ∥ C-06; C-10a → C-12a → C-09a → C-13a; C-11a and C-08a after C-10a + C-09a; C-15a last (after FE C-15b).
+FE lane: C-04 ∥ C-09b ∥ C-10b first (mock data from C-00 types); then C-01b → C-02b; C-03b → C-07 → C-13b; C-08b after C-08a; C-11b → C-12b; C-15b last.
+QA follows each FE pair. Reviews: security-reviewer on C-09/C-11/C-13 + share routes; code-reviewer + arch-reviewer after both lanes finish (C-17).
+**Shared-file rule inside a lane:** the "After" column serialises every task that touches the same file, so no two agents ever hold one file at once.
+
+Gate for every task: `npm run lint && npm run typecheck && npm test && npm run build && npm run format:check`
+(+ `npm run test:e2e` for any task that touches pages, components or routes; then `git checkout -- docs/06-qa/screenshots`).

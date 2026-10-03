@@ -178,7 +178,7 @@ Format detection uses header names (case-insensitive aliases). No `fetch` or `@/
 |---|---|---|
 | Letterboxd ZIP or CSV | `diary.csv` (`Date,Name,Year,Letterboxd URI,Rating,Rewatch,Tags,Watched Date`), `reviews.csv` (+`Review`), `ratings.csv`; also **our own export** (`tmdbID,imdbID,Title,Year,Rating10,WatchedDate,Rewatch,Review`) | Stars 0.5–5 → `rating10 = round(stars×2)`. Movies only. One stub per diary row (`Watched Date`) |
 | IMDb `ratings.csv` | `Const,Your Rating,Date Rated,Title,Title Type,Year,…` | `Const` → `imdbId`; type `movie` → movie, `tvSeries`/`tvMiniSeries` → tv, other types → invalid. A stub dated `Date Rated` is optional ("Create stubs" toggle, default on) |
-| TV Time ZIP | GDPR export CSVs; header aliases for show name, IMDb/TVDB id, season, episode, watched-at, movie rows | **Unverified format**: the founder supplies a sample (FOUNDER_INPUTS F11 below). One stub per (show, season) dated at the last episode watched in that season. One stub per movie watch |
+| TV Time ZIP | GDPR export CSVs; header aliases for show name, IMDb/TVDB id, season, episode, watched-at, movie rows | **Unverified format**: a founder sample confirms it (§17 F11). One stub per (show, season) dated at the last episode watched in that season. One stub per movie watch |
 Normalised row (`importRowSchema`, C-00): `{ ref: string ≤64, mediaType?: 'movie'|'tv', tmdbId?: int, imdbId?: /^tt\d{7,10}$/, title?: ≤200, year?: 1870..2100, watchedOn?: IsoDate|null, rating10?: 1..10|null, rewatch?: boolean, review?: ≤5000, isSpoiler?: boolean, season?: 1..200|null }`.
 **Limits:** the file is ≤ 10 MB (checked before reading). ZIP: ≤ 50 entries, each inflated entry ≤ 20 MB, total inflated ≤ 50 MB (counted while streaming, then abort). ≤ 20,000 rows per import. Past these limits the UI shows a message; the server limits are in the API section.
 **Matching (server, `src/server/imports/match.ts`):** `tmdbId`+type → `imdbId` (`catalog_index.imdb_id`) → normalised title (`text.ts` normalisation) + year ±1 + type. Several title matches → the highest `vote_count`. Unlisted index rows count as matched (they can be stubbed today).
@@ -217,7 +217,7 @@ Use it in `http.ts` (internal 500s), `dal.ts` degraded logs and jobs. `src/instr
 **API `POST /api/log`:** body `clientLogSchema { kind: 'boundary'|'global'|'unhandled'|'rejection', message: ≤300, digest?: ≤64, stack?: ≤2000, path: ≤200 /* location.pathname only */ }` with a body ≤ 4 KB.
 The server strips the query and hash from `path` again, redacts, and logs `client_error` with `uaFamily` (`chrome|firefox|safari|edge|other`, derived and not stored raw). It never logs the IP. Response `204`.
 Rate limits: 10/min per IP (in-memory hashed key, like C-09) and 300/min per process. Over → `429`. `413` over 4 KB. Same-origin + JSON.
-**Tests:** unit `redact`, `onRequestError` shape, `reportError` dedupe/cap; route (`204`, `413`, `429`, query stripped); E2E (throw in a test-only route? No: trigger via `page.evaluate(() => Promise.reject(new Error('x')))` and assert one `/api/log` request).
+**Tests:** unit `redact`, `onRequestError` shape, `reportError` dedupe/cap; route (`204`, `413`, `429`, query stripped); E2E (trigger via `page.evaluate(() => Promise.reject(new Error('x')))`, assert exactly one `/api/log` request and no non-origin request).
 
 ## C-14 · Launch kit: reference only
 Built by **devops-release** in parallel (`launch:check`, `db:apply`, `smoke:live` + workflow, `check:provider-links`). Contract with this ADR:
@@ -229,7 +229,7 @@ Built by **devops-release** in parallel (`launch:check`, `db:apply`, `smoke:live
 It is inlined at build time, so a rename means a rebuild (documented).
 **Scope:** user-visible copy only: `layout.tsx` metadata (title template, `siteName`), Header logo text and aria, Footer, About, auth copy, "Not in {brand}", "On {brand} · N", empty states, OG images, `ERROR_COPY`/`format.ts` strings (C-00).
 **Not renamed:** cookie names (`stubbed_*`), `@demo.stubbed.app`, the reserved handle list, DB names and file names.
-**Guard:** `tests/lib/guards.test.ts` fails on the string literal `Stubbed` in `src/components/**` and `src/app/**` (allowlist: `brand.ts`, tests).
+**Guard (added by BE after the FE sweep, WORK_SPLIT §7 C-15a):** `tests/lib/guards.test.ts` fails on the string literal `Stubbed` in `src/components/**` and `src/app/**` (allowlist: `brand.ts`, tests).
 **Tests:** unit (invalid → default); build with `NEXT_PUBLIC_BRAND_NAME=Reel` renders "Reel" in the header (an E2E project or a unit render). The founder input stays F8.
 
 ---

@@ -15,3 +15,5 @@ Each item has a workaround the team builds now, so the founder's step becomes on
 | F8 | Trademark search "Stubbed" | Legal | Name is one config value (`NEXT_PUBLIC_BRAND_NAME`) so a rename is cheap | Search USPTO/EUIPO |
 | F9 | Contact email | Your inbox | `NEXT_PUBLIC_CONTACT_EMAIL`; `launch:check` fails on the placeholder | Set the env var |
 | F10 | Repo public/private; commercial plans | Your decision | Defaults: works either way; keep-alive commits not needed if private; non-commercial notice on About | Answer when ready |
+| F11 | (Optional) a real TV Time export file | Only you have an account export | Parser matches header aliases; UI labels TV Time import "beta" until a sample is checked | Send/attach one export when convenient |
+| F12 | (Optional) turn on asymmetric JWT signing keys in Supabase Auth | Dashboard setting | Code uses `getClaims()` which verifies locally when asymmetric keys are on, and falls back to a server check otherwise | Toggle in Supabase → Auth → Signing keys |
