@@ -46,3 +46,7 @@ confidence: high
 ## 2026-09-28 · Where to watch + race fix
 - stub-count race fixed (orchestrator-approved), where-to-watch backend/frontend/review/E2E done; orchestrator fixed QA-WTW-1/2 directly.
 - verification: lint/typecheck/535 unit/build/format green; full E2E 212 passed, 8 skipped. HEAD 06e1627082bc240fb33c0d5e17c90fdeb0226f03.
+
+## 2026-10-03 · Close-out started
+- founder: close everything except founder inputs; deploy all roles + reviewer; use arena + clearpath.
+- created FOUNDER_INPUTS (F1–F10 with workarounds), CLOSEOUT_BOARD (C-01…C-18), roles devops-release/security-reviewer/tech-writer.

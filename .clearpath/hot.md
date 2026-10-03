@@ -10,7 +10,7 @@ confidence: high
 # Hot Cache  (≤600 words · expires 7 days / 20 commits after `updated`)
 
 ## Current Goal
-M1 + Where to watch done. Next: founder launch tasks + staging smoke on real keys; then Phase 2 M2 (share, analytics, 404/308).
+CLOSE-OUT (founder 2026-10-03): close every engineering item; leave only founder inputs ([[../docs/09-closeout/FOUNDER_INPUTS.md]] F1–F10). Board: docs/09-closeout/CLOSEOUT_BOARD.md (C-01…C-18).
 
 ## Active Context
 - M1 launch hardening DONE and reviewed (SHIP). Stub-count race fixed ([[issues/stub-count-race.md]]).
@@ -27,4 +27,4 @@ M1 + Where to watch done. Next: founder launch tasks + staging smoke on real key
 - Launch commercially later? (Vercel Hobby, TMDB, OMDb, JustWatch data are non-commercial.)
 
 ## Next Best Step
-Founder: TMDB logo, trademark, SMTP, keys, apply 5 migrations to Supabase, staging smoke (M1-17) + real-device provider-link check (W-21). Engineering: W-30/31/32 P1 (ticket watch hint, browse chips), then M2.
+Wave 1 running: architect ADR-013 (C-01..C-13,C-15), devops launch kit (C-14), arena ×3 share ticket (C-08). Then BE ∥ FE → security ∥ code ∥ arch review → QA full → PM acceptance + tech-writer docs. /gstak skill not available in this environment.
