@@ -129,7 +129,7 @@ test('throwaway account: sign-up → stub → review → export → delete', asy
     const signup = await page.request.post('/api/auth/signup', { data: acc });
     if (signup.status() === 202)
       throw new Error(
-        'Sign-up needs email confirmation: turn "Confirm email" OFF in Supabase (README §3).',
+        `Sign-up needs email confirmation: turn "Confirm email" OFF in Supabase (README §3), then delete ${acc.handle} under Authentication → Users.`,
       );
     await ok(signup, 'sign-up', 201);
     created = true;
