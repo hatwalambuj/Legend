@@ -86,6 +86,30 @@ export interface TitleSummary {
   episodeRuntimeMinutes: number | null;
   /** False = hidden from browse/search by the curation rule but still reachable by URL (PRD D4). */
   isListed: boolean;
+  /**
+   * v1.6 (ADR-013 C-01): the ticket's "on {service}" logo for the region the list call asked for.
+   * Absent when the call had no `region`; null = nothing to stream there, or the watch data is stale (> 30 d).
+   */
+  watchHint?: WatchHint | null;
+}
+
+/** v1.6 (ADR-013 C-01): first `s` provider by region priority, else `f`, else `a`. Decorative. */
+export interface WatchHint {
+  providerId: number;
+  name: string;
+  /** TMDB logo path → `providerLogoUrl()` (w92); null → monogram tile. */
+  logoPath: string | null;
+  monogram: string;
+  tile: string | null;
+}
+
+/** v1.6 (ADR-013 C-02): a browse "On {name}" chip. `count` = listed titles with fresh data (>= 1). */
+export interface WatchProviderChip {
+  providerId: number;
+  name: string;
+  logoPath: string | null;
+  monogram: string;
+  count: number;
 }
 
 export interface CastMember {
@@ -341,6 +365,10 @@ export interface TitleStats {
   ratingCount: number;
 }
 
+/** v1.6 (ADR-013 C-12): avatar gradient keys (`AVATAR_COLORS` in src/lib/avatar.ts). */
+export type AvatarColor =
+  'sunset' | 'ocean' | 'forest' | 'grape' | 'ember' | 'steel' | 'rose' | 'gold';
+
 export interface PublicProfile {
   id: string;
   handle: string;
@@ -348,6 +376,11 @@ export interface PublicProfile {
   bio: string;
   avatarUrl: string | null;
   createdAt: IsoDateTime;
+  /**
+   * v1.6 (ADR-013 C-12): chosen avatar gradient; null = the handle-derived colour. Always set by the
+   * server; optional in the type only so existing client literals need no edit. Treat undefined as null.
+   */
+  avatarColor?: AvatarColor | null;
 }
 
 export interface ProfileStats {
@@ -377,8 +410,52 @@ export interface Stub {
   note: string;
   /** 1-based: which watch of this title this stub is, ordered by (watchedOn, createdAt). */
   number: number;
+  /** v1.6 (ADR-013 C-10): TV only, 1..200; null = the whole show (and always null for movies). */
+  season: number | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
+}
+
+/**
+ * v1.6 (ADR-013 C-08): the data of a shared stub image/landing. Never carries the note, review text
+ * or spoiler content.
+ */
+export interface StubShareCard {
+  stubId: string;
+  number: number;
+  watchedOn: IsoDate;
+  season: number | null;
+  title: Pick<
+    TitleSummary,
+    'key' | 'mediaType' | 'title' | 'year' | 'voteAverage' | 'imdbRating' | 'posterPath' | 'palette'
+  >;
+  handle: string;
+  displayName: string;
+  avatarColor: AvatarColor | null;
+  /** Printed on the image: "{host}/u/{handle}". */
+  profileUrl: string;
+}
+
+/** v1.6 (ADR-013 C-11): where an import file came from. */
+export type ImportSource = 'letterboxd' | 'imdb' | 'tvtime';
+
+/** v1.6 (ADR-013 C-11): one normalised row, parsed in the browser (src/lib/import). */
+export interface ImportRow {
+  /** Stable id within the file (e.g. "diary:12"), echoed in previews. <= 64 chars. */
+  ref: string;
+  mediaType?: MediaType;
+  tmdbId?: number;
+  imdbId?: string;
+  title?: string;
+  year?: number;
+  watchedOn?: IsoDate | null;
+  rating10?: number | null;
+  rewatch?: boolean;
+  review?: string;
+  /** Preview only: the body is omitted, this says one exists. */
+  hasReview?: boolean;
+  isSpoiler?: boolean;
+  season?: number | null;
 }
 
 export interface DiaryEntry extends Stub {
@@ -482,6 +559,10 @@ export interface CatalogQuery {
   cursor?: string | null;
   /** Default 20, max 50. */
   limit?: number;
+  /** v1.6 (ADR-013 C-01): region code → items carry `watchHint`. Unsupported → the default region. */
+  region?: string;
+  /** v1.6 (ADR-013 C-02): TMDB provider id; only with `region` (stream/free/ads in that region, fresh data). */
+  provider?: number;
 }
 
 export interface SearchResult {
