@@ -4,6 +4,8 @@
  * OWNER: Backend (config). Used by the footer "Contact" link and the "Report" item on reviews.
  */
 
+import { BRAND_NAME } from './brand';
+
 export const CONTACT_EMAIL_PLACEHOLDER = 'contact@example.com';
 
 /** Pure resolver (exported for tests): trims, falls back to the placeholder on empty/invalid values. */
@@ -30,7 +32,7 @@ function mailto(subject: string, body?: string, to = CONTACT_EMAIL): string {
 
 /** Footer "Contact". */
 export function contactHref(to = CONTACT_EMAIL): string {
-  return mailto('Stubbed', undefined, to);
+  return mailto(BRAND_NAME, undefined, to);
 }
 
 /** "Report" on someone else's review: the review id is all the founder needs to find the row. */

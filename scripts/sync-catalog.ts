@@ -53,6 +53,7 @@ import { normalizeSearch, sortTitle } from '../src/lib/text';
 import { parseEnv, type ServerEnv } from '../src/server/env';
 import {
   enrichmentAppends,
+  mapTmdbCore,
   mapTmdbEnrichment,
   type EnrichmentRow,
 } from '../src/server/jobs/enrich';
@@ -281,11 +282,9 @@ async function enrichStep(
   enrichedIds: Set<number> = new Set(),
 ): Promise<StepResult> {
   if (!env.tmdb) return { counts: { skipped: 'no TMDB key' }, wrote: 0 };
-  const due = await rpc<{ id: number; media_type: 'movie' | 'tv'; tmdb_id: number }[]>(
-    db,
-    'catalog_enrich_due',
-    { p_limit: env.sync.enrichMax, p_ttl_days: env.sync.enrichTtlDays },
-  );
+  const due = await rpc<
+    { id: number; media_type: 'movie' | 'tv'; tmdb_id: number; is_listed?: boolean }[]
+  >(db, 'catalog_enrich_due', { p_limit: env.sync.enrichMax, p_ttl_days: env.sync.enrichTtlDays });
   // ADR-011 §1: a dry run spends no enrich budget (no TMDB detail call) and writes nothing.
   if (dryRun) return { counts: { due: due.length, dry_run: true }, wrote: 0 };
   const tmdb = new TmdbDetailProvider(env.tmdb);
@@ -295,14 +294,29 @@ async function enrichStep(
   let errors = 0;
   let watchMissing = 0;
   let linkMismatch = 0;
+  let unlistedRefreshed = 0;
+  const gone: number[] = [];
   for (const r of due) {
     try {
       const body = await tmdb.request<unknown>(`/${r.media_type}/${r.tmdb_id}`, {
         append_to_response: enrichmentAppends(r.media_type),
       });
-      out.push(
-        mapTmdbEnrichment(r.id, r.media_type, r.tmdb_id, body, env.sync.certificationRegion),
+      const row = mapTmdbEnrichment(
+        r.id,
+        r.media_type,
+        r.tmdb_id,
+        body,
+        env.sync.certificationRegion,
       );
+      // ADR-013 C-06 (AR-8): referenced unlisted rows get their core re-synced (TMDB 6-month rule).
+      if (r.is_listed === false) {
+        const core = mapTmdbCore(r.media_type, body);
+        if (core) {
+          row.core = core;
+          unlistedRefreshed++;
+        }
+      }
+      out.push(row);
       // ADR-012 §1–2: the appended availability. Missing = not fetched (stored data untouched, and
       // the title stays due for the watch step); counted so a renamed append key shows in sync_runs.
       const watch = mapTmdbWatch(body, regions);
@@ -311,12 +325,15 @@ async function enrichStep(
         enrichedIds.add(r.id);
         linkMismatch += linkMismatches(watchProvidersOf(body), r.media_type, r.tmdb_id, regions);
       } else watchMissing++;
-    } catch {
-      errors++; // stays due; retried next night
+    } catch (e) {
+      // TMDB 404: the title is gone upstream (ADR-013 C-06) → source_status 'gone'.
+      if (e instanceof AppError && e.code === 'not_found') gone.push(r.id);
+      else errors++; // stays due; retried next night
     }
     await new Promise((res) => setTimeout(res, 100)); // ~10 req/s, well under TMDB's limit
   }
   for (const batch of chunks(out, 200)) await rpc(db, 'catalog_set_enrichment', { p_rows: batch });
+  if (gone.length) await rpc(db, 'catalog_mark_gone', { p_ids: gone });
   for (const batch of chunks(watchRows, 200)) await rpc(db, 'catalog_set_watch', { p_rows: batch });
   if (linkMismatch > 0)
     console.warn(`[sync] watch: ${linkMismatch} upstream links differ from tmdbWatchHref()`);
@@ -328,8 +345,10 @@ async function enrichStep(
       watch: watchRows.length,
       watch_missing: watchMissing,
       watch_link_mismatch: linkMismatch,
+      unlisted_refreshed: unlistedRefreshed,
+      gone: gone.length,
     },
-    wrote: out.length,
+    wrote: out.length + gone.length,
   };
 }
 
@@ -712,6 +731,8 @@ export function buildSteps(
     palettes: ({ dryRun }) => paletteStep(db, dryRun),
     disagreements: () => disagreementStep(db),
     purge: () => rpc(db, 'catalog_purge_stale', {}),
+    // ADR-013 C-09: analytics retention (anonymous daily counters, 400 days).
+    eventsPurge: () => rpc(db, 'events_purge', { p_days: 400 }),
     revalidate: (tags) => revalidateSite(env.siteUrl, env.revalidateSecret, tags),
   };
 }

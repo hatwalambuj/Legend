@@ -84,6 +84,7 @@ export async function updateProfile(
     ...(patch.displayName !== undefined ? { displayName: patch.displayName } : {}),
     ...(patch.bio !== undefined ? { bio: patch.bio } : {}),
     ...(patch.avatarUrl !== undefined ? { avatarUrl: patch.avatarUrl } : {}),
+    ...(patch.avatarColor !== undefined ? { avatarColor: patch.avatarColor } : {}),
   });
   return { profile };
 }

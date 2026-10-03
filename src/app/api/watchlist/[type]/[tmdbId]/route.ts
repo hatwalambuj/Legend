@@ -3,6 +3,8 @@ import { mediaTypeSchema, tmdbIdSchema, type WatchlistResponse } from '@/lib/con
 import { AppError } from '@/lib/errors';
 import type { MediaType } from '@/lib/types';
 import { container } from '@/server/container';
+import { today } from '@/server/env';
+import { recordEvent } from '@/server/events';
 import { assertSameOrigin, json, parseBody, route } from '@/server/http';
 import { setWatchlisted } from '@/server/services/reviews';
 import { requireSession } from '@/server/session';
@@ -24,7 +26,11 @@ export const PUT = route<Ctx>(async (req, ctx) => {
   const session = await requireSession(c);
   const ref = await titleRef(ctx);
   await parseBody(req, z.object({}));
+  const key = `${ref.mediaType}:${ref.tmdbId}` as const;
+  // `watchlist_added` counts only a new add (PUT is idempotent).
+  const before = await c.titleStates.states(session.user.id, [key], today());
   const { watchlisted } = await setWatchlisted(c, session, ref.mediaType, ref.tmdbId, true);
+  if (!before[key]?.watchlisted) recordEvent('watchlist_added');
   const body: WatchlistResponse = { watchlisted };
   return json(body);
 });

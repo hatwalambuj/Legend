@@ -4,6 +4,7 @@
  */
 import { AppError, ERROR_COPY } from '@/lib/errors';
 import { isTitleKey } from '@/lib/keys';
+import { isAvatarColor } from '@/lib/avatar';
 import type {
   Genre,
   MediaType,
@@ -123,6 +124,8 @@ export interface ProfileRow {
   bio: string | null;
   avatar_url: string | null;
   created_at: string;
+  /** v1.6 (ADR-013 C-12). Absent before the migration → null. */
+  avatar_color?: string | null;
 }
 
 export function rowToProfile(r: ProfileRow): PublicProfile {
@@ -133,6 +136,7 @@ export function rowToProfile(r: ProfileRow): PublicProfile {
     bio: r.bio ?? '',
     avatarUrl: r.avatar_url ?? null,
     createdAt: r.created_at,
+    avatarColor: isAvatarColor(r.avatar_color) ? r.avatar_color : null,
   };
 }
 
@@ -147,6 +151,8 @@ export interface StubRow {
   created_at: string;
   updated_at: string;
   number: number;
+  /** v1.6 (ADR-013 C-10): `stub_details.season` (absent before the migration → null). */
+  season?: number | null;
 }
 
 export function rowToStub(r: StubRow, userId: string): Stub {
@@ -158,6 +164,7 @@ export function rowToStub(r: StubRow, userId: string): Stub {
     watchedWhere: r.watched_where ?? null,
     note: r.note ?? '',
     number: Number(r.number) || 1,
+    season: r.season === null || r.season === undefined ? null : Number(r.season) || null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -176,7 +183,7 @@ export interface ReviewRow {
   created_at: string;
   updated_at: string;
   edited_at: string | null;
-  author: PublicProfile;
+  author: PublicProfile & { avatarColor?: unknown };
 }
 
 export function rowToReview(r: ReviewRow): Review {
@@ -190,6 +197,7 @@ export function rowToReview(r: ReviewRow): Review {
       bio: r.author.bio ?? '',
       avatarUrl: r.author.avatarUrl ?? null,
       createdAt: r.author.createdAt,
+      avatarColor: isAvatarColor(r.author.avatarColor) ? r.author.avatarColor : null,
     },
     rating10: Number(r.rating_10),
     body: r.body ?? '',
@@ -210,6 +218,10 @@ export interface PgError {
   details?: string | null;
   hint?: string | null;
 }
+
+/** v1.6 (ADR-013 C-10) field copy, shared with src/server/services/stubs.ts. */
+export const SEASON_ON_MOVIE = 'Seasons are for shows only.';
+export const SEASON_TOO_HIGH = "This show doesn't have that many seasons.";
 
 const invalid = (field: string, msg: string) =>
   new AppError('validation_failed', 'Please check the highlighted fields.', {
@@ -237,6 +249,7 @@ export function mapPgError(e: PgError, context: 'stub' | 'review' | 'other' = 'o
       return invalid('watchedOn', 'That date is before this title came out.');
     if (msg.includes('stub_mismatch'))
       return invalid('stubId', 'That stub is not one of yours for this title.');
+    if (msg.includes('season_on_movie')) return invalid('season', SEASON_ON_MOVIE);
     return new AppError('validation_failed', 'Please check the highlighted fields.');
   }
   if (e.code === '23514' || e.code === '22001')

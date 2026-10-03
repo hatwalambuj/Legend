@@ -14,6 +14,7 @@ import { AppError } from '@/lib/errors';
 import { parseTitleKey, toTitleKey } from '@/lib/keys';
 import type { Session, TitleKey, TitleState, TitleSummary } from '@/lib/types';
 import type { Container } from '@/server/ports';
+import { SEASON_ON_MOVIE, SEASON_TOO_HIGH } from '@/server/repositories/supabase/rows';
 import { emptyTitleState } from '@/server/stats';
 
 export const WATCHED_ON_FUTURE = "That date hasn't happened yet.";
@@ -49,6 +50,23 @@ export function validateWatchedOn(
   }
 }
 
+/**
+ * v1.6 (ADR-013 C-10): a season only on a TV title, and not above its `seasonCount` when known
+ * (range 1..200 is the zod schema; the DB trigger/check repeat the movie + range rules).
+ */
+export function validateSeason(
+  season: number | null | undefined,
+  title: Pick<TitleSummary, 'mediaType' | 'seasonCount'>,
+): void {
+  if (season === null || season === undefined) return;
+  const bad = (msg: string) =>
+    new AppError('validation_failed', 'Please check the highlighted fields.', {
+      fields: { season: msg },
+    });
+  if (title.mediaType !== 'tv') throw bad(SEASON_ON_MOVIE);
+  if (title.seasonCount !== null && season > title.seasonCount) throw bad(SEASON_TOO_HIGH);
+}
+
 export async function titleStateFor(
   c: Pick<Container, 'titleStates'>,
   userId: string,
@@ -76,6 +94,7 @@ export async function createStub(
   const title = await requireTitle(c, key);
   const watchedOn = input.watchedOn ?? today;
   validateWatchedOn(watchedOn, title, today);
+  validateSeason(input.season, title);
   // A same-day duplicate is allowed (double feature); the UI confirms first via state.hasStubToday.
   const stub = await c.stubs.create({
     userId: session.user.id,
@@ -83,6 +102,7 @@ export async function createStub(
     watchedOn,
     watchedWhere: input.watchedWhere ?? null,
     note: input.note,
+    season: input.season ?? null,
   });
   return { stub, state: await titleStateFor(c, session.user.id, key, today) };
 }
@@ -96,12 +116,16 @@ export async function updateStub(
 ): Promise<StubMutationResponse> {
   const existing = await c.stubs.get(session.user.id, id);
   if (!existing) throw new AppError('not_found', "This stub doesn't exist.");
-  if (patch.watchedOn !== undefined)
-    validateWatchedOn(patch.watchedOn, await requireTitle(c, existing.titleKey), today);
+  if (patch.watchedOn !== undefined || (patch.season !== undefined && patch.season !== null)) {
+    const title = await requireTitle(c, existing.titleKey);
+    if (patch.watchedOn !== undefined) validateWatchedOn(patch.watchedOn, title, today);
+    validateSeason(patch.season, title);
+  }
   const stub = await c.stubs.update(session.user.id, id, {
     ...(patch.watchedOn !== undefined ? { watchedOn: patch.watchedOn } : {}),
     ...(patch.watchedWhere !== undefined ? { watchedWhere: patch.watchedWhere } : {}),
     ...(patch.note !== undefined ? { note: patch.note } : {}),
+    ...(patch.season !== undefined ? { season: patch.season } : {}),
   });
   return { stub, state: await titleStateFor(c, session.user.id, stub.titleKey, today) };
 }

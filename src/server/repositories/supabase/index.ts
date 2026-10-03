@@ -13,7 +13,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { decodeCursor, encodeCursor, sortTuple } from '@/lib/catalog-order';
 import { AppError } from '@/lib/errors';
 import { parseTitleKey, toTitleKey } from '@/lib/keys';
+import { providerMonogram } from '@/lib/provider-links';
 import type {
+  AvatarColor,
   CatalogQuery,
   DiaryEntry,
   MediaType,
@@ -32,11 +34,19 @@ import type {
   TypeFilter,
   WalletItem,
   WatchedWhere,
+  WatchProviderChip,
+  ImportSource,
 } from '@/lib/types';
 import { decodeKeyset, encodeKeyset } from '@/server/cursor';
 import type {
   CatalogIndexRepository,
+  CatalogMatchItem,
+  EventCount,
+  EventRepository,
   HealthProbe,
+  ImportApplyRow,
+  ImportExisting,
+  ImportRepository,
   ProfileRepository,
   ReviewRepository,
   StubRepository,
@@ -133,6 +143,38 @@ function nextPage<T, R>(
   };
 }
 
+/* v1.6 (ADR-013 C-01): stored availability of rows this process read recently, so list `watchHint`s
+   need no extra round trip (catalog_page/search/watchlist rows already carry `watch`). Same 1 h as the
+   catalogue data cache; bounded. */
+const WATCH_MEMO_TTL_MS = 60 * 60 * 1000;
+const WATCH_MEMO_MAX = 5000;
+const watchMemo = new Map<TitleKey, { w: StoredWatch; at: number }>();
+
+function remember(rows: CatalogRow[], now = Date.now()): void {
+  for (const r of rows) {
+    if (!('watch' in r) && !('watch_checked_at' in r)) continue;
+    const k = r.title_key as TitleKey;
+    watchMemo.delete(k);
+    watchMemo.set(k, { w: rowToWatch(r), at: now });
+  }
+  while (watchMemo.size > WATCH_MEMO_MAX) {
+    const oldest = watchMemo.keys().next().value;
+    if (oldest === undefined) break;
+    watchMemo.delete(oldest);
+  }
+}
+
+const summaries = (rows: CatalogRow[] | null | undefined): TitleSummary[] => {
+  const list = rows ?? [];
+  remember(list);
+  return list.map(rowToSummary);
+};
+
+/** Tests only. */
+export function resetWatchMemo(): void {
+  watchMemo.clear();
+}
+
 async function titleIdOf(db: SupabaseClient, key: TitleKey): Promise<number> {
   const res = await db.from('catalog_index').select('id').eq('title_key', key).maybeSingle();
   const row = unwrap(res) as { id: number } | null;
@@ -159,6 +201,9 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
     const limit = query.limit ?? 20;
     const after = typedTuple(decodeCursor(query.cursor, query.sort), CATALOG_COLS[query.sort]);
     const genres = query.genreIds?.length ? query.genreIds : undefined;
+    // v1.6 (ADR-013 C-02): `p_watch_tag` exists only after 20261003090000_watch_filter.sql; sent only when used.
+    const tag =
+      query.provider && query.region ? { p_watch_tag: `${query.region}:${query.provider}` } : {};
     // GET (+ data cache): jsonb/array args must be pre-encoded; absent args fall back to SQL defaults.
     const [page, count] = await Promise.all([
       db.rpc(
@@ -169,16 +214,18 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
           p_limit: limit + 1,
           ...(after ? { p_after: JSON.stringify(after) } : {}),
           ...(genres ? { p_genre_ids: genres } : {}),
+          ...tag,
         },
         { get: true },
       ),
       db.rpc(
         'catalog_count',
-        { p_type: query.type, ...(genres ? { p_genre_ids: genres } : {}) },
+        { p_type: query.type, ...(genres ? { p_genre_ids: genres } : {}), ...tag },
         { get: true },
       ),
     ]);
     const rows = (unwrap(page) as CatalogRow[] | null) ?? [];
+    remember(rows);
     const total = Number(unwrap(count) ?? 0);
     const result = nextPage(rows, limit, rowToSummary, (last) =>
       encodeCursor(query.sort, sortTuple(rowToSummary(last), query.sort)),
@@ -193,7 +240,7 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
       { p_type: type, p_sort: 'popularity_desc', p_limit: limit },
       { get: true },
     );
-    return ((unwrap(res) as CatalogRow[] | null) ?? []).map(rowToSummary);
+    return summaries(unwrap(res) as CatalogRow[] | null);
   }
 
   async search(normalizedQuery: string, type: TypeFilter, limit: number): Promise<TitleSummary[]> {
@@ -204,7 +251,7 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
       { p_q: normalizedQuery, p_type: type, p_limit: limit },
       { get: true },
     );
-    return ((unwrap(res) as CatalogRow[] | null) ?? []).map(rowToSummary);
+    return summaries(unwrap(res) as CatalogRow[] | null);
   }
 
   private async row(mediaType: MediaType, tmdbId: number): Promise<CatalogRow | null> {
@@ -227,6 +274,7 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
     tmdbId: number,
   ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment; watch: StoredWatch } | null> {
     const r = await this.row(mediaType, tmdbId);
+    if (r) remember([r]);
     return r
       ? { summary: rowToSummary(r), enrichment: rowToEnrichment(r), watch: rowToWatch(r) }
       : null;
@@ -238,9 +286,49 @@ export class SupabaseCatalogIndex implements CatalogIndexRepository {
     if (unique.length === 0) return out;
     const db = await this.db();
     const res = await db.from('catalog_index').select('*').in('title_key', unique);
-    for (const r of (unwrap(res) as CatalogRow[] | null) ?? []) {
-      const s = rowToSummary(r);
-      out.set(s.key, s);
+    for (const s of summaries(unwrap(res) as CatalogRow[] | null)) out.set(s.key, s);
+    return out;
+  }
+
+  async storedWatch(keys: TitleKey[]): Promise<Map<TitleKey, StoredWatch>> {
+    const out = new Map<TitleKey, StoredWatch>();
+    const now = Date.now();
+    const missing: TitleKey[] = [];
+    for (const k of new Set(keys)) {
+      const hit = watchMemo.get(k);
+      if (hit && now - hit.at < WATCH_MEMO_TTL_MS) out.set(k, hit.w);
+      else missing.push(k);
+    }
+    if (missing.length === 0) return out;
+    const db = await this.db();
+    const res = await db
+      .from('catalog_index')
+      .select('title_key, watch, watch_checked_at')
+      .in('title_key', missing.slice(0, 200));
+    const rows = (unwrap(res) as CatalogRow[] | null) ?? [];
+    remember(rows, now);
+    for (const r of rows) out.set(r.title_key as TitleKey, rowToWatch(r));
+    return out;
+  }
+
+  /** rpc `catalog_match` (≤ 1000 items per call, security invoker, catalogue only). */
+  async match(items: CatalogMatchItem[]): Promise<Map<string, TitleSummary>> {
+    const out = new Map<string, TitleSummary>();
+    if (items.length === 0) return out;
+    const db = await this.clients.public();
+    for (let i = 0; i < items.length; i += 1000) {
+      const p_items = items.slice(i, i + 1000).map((x) => ({
+        ref: x.ref,
+        media_type: x.mediaType ?? null,
+        tmdb_id: x.tmdbId ?? null,
+        imdb_id: x.imdbId ?? null,
+        title_norm: x.titleNorm ?? null,
+        year: x.year ?? null,
+      }));
+      const rows =
+        (unwrap(await db.rpc('catalog_match', { p_items })) as
+          { ref: string; title: CatalogRow }[] | null) ?? [];
+      for (const r of rows) if (r.title) out.set(r.ref, rowToSummary(r.title));
     }
     return out;
   }
@@ -306,6 +394,31 @@ export class SupabaseWatchProviders implements WatchProviderRepository {
     }
   }
 
+  /** rpc `watch_provider_counts` (security invoker, data-cached under `watch-providers`). */
+  async chips(region: string): Promise<WatchProviderChip[]> {
+    const db = await this.client();
+    const res = await db.rpc('watch_provider_counts', { p_region: region }, { get: true });
+    const rows =
+      (unwrap(res) as
+        { provider_id: number; name: string; logo_path: string | null; count: number }[] | null) ??
+      [];
+    // Two ids can share a display name (e.g. Prime Video 9/119): one chip per name, first wins.
+    const seen = new Set<string>();
+    return rows
+      .filter((r) => Number(r.count) >= 1 && r.name && !seen.has(r.name) && seen.add(r.name))
+      .slice(0, 6)
+      .map((r) => {
+        const id = Number(r.provider_id);
+        return {
+          providerId: id,
+          name: r.name,
+          logoPath: r.logo_path ?? null,
+          monogram: providerMonogram(id, r.name).monogram.slice(0, 2),
+          count: Number(r.count),
+        };
+      });
+  }
+
   private async load(): Promise<ProviderDirectory> {
     const db = await this.client();
     const res = await db.from('watch_provider').select('provider_id, name, logo_path');
@@ -350,7 +463,7 @@ export class SupabaseSettings implements UserSettingsRepository {
 /* Profiles                                                            */
 /* ------------------------------------------------------------------ */
 
-const PROFILE_COLUMNS = 'id, handle, display_name, bio, avatar_url, created_at';
+const PROFILE_COLUMNS = 'id, handle, display_name, bio, avatar_url, created_at, avatar_color';
 
 interface ProfileStatsRow {
   total_stubs: number;
@@ -403,7 +516,12 @@ export class SupabaseProfiles implements ProfileRepository {
 
   async update(
     userId: string,
-    patch: { displayName?: string; bio?: string; avatarUrl?: string | null },
+    patch: {
+      displayName?: string;
+      bio?: string;
+      avatarUrl?: string | null;
+      avatarColor?: AvatarColor | null;
+    },
   ): Promise<PublicProfile> {
     const db = await this.clients.user();
     const res = await db
@@ -412,6 +530,7 @@ export class SupabaseProfiles implements ProfileRepository {
         ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
         ...(patch.bio !== undefined ? { bio: patch.bio } : {}),
         ...(patch.avatarUrl !== undefined ? { avatar_url: patch.avatarUrl } : {}),
+        ...(patch.avatarColor !== undefined ? { avatar_color: patch.avatarColor } : {}),
       })
       .eq('id', userId)
       .select(PROFILE_COLUMNS)
@@ -447,6 +566,7 @@ export class SupabaseStubs implements StubRepository {
     watchedOn: string;
     watchedWhere: WatchedWhere | null;
     note: string;
+    season?: number | null;
   }): Promise<Stub> {
     const db = await this.clients.user();
     const res = await db.rpc('stub_insert', {
@@ -454,6 +574,8 @@ export class SupabaseStubs implements StubRepository {
       p_watched_on: input.watchedOn,
       p_watched_where: input.watchedWhere,
       p_note: input.note,
+      // v1.6: `p_season` exists after 20261003091000_stub_season.sql; omitted → the SQL default (null).
+      ...(input.season != null ? { p_season: input.season } : {}),
     });
     const rows = unwrap(res, 'stub') as StubRow[] | null;
     const row = rows?.[0];
@@ -473,10 +595,24 @@ export class SupabaseStubs implements StubRepository {
     return row ? rowToStub(row, userId) : null;
   }
 
+  /** Public read (stubs are public-read per ADR-005), cookie-less client. Share routes only. */
+  async getById(id: string): Promise<Stub | null> {
+    if (!UUID_RE.test(id)) return null;
+    const db = await this.clients.public();
+    const res = await db.from('stub_details').select('*').eq('id', id).maybeSingle();
+    const row = unwrap(res) as StubRow | null;
+    return row && row.user_id ? rowToStub(row, row.user_id) : null;
+  }
+
   async update(
     userId: string,
     id: string,
-    patch: { watchedOn?: string; watchedWhere?: WatchedWhere | null; note?: string },
+    patch: {
+      watchedOn?: string;
+      watchedWhere?: WatchedWhere | null;
+      note?: string;
+      season?: number | null;
+    },
   ): Promise<Stub> {
     const db = await this.clients.user();
     const res = await db
@@ -485,6 +621,7 @@ export class SupabaseStubs implements StubRepository {
         ...(patch.watchedOn !== undefined ? { watched_on: patch.watchedOn } : {}),
         ...(patch.watchedWhere !== undefined ? { watched_where: patch.watchedWhere } : {}),
         ...(patch.note !== undefined ? { note: patch.note } : {}),
+        ...(patch.season !== undefined ? { season_number: patch.season } : {}),
       })
       .eq('id', id)
       .eq('user_id', userId)
@@ -764,6 +901,7 @@ export class SupabaseWatchlist implements WatchlistRepository {
     const rows =
       (unwrap(res) as unknown as
         { added_at: string; title_id: number; title: CatalogRow | null }[] | null) ?? [];
+    remember(rows.flatMap((r) => (r.title ? [r.title] : [])));
     const page = nextPage(
       rows,
       opts.limit,
@@ -862,5 +1000,99 @@ export class SupabaseRateLimiter implements RateLimiter {
       ),
     );
     return wait > 0 ? { ok: false, retryAfter: wait } : { ok: true };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Analytics (ADR-013 C-09): service-role `events_track`                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Writes anonymous daily counters with the service-role client (server only). Without
+ * `SUPABASE_SERVICE_ROLE_KEY` the counters are dropped and that is logged once.
+ */
+export class SupabaseEvents implements EventRepository {
+  private warned = false;
+  constructor(private readonly admin: ClientFn | null) {}
+
+  async track(rows: EventCount[]): Promise<void> {
+    if (rows.length === 0) return;
+    if (!this.admin) {
+      if (!this.warned) console.warn('[events] no service role key: analytics counters dropped');
+      this.warned = true;
+      return;
+    }
+    const db = await this.admin();
+    unwrap(await db.rpc('events_track', { p_rows: rows.slice(0, 50) }));
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Imports (ADR-013 C-11): rpc `import_apply` with the user JWT (RLS)   */
+/* ------------------------------------------------------------------ */
+
+export class SupabaseImports implements ImportRepository {
+  private readonly clients: Clients;
+  constructor(clients?: Partial<Clients>) {
+    this.clients = resolveClients(clients);
+  }
+
+  async existing(userId: string, keys: TitleKey[]): Promise<ImportExisting> {
+    const out: ImportExisting = { stubDays: new Set(), reviewed: new Set() };
+    const unique = [...new Set(keys)];
+    if (unique.length === 0) return out;
+    const db = await this.clients.user();
+    for (let i = 0; i < unique.length; i += 300) {
+      const chunk = unique.slice(i, i + 300);
+      const [stubs, reviews] = await Promise.all([
+        db
+          .from('stub_details')
+          .select('title_key, watched_on')
+          .eq('user_id', userId)
+          .in('title_key', chunk)
+          .limit(20_000),
+        db.from('review_details').select('title_key').eq('user_id', userId).in('title_key', chunk),
+      ]);
+      for (const r of (unwrap(stubs) as { title_key: string; watched_on: string }[] | null) ?? [])
+        out.stubDays.add(`${r.title_key}|${String(r.watched_on).slice(0, 10)}`);
+      for (const r of (unwrap(reviews) as { title_key: string }[] | null) ?? [])
+        out.reviewed.add(r.title_key as TitleKey);
+    }
+    return out;
+  }
+
+  async importedSince(userId: string, sinceIso: string): Promise<number> {
+    const db = await this.clients.user();
+    const res = await db
+      .from('stubs')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('source', 'import')
+      .gt('created_at', sinceIso);
+    if (res.error) throw mapPgError(res.error);
+    return res.count ?? 0;
+  }
+
+  async apply(
+    _userId: string,
+    source: ImportSource,
+    rows: ImportApplyRow[],
+  ): Promise<{ stubs: number; reviews: number }> {
+    if (rows.length === 0) return { stubs: 0, reviews: 0 };
+    const db = await this.clients.user();
+    const p_rows = rows.slice(0, 1000).map((r) => ({
+      title_key: r.titleKey,
+      import_key: r.importKey,
+      watched_on: r.watchedOn,
+      season: r.season,
+      rating_10: r.rating10,
+      body: r.body,
+      is_spoiler: r.isSpoiler,
+    }));
+    const res = unwrap(await db.rpc('import_apply', { p_source: source, p_rows })) as {
+      stubs?: number;
+      reviews?: number;
+    } | null;
+    return { stubs: Number(res?.stubs ?? 0), reviews: Number(res?.reviews ?? 0) };
   }
 }

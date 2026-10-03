@@ -9,6 +9,7 @@
  * - Frontend (ticket stubs, any component): `ticketTimeLabel(summary)` for the stub's mono meta line (F2).
  *   Everything else arrives precomputed in `TitleDetail.worthIt`.
  */
+import { BRAND_NAME } from './brand';
 import type {
   PitchHook,
   SeriesStatus,
@@ -256,13 +257,13 @@ export function verdictFor(input: {
   if (useStubbed)
     src.push({
       id: 'stubbed',
-      name: 'Stubbed users',
+      name: `${BRAND_NAME} users`,
       verb: 'rate',
       tenths: Math.round(input.stubbedAvg! * 10),
     });
 
   const names = src.map((s) =>
-    s.id === 'stubbed' ? `${input.stubbedCount} Stubbed ratings` : s.name,
+    s.id === 'stubbed' ? `${input.stubbedCount} ${BRAND_NAME} ratings` : s.name,
   );
   const sourceLine = `Based on ${
     names.length === 1

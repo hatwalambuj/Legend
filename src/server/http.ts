@@ -5,8 +5,9 @@
 import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { z } from 'zod';
-import { AppError, isAppError } from '@/lib/errors';
+import { AppError, ERROR_COPY, isAppError } from '@/lib/errors';
 import { env, type TrustedProxy } from '@/server/env';
+import { log } from '@/server/log';
 
 /**
  * Host the client used. x-forwarded-host is trusted only behind a known edge (TRUSTED_PROXY, ADR-001
@@ -25,6 +26,8 @@ export const CACHE = {
   reviews: 'public, s-maxage=60, stale-while-revalidate=300',
   /** v1.5 GET /api/titles/{type}/{id}/watch?region= : the URL fully keys it (no cookie, no Accept-Language). */
   watch: 'public, s-maxage=3600, stale-while-revalidate=86400',
+  /** v1.6 GET /api/watch/providers?region= (tag `watch-providers`). */
+  watchProviders: 'public, s-maxage=3600, stale-while-revalidate=86400',
   /** Anything that reads the session cookie or mutates. */
   private: 'private, no-store',
 } as const;
@@ -47,7 +50,7 @@ export function errorResponse(e: unknown): NextResponse {
   const err = isAppError(e)
     ? e
     : new AppError('internal', 'Something went wrong. Try again.', { cause: e });
-  if (!isAppError(e)) console.error('[api] unhandled error', e);
+  if (!isAppError(e)) log.error('api_unhandled_error', { error: e });
   const res = NextResponse.json(err.toBody(), { status: err.status });
   // API_CONTRACT §4: every error is `private, no-store` + `Vary: Cookie`.
   res.headers.set('Cache-Control', CACHE.private);
@@ -98,6 +101,57 @@ export async function parseBody<S extends z.ZodType>(
   const raw: unknown = await req.json().catch(() => {
     throw new AppError('validation_failed', 'Malformed JSON body.');
   });
+  const r = schema.safeParse(raw);
+  if (!r.success)
+    throw new AppError('validation_failed', 'Please check the highlighted fields.', {
+      fields: zodFields(r.error),
+    });
+  return r.data;
+}
+
+const tooLarge = () => new AppError('payload_too_large', ERROR_COPY.payload_too_large);
+
+/**
+ * Reads at most `maxBytes` of the body (v1.6, ADR-013): a declared `Content-Length` over the limit is
+ * refused before reading, and a streamed body is cut off as soon as it passes the limit → 413.
+ */
+export async function readBodyCapped(req: NextRequest, maxBytes: number): Promise<string> {
+  const declared = Number(req.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) throw tooLarge();
+  if (!req.body) return '';
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw tooLarge();
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+
+/** `parseBody` with a byte cap (same-origin + JSON + zod; 413 over the cap). */
+export async function parseBodyLimited<S extends z.ZodType>(
+  req: NextRequest,
+  schema: S,
+  maxBytes: number,
+): Promise<z.output<S>> {
+  assertSameOrigin(req);
+  if (!req.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
+    throw new AppError('unsupported_media_type', 'Expected application/json.');
+  }
+  const text = await readBodyCapped(req, maxBytes);
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new AppError('validation_failed', 'Malformed JSON body.');
+  }
   const r = schema.safeParse(raw);
   if (!r.success)
     throw new AppError('validation_failed', 'Please check the highlighted fields.', {

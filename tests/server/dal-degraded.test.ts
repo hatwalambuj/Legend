@@ -45,7 +45,11 @@ describe('dal.getTitle degraded', () => {
     expect(t!.title).toBe(good!.title);
     expect(t!.imdbRating).toBe(good!.imdbRating);
     expect(t!.worthIt.verdict.word).toBeTruthy();
-    expect(log).toHaveBeenCalledWith('[dal.getTitle] degraded', {
+    // ADR-013 C-13: one structured JSON line.
+    const line = JSON.parse(String(log.mock.calls[0]![0])) as Record<string, unknown>;
+    expect(line).toMatchObject({
+      level: 'error',
+      event: 'dal_degraded',
       key: 'movie:693134',
       degraded: 'catalog',
       code: 'internal',

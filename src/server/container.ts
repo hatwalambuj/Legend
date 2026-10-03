@@ -13,6 +13,8 @@ import { TmdbDetailProvider } from './providers/tmdb';
 import { MemoryRateLimiter } from './rate-limit';
 import { MemoryCatalogIndex, MemoryWatchProviders } from './repositories/memory/catalog';
 import {
+  MemoryEvents,
+  MemoryImports,
   MemoryProfiles,
   MemoryReviews,
   MemorySettings,
@@ -22,6 +24,8 @@ import {
 } from './repositories/memory/user-data';
 import {
   SupabaseCatalogIndex,
+  SupabaseEvents,
+  SupabaseImports,
   SupabaseProfiles,
   SupabaseRateLimiter,
   SupabaseReviews,
@@ -64,6 +68,11 @@ export function container(): Container {
     watchProviders: live ? new SupabaseWatchProviders() : new MemoryWatchProviders(),
     settings: live ? new SupabaseSettings() : new MemorySettings(),
     rateLimiter: live ? new SupabaseRateLimiter() : new MemoryRateLimiter(),
+    // v1.6 (ADR-013 C-09): anonymous counters; live writes need the service role (server only).
+    events: live
+      ? new SupabaseEvents(e.supabase?.serviceRoleKey ? () => supabaseAdmin() : null)
+      : new MemoryEvents(),
+    imports: live ? new SupabaseImports() : new MemoryImports(),
   };
   return instance;
 }

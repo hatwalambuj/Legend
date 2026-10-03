@@ -8,7 +8,7 @@
  *   Supabase implementation backed by `public.consume_rate_limit()` (correct across serverless instances).
  * OWNER: Backend.
  */
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { AppError } from '@/lib/errors';
 import type { TrustedProxy } from '@/server/env';
 
@@ -33,6 +33,13 @@ export const LIMITS = {
   setPassword: { max: 5, windowSec: 600 },
   /** ADR-012 §7: PUT /api/me/watch-region per IP. */
   watchRegion: { max: 30, windowSec: 60 },
+  /** v1.6 (ADR-013 C-09): POST /api/events per IP (in memory, salted key). */
+  events: { max: 60, windowSec: 60 },
+  /** v1.6 (ADR-013 C-13): POST /api/log per IP, plus a per-process ceiling. */
+  clientLog: { max: 10, windowSec: 60 },
+  clientLogProcess: { max: 300, windowSec: 60 },
+  /** v1.6 (ADR-013 C-11): import previews per user. */
+  importPreview: { max: 20, windowSec: 3600 },
 } as const;
 
 /** Limits keyed by client IP: with TRUSTED_PROXY=none every client shares one key (ADR-001 §A3). */
@@ -42,6 +49,8 @@ const PER_IP: ReadonlySet<keyof typeof LIMITS> = new Set([
   'magicLink',
   'health',
   'watchRegion',
+  'events',
+  'clientLog',
 ]);
 
 /**
@@ -56,7 +65,11 @@ export function limitFor(
   trust: TrustedProxy,
 ): { max: number; windowSec: number } {
   const l = LIMITS[name];
-  const perUser = name === 'export' || name === 'setPassword';
+  const perUser =
+    name === 'export' ||
+    name === 'setPassword' ||
+    name === 'importPreview' ||
+    name === 'clientLogProcess';
   const factor = (demo && !perUser ? 10 : 1) * (trust === 'none' && PER_IP.has(name) ? 20 : 1);
   return factor === 1 ? l : { max: l.max * factor, windowSec: l.windowSec };
 }
@@ -158,4 +171,15 @@ export function clientIp(headers: Pick<Headers, 'get'>, trust: TrustedProxy): st
 /** ID-5: limiter key for an email. SHA-256 of the lower-cased address; the raw email is never kept. */
 export function emailKey(email: string): string {
   return createHash('sha256').update(email.trim().toLowerCase()).digest('hex');
+}
+
+/** Process-local salt: per-IP limiter keys can't be reversed or joined across restarts. */
+const IP_SALT = randomBytes(16).toString('hex');
+
+/**
+ * v1.6 (ADR-013 C-09/C-13): an in-memory limiter key for an IP. Salted SHA-256, never stored, logged
+ * or sent anywhere.
+ */
+export function ipKey(ip: string): string {
+  return createHash('sha256').update(`${IP_SALT}:${ip}`).digest('hex').slice(0, 32);
 }

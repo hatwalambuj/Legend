@@ -19,6 +19,7 @@ import type {
   TitleWatch,
   WatchGroup,
   WatchGroupType,
+  WatchHint,
   WatchProviderItem,
   WatchRegionInfo,
   WatchRegionStore,
@@ -143,4 +144,60 @@ export function buildTitleWatch(
   }
   if (groups.length === 0) return storedCount > 0 ? null : { ...base, status: 'none', groups: [] };
   return { ...base, status: 'available', groups };
+}
+
+/* ------------------------------------------------------------------ */
+/* v1.6 (ADR-013 C-01/C-02): ticket hint + browse provider filter       */
+/* ------------------------------------------------------------------ */
+
+/** Lists that count as "on {service}" (stream, free, ads), in pick order. */
+const HINT_ORDER: (keyof WatchRegionStore)[] = ['s', 'f', 'a'];
+
+function regionStore(watch: WatchStore | null | undefined, region: string) {
+  if (!watch || typeof watch !== 'object' || Array.isArray(watch)) return null;
+  const r = watch[region];
+  return r && typeof r === 'object' ? (r as Record<string, unknown>) : null;
+}
+
+/**
+ * The ticket's provider hint for one region: the first `s` provider (lists are stored in TMDB display
+ * priority order), else the first `f`, else the first `a`; ids missing from the directory are skipped.
+ * null = nothing to stream there, stale (> 30 days) or never fetched. Pure.
+ */
+export function watchHintFor(
+  watch: WatchStore | null | undefined,
+  checkedAt: string | null,
+  region: string,
+  providers: ProviderDirectory,
+  now: Date = new Date(),
+): WatchHint | null {
+  if (!isWatchFresh(checkedAt, now)) return null;
+  const r = regionStore(watch, region);
+  if (!r) return null;
+  for (const key of HINT_ORDER)
+    for (const id of ids(r[key])) {
+      const p = providers.get(id);
+      if (!p) continue;
+      const fallback = providerMonogram(id, p.name);
+      return {
+        providerId: id,
+        name: p.name,
+        logoPath: p.logoPath,
+        monogram: (p.monogram || fallback.monogram).slice(0, 2),
+        tile: p.tile ?? fallback.tile,
+      };
+    }
+  return null;
+}
+
+/** Browse filter (memory mirror of `watch_tags @> {R:id}` + the 30-day rule). */
+export function watchHasProvider(
+  stored: StoredWatch | null | undefined,
+  region: string,
+  providerId: number,
+  now: Date = new Date(),
+): boolean {
+  if (!stored || !isWatchFresh(stored.checkedAt, now)) return false;
+  const r = regionStore(stored.store, region);
+  return !!r && HINT_ORDER.some((k) => ids(r[k]).includes(providerId));
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { exportQuerySchema } from '@/lib/contracts';
 import { container } from '@/server/container';
 import { today } from '@/server/env';
+import { recordEvent } from '@/server/events';
 import { CACHE, parseQuery, route } from '@/server/http';
 import { buildExport } from '@/server/services/export';
 import { requireSession } from '@/server/session';
@@ -14,6 +15,7 @@ export const GET = route(async (req) => {
   const session = await requireSession(c);
   const { format } = parseQuery(req, exportQuerySchema);
   const file = await buildExport(c, session, format, today());
+  recordEvent('export_downloaded', format);
   return new NextResponse(file.body, {
     status: 200,
     headers: {

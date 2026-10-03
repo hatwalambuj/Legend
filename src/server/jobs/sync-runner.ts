@@ -38,6 +38,8 @@ export interface SyncSteps {
   palettes(opts: { dryRun: boolean }): Promise<StepResult>;
   disagreements(): Promise<unknown>;
   purge(): Promise<unknown>;
+  /** v1.6 (ADR-013 C-09): `events_purge` retention; full non-dry runs only. Optional for older wiring. */
+  eventsPurge?(): Promise<unknown>;
   revalidate(tags: string[]): Promise<unknown>;
 }
 
@@ -72,6 +74,7 @@ export async function runSync(
       record('palettes', await steps.palettes({ dryRun }));
       counts.disagreements = await steps.disagreements();
       if (!dryRun) counts.purge = await steps.purge();
+      if (!dryRun && steps.eventsPurge) counts.events_purge = await steps.eventsPurge();
     }
     if (!dryRun && wrote > 0) counts.revalidate = await steps.revalidate([...tags]);
     const status = reasons.length ? 'aborted' : 'ok';

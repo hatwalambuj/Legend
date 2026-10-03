@@ -9,7 +9,8 @@
  * OWNER: Backend (reference mapping by Architect, tests in tests/server/enrich.test.ts).
  */
 import { normalizeKeyword } from '@/lib/vibes';
-import type { MediaType, SeriesStatus, TitleKey } from '@/lib/types';
+import { normalizeSearch, slugify, sortTitle, truncate } from '@/lib/text';
+import type { Genre, MediaType, SeriesStatus, TitleKey } from '@/lib/types';
 
 /** Row shape accepted by public.catalog_set_enrichment(jsonb). */
 export interface EnrichmentRow {
@@ -24,6 +25,28 @@ export interface EnrichmentRow {
   certification: string | null;
   keywords: string[];
   recommendation_keys: TitleKey[];
+  /**
+   * v1.6 (ADR-013 C-06): catalogue core fields from the same detail body. The SQL applies them only to
+   * UNLISTED rows (discover owns listed rows) and stamps synced_at; is_listed/pitch_hook never change.
+   */
+  core?: EnrichmentCore;
+}
+
+export interface EnrichmentCore {
+  title: string;
+  original_title: string;
+  slug: string;
+  sort_title: string;
+  search_text: string;
+  overview_short: string;
+  release_date: string | null;
+  vote_average: number;
+  vote_count: number;
+  popularity: number;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  genre_ids: number[];
+  genres: Genre[];
 }
 
 export const RECOMMENDATION_LIMIT = 12;
@@ -143,4 +166,44 @@ export function enrichmentAppends(mediaType: MediaType): string {
     // ADR-012 §1: availability rides on the same call (6 appends, TMDB allows 20).
     'watch/providers',
   ].join(',');
+}
+
+const isoDay = (v: unknown): string | null =>
+  typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+const num = (v: unknown, fallback = 0): number =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+
+/**
+ * v1.6 (ADR-013 C-06): the catalogue core of a TMDB detail body (same normalisation as discover:
+ * src/lib/text.ts). null when the body has no title (never overwrite a row with an empty one).
+ */
+export function mapTmdbCore(mediaType: MediaType, body: unknown): EnrichmentCore | null {
+  const d = obj(body);
+  const title = str(mediaType === 'movie' ? d.title : d.name);
+  if (!title) return null;
+  const originalTitle = str(mediaType === 'movie' ? d.original_title : d.original_name) ?? title;
+  const genres: Genre[] = arr(d.genres)
+    .map(obj)
+    .flatMap((g) =>
+      typeof g.id === 'number' && Number.isInteger(g.id) && g.id > 0
+        ? [{ id: g.id, name: str(g.name) ?? 'Other' }]
+        : [],
+    );
+  const path = (v: unknown) => (typeof v === 'string' && /^\/[\w.-]+$/.test(v) ? v : null);
+  return {
+    title,
+    original_title: originalTitle,
+    slug: slugify(title),
+    sort_title: sortTitle(title),
+    search_text: normalizeSearch(`${title} ${originalTitle}`),
+    overview_short: truncate((str(d.overview) ?? '').replace(/\s+/g, ' '), 300),
+    release_date: isoDay(mediaType === 'movie' ? d.release_date : d.first_air_date),
+    vote_average: Math.round(Math.min(Math.max(num(d.vote_average), 0), 10) * 10) / 10,
+    vote_count: Math.max(0, Math.round(num(d.vote_count))),
+    popularity: Math.max(0, num(d.popularity)),
+    poster_path: path(d.poster_path),
+    backdrop_path: path(d.backdrop_path),
+    genre_ids: genres.map((g) => g.id),
+    genres,
+  };
 }

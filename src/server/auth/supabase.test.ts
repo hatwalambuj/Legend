@@ -8,6 +8,10 @@ function fakeClient(over: Record<string, unknown> = {}) {
   const profile = { handle: 'alice', display_name: 'Alice', avatar_url: null };
   const auth = {
     getUser: vi.fn(async () => ({ data: { user }, error: null })),
+    getClaims: vi.fn(async () => ({
+      data: { claims: { sub: user.id, email: user.email } },
+      error: null,
+    })),
     signUp: vi.fn(async () => ({ data: { user, session: {} }, error: null })),
     signInWithPassword: vi.fn(async () => ({ data: { user }, error: null })),
     signOut: vi.fn(async () => ({ error: null })),
@@ -16,16 +20,19 @@ function fakeClient(over: Record<string, unknown> = {}) {
     ...over,
   };
   const rpc = vi.fn(async () => ({ data: true, error: null }));
+  const profileRow = 'profile' in over ? over.profile : profile;
   const from = vi.fn(() => ({
-    select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: profile, error: null }) }) }),
+    select: () => ({
+      eq: () => ({ maybeSingle: async () => ({ data: profileRow, error: null }) }),
+    }),
   }));
   const client = { auth, rpc, from } as unknown as SupabaseClient;
   return { client, auth, rpc, provider: new SupabaseAuthProvider(() => client) };
 }
 
 describe('SupabaseAuthProvider', () => {
-  it('getSession validates with getUser() and joins the profile', async () => {
-    const { provider } = fakeClient();
+  it('getSession validates with getClaims() (never getUser) and joins the profile (ADR-013 C-05)', async () => {
+    const { provider, auth } = fakeClient();
     expect(await provider.getSession()).toEqual({
       user: {
         id: 'u1',
@@ -33,13 +40,23 @@ describe('SupabaseAuthProvider', () => {
         handle: 'alice',
         displayName: 'Alice',
         avatarUrl: null,
+        avatarColor: null,
         watchRegion: null,
       },
     });
+    expect(auth.getClaims).toHaveBeenCalledTimes(1);
+    expect(auth.getUser).not.toHaveBeenCalled();
     const anon = fakeClient({
-      getUser: async () => ({ data: { user: null }, error: { message: 'no session' } }),
+      getClaims: async () => ({ data: null, error: { message: 'no session' } }),
     });
     expect(await anon.provider.getSession()).toBeNull();
+    const noSub = fakeClient({ getClaims: async () => ({ data: { claims: {} }, error: null }) });
+    expect(await noSub.provider.getSession()).toBeNull();
+  });
+
+  it('getSession is null when the profile is gone (e.g. a deleted user)', async () => {
+    const { provider } = fakeClient({ profile: null });
+    expect(await provider.getSession()).toBeNull();
   });
 
   it('sign-up pre-checks the handle and passes metadata for the profile trigger', async () => {
@@ -302,7 +319,12 @@ describe('SupabaseAuthProvider: watchRegion from user_settings (ADR-012 §7)', (
       }),
     }));
     const client = {
-      auth: { getUser: async () => ({ data: { user }, error: null }) },
+      auth: {
+        getClaims: async () => ({
+          data: { claims: { sub: user.id, email: user.email } },
+          error: null,
+        }),
+      },
       from,
     } as unknown as SupabaseClient;
     return new SupabaseAuthProvider(() => client).getSession();

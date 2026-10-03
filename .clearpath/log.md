@@ -50,3 +50,9 @@ confidence: high
 ## 2026-10-03 · Close-out started
 - founder: close everything except founder inputs; deploy all roles + reviewer; use arena + clearpath.
 - created FOUNDER_INPUTS (F1–F10 with workarounds), CLOSEOUT_BOARD (C-01…C-18), roles devops-release/security-reviewer/tech-writer.
+
+## 2026-10-03 · Close-out backend (ADR-013, WORK_SPLIT §7)
+- done: C-00 shared layer (types/contracts/errors 413/api-client/data-access/format/routes/analytics + brand/share/avatar/report-error, guards, og fonts, next.config tracing); C-01a/02a/03a/05/06/08a/09a/10a/11a/12a/13a; 6 new migrations 20261003090000…095000 (not applied).
+- deviations: import 24 h budget counts imported stubs in SQL (consume_rate_limit can't sum rows); catalog_enrich_due now returns is_listed (drop+create); PublicProfile/SessionUser.avatarColor optional in type; watchHint via `catalog.storedWatch` + in-process row memo (no extra round trip in live lists).
+- pending: C-15a guard waits for FE C-15b. Deploy order: apply migrations before deploying (profile selects avatar_color).
+- verification: lint, typecheck, 651 unit, build, format:check green. No commit.

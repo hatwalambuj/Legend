@@ -1,6 +1,6 @@
 /**
  * Supabase Auth provider (live mode, ADR-005). OWNER: Backend.
- * - getSession: `auth.getUser()` (validates the JWT with Supabase, never trusts getSession() alone) +
+ * - getSession: `auth.getClaims()` (verified JWT claims, ADR-013 C-05; never trusts getSession() alone) +
  *   the profiles row → Session.
  * - signUp: handle pre-check via rpc('handle_available'), then auth.signUp with
  *   options.data = { handle, display_name }; the `on_auth_user_created` trigger creates the profile
@@ -17,6 +17,7 @@
  *   triggers fire for every cascaded row. Then the session cookies are cleared.
  */
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { isAvatarColor } from '@/lib/avatar';
 import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { Session } from '@/lib/types';
 import { REAUTH_WINDOW_MS, type AuthProvider } from '@/server/ports';
@@ -106,18 +107,26 @@ export class SupabaseAuthProvider implements AuthProvider {
     private readonly now: () => number = Date.now,
   ) {}
 
-  private async sessionFor(db: SupabaseClient, user: User): Promise<Session | null> {
+  private async sessionFor(
+    db: SupabaseClient,
+    user: Pick<User, 'id' | 'email'>,
+  ): Promise<Session | null> {
     const [{ data, error }, watchRegion] = await Promise.all([
       db
         .from('profiles')
-        .select('handle, display_name, avatar_url')
+        .select('handle, display_name, avatar_url, avatar_color')
         .eq('id', user.id)
         .maybeSingle(),
       this.watchRegionOf(db, user.id),
     ]);
     if (error) throw new AppError('internal', 'Something went wrong. Try again.', { cause: error });
     if (!data) return null;
-    const p = data as { handle: string; display_name: string; avatar_url: string | null };
+    const p = data as {
+      handle: string;
+      display_name: string;
+      avatar_url: string | null;
+      avatar_color?: unknown;
+    };
     return {
       user: {
         id: user.id,
@@ -125,6 +134,7 @@ export class SupabaseAuthProvider implements AuthProvider {
         handle: String(p.handle),
         displayName: p.display_name,
         avatarUrl: p.avatar_url ?? null,
+        avatarColor: isAvatarColor(p.avatar_color) ? p.avatar_color : null,
         watchRegion,
       },
     };
@@ -152,11 +162,20 @@ export class SupabaseAuthProvider implements AuthProvider {
     }
   }
 
+  /**
+   * ADR-013 C-05 (AR-5): verified JWT claims (`getClaims`: local JWKS check with asymmetric keys, an
+   * Auth-server call with the legacy HS256 secret), then the profile row decides: no profile (e.g. a
+   * deleted user) → no session.
+   */
   async getSession(): Promise<Session | null> {
     const db = await this.client();
-    const { data, error } = await db.auth.getUser();
-    if (error || !data.user) return null;
-    return this.sessionFor(db, data.user);
+    const { data, error } = await db.auth.getClaims();
+    const claims = data?.claims as { sub?: unknown; email?: unknown } | undefined;
+    if (error || !claims || typeof claims.sub !== 'string' || !claims.sub) return null;
+    return this.sessionFor(db, {
+      id: claims.sub,
+      email: typeof claims.email === 'string' ? claims.email : undefined,
+    });
   }
 
   async isHandleAvailable(handle: string): Promise<boolean> {
@@ -198,6 +217,7 @@ export class SupabaseAuthProvider implements AuthProvider {
         handle,
         displayName,
         avatarUrl: null,
+        avatarColor: null,
         watchRegion: null,
       },
     };

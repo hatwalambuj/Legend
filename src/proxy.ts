@@ -41,9 +41,10 @@ export async function proxy(request: NextRequest) {
     },
   });
   try {
-    await supabase.auth.getUser();
+    // ADR-013 C-05: verified claims (local JWKS with asymmetric keys); refreshes cookies via setAll.
+    await supabase.auth.getClaims();
   } catch (err) {
-    console.warn('[proxy] session refresh failed', err);
+    console.warn('[proxy] session refresh failed', err instanceof Error ? err.name : 'error');
   }
   return response;
 }

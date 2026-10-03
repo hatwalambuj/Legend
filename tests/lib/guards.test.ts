@@ -33,4 +33,25 @@ describe('founder constraints', () => {
     );
     expect(hits).toEqual([]);
   });
+
+  // ADR-013 §0 / C-09 / C-13: analytics and error tracking are first-party only.
+  it('ships no third-party analytics or error-tracking vendor in src/ (ADR-013)', () => {
+    const vendor =
+      /sentry|posthog|plausible|googletagmanager|google-analytics|gtag\(|@segment\/|segment\.(io|com)|mixpanel/i;
+    const hits = files('src').filter((f) => vendor.test(readFileSync(f, 'utf8')));
+    expect(hits).toEqual([]);
+  });
+
+  // ADR-013 C-11: import files are parsed in the browser and never leave the device.
+  it('the import parsers make no network call and import no server code', () => {
+    const dir = join('src', 'lib', 'import');
+    const hits = files(dir)
+      .filter((f) => !f.endsWith('.test.ts'))
+      .filter((f) =>
+        /\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|from '@\/server|from "@\/server|next\/server/.test(
+          readFileSync(f, 'utf8'),
+        ),
+      );
+    expect(hits).toEqual([]);
+  });
 });

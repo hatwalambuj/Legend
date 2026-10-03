@@ -132,6 +132,7 @@ export function buildJsonExport(input: {
       watchedWhere: s.watchedWhere,
       note: s.note,
       number: s.number,
+      season: s.season ?? null,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
       title: titleRef(s.title),

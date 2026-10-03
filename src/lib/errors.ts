@@ -2,6 +2,7 @@
  * Error model shared by route handlers, the data-access layer and the typed API client.
  * OWNER: Architect. FROZEN. See docs/04-architecture/API_CONTRACT.md §2.
  */
+import { BRAND_NAME } from './brand';
 
 export const ERROR_STATUS = {
   validation_failed: 400,
@@ -14,6 +15,8 @@ export const ERROR_STATUS = {
   email_taken: 409,
   handle_taken: 409,
   conflict: 409,
+  /** v1.6 (ADR-013): body or row count over the route limit (imports, /api/events, /api/log). */
+  payload_too_large: 413,
   unsupported_media_type: 415,
   rate_limited: 429,
   not_implemented: 501,
@@ -83,4 +86,9 @@ export const ERROR_COPY = {
   not_found: "This ticket doesn't exist.",
   upstream_unavailable: "The projector jammed. We couldn't load that.",
   internal: 'Something went wrong. Try again.',
+  /** v1.6 (ADR-013 C-11). */
+  payload_too_large: "That's too much at once. Try a smaller file.",
+  /** v1.6: search / import copy for titles outside the curated catalogue (C-15 brand). */
+  not_in_catalog: `Not in ${BRAND_NAME} — we only list titles rated 6.5+`,
+  rate_limited_import: "That's a lot of imports for one day. Try again tomorrow.",
 } as const;

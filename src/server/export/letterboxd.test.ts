@@ -29,6 +29,7 @@ const stub = (key: string, watchedOn: string): DiaryEntry => ({
   watchedWhere: null,
   note: '',
   number: 1,
+  season: null,
   createdAt: `${watchedOn}T20:00:00Z`,
   updatedAt: `${watchedOn}T20:00:00Z`,
   title: title(key),

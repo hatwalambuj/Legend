@@ -514,6 +514,8 @@ export interface SessionUser {
    * Treat undefined as null.
    */
   watchRegion?: string | null;
+  /** v1.6 (ADR-013 C-12): header avatar colour (same rules as PublicProfile.avatarColor). */
+  avatarColor?: AvatarColor | null;
 }
 
 export interface Session {

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import catalogJson from '@/fixtures/catalog.json';
 import type { FixtureCatalog } from '@/fixtures/schema';
-import { formatCount, formatScore, titleScores } from '@/lib/format';
+import {
+  formatCount,
+  formatScore,
+  seasonLabel,
+  ticketAccessibleName,
+  titleScores,
+} from '@/lib/format';
 import { imdbTitleHref } from '@/lib/routes';
 
 const catalog = catalogJson as unknown as FixtureCatalog;
@@ -38,6 +44,33 @@ describe('format', () => {
     expect(imdbTitleHref('tt15239678')).toBe('https://www.imdb.com/title/tt15239678/');
     expect(imdbTitleHref(null)).toBeNull();
     expect(imdbTitleHref('nm0000123')).toBeNull();
+  });
+});
+
+describe('v1.6 format helpers (ADR-013)', () => {
+  it('seasonLabel pads to two digits and hides the whole-show case', () => {
+    expect(seasonLabel(3)).toBe('S03');
+    expect(seasonLabel(12)).toBe('S12');
+    expect(seasonLabel(120)).toBe('S120');
+    expect(seasonLabel(null)).toBe('');
+    expect(seasonLabel(0)).toBe('');
+  });
+
+  it('ticketAccessibleName appends the watch hint only when present', () => {
+    const t = { title: 'Dune', mediaType: 'movie' as const, year: 2024, voteAverage: 8.2 };
+    expect(ticketAccessibleName({ ...t, imdbRating: null })).toBe(
+      'Dune, movie, 2024, rated 8.2 on TMDB',
+    );
+    expect(
+      ticketAccessibleName({
+        ...t,
+        imdbRating: 8.5,
+        watchHint: { providerId: 8, name: 'Netflix', logoPath: null, monogram: 'N', tile: null },
+      }),
+    ).toBe('Dune, movie, 2024, rated 8.2 on TMDB and 8.5 on IMDb, on Netflix');
+    expect(ticketAccessibleName({ ...t, imdbRating: null, watchHint: null })).toBe(
+      'Dune, movie, 2024, rated 8.2 on TMDB',
+    );
   });
 });
 

@@ -21,6 +21,7 @@ import type {
   ReviewWithTitle,
   SearchResult,
   Session,
+  StubShareCard,
   TitleDetail,
   TitleKey,
   TitleState,
@@ -29,20 +30,47 @@ import type {
   TypeFilter,
   WalletItem,
   MediaType,
+  WatchProviderChip,
   WatchRegionInfo,
 } from './types';
+
+/** v1.6 (ADR-013 C-01): a region code (e.g. `(await dal.getWatchRegion()).region`) → items carry `watchHint`. */
+export interface RegionOpts {
+  region?: string;
+}
 
 export interface DataAccess {
   /** Resolved once per process from env (ADR-006). Cheap, sync-safe. */
   getMode(): AppMode;
 
   /* ---------- public catalogue ---------- */
-  /** Browse grid. Only `isListed` titles. Keyset-paginated; `total` = matching row count. */
-  listCatalog(query: CatalogQuery): Promise<Page<TitleSummary>>;
+  /**
+   * Browse grid. Only `isListed` titles. Keyset-paginated; `total` = matching row count.
+   * v1.6: `query.region` → `watchHint` on items + `region` echoed; `query.provider` filters (needs region).
+   */
+  listCatalog(query: CatalogQuery): Promise<Page<TitleSummary> & { region?: string }>;
   /** Home "Trending" rail: popularity_desc, listed only. */
-  listTrending(type: TypeFilter, limit?: number): Promise<TitleSummary[]>;
+  listTrending(type: TypeFilter, limit?: number, opts?: RegionOpts): Promise<TitleSummary[]>;
   /** Accent/case-insensitive partial title match within listed titles (A4). */
-  searchCatalog(q: string, type?: TypeFilter, limit?: number): Promise<SearchResult>;
+  searchCatalog(
+    q: string,
+    type?: TypeFilter,
+    limit?: number,
+    opts?: RegionOpts,
+  ): Promise<SearchResult & { region?: string }>;
+  /**
+   * v1.6 (ADR-013 C-03): existence + canonical slug from the index only (same fallbacks as getTitle,
+   * `cache()`-shared with it). null → `notFound()`; a slug mismatch → `permanentRedirect()`. Call it
+   * before any Suspense boundary.
+   */
+  resolveTitle(mediaType: MediaType, tmdbId: number): Promise<{ slug: string } | null>;
+  /** v1.6 (ADR-013 C-02): browse chips for a region (<= 6, count >= 1); [] when unavailable. */
+  listWatchProviders(region: string): Promise<WatchProviderChip[]>;
+  /**
+   * v1.6 (ADR-013 C-08): data of a shared stub (never the note or review text). null → 404: not a uuid,
+   * missing/deleted stub, owner gone, or the profile isn't shareable.
+   */
+  getStubShare(id: string): Promise<StubShareCard | null>;
   /**
    * Title page payload (listed OR unlisted — hysteresis titles stay reachable by URL, D4).
    * null → 404. Never throws for TMDB outages: degrades to detailStatus 'stale' | 'index_only'.
@@ -90,5 +118,7 @@ export interface DataAccess {
   /** Signed-in user's state per title; empty object when signed out. */
   myTitleStates(keys: TitleKey[]): Promise<Record<TitleKey, TitleState>>;
   /** Owner-only watchlist. Throws AppError('unauthenticated') when signed out. */
-  myWatchlist(opts?: { cursor?: string | null; limit?: number }): Promise<Page<TitleSummary>>;
+  myWatchlist(
+    opts?: { cursor?: string | null; limit?: number } & RegionOpts,
+  ): Promise<Page<TitleSummary> & { region?: string }>;
 }

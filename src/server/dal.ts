@@ -10,9 +10,11 @@ import { AppError, ERROR_COPY } from '@/lib/errors';
 import type { DataAccess } from '@/lib/data-access';
 import { normalizeSearch } from '@/lib/text';
 import { SORT_KEYS } from '@/lib/catalog-order';
-import { toTitleKey } from '@/lib/keys';
+import { parseTitleKey, toTitleKey } from '@/lib/keys';
 import type {
+  CatalogQuery,
   MediaType,
+  StubShareCard,
   TitleDegraded,
   TitleDetail,
   TitleKey,
@@ -20,6 +22,7 @@ import type {
   TitleSummary,
   TitleWatch,
   TypeFilter,
+  WatchProviderChip,
   WatchRegionInfo,
 } from '@/lib/types';
 import { buildWorthIt } from '@/lib/worth-it';
@@ -31,8 +34,10 @@ import {
   type CatalogEntry,
 } from './degraded';
 import { env, today } from './env';
+import { log } from './log';
 import { regionInfo, requestWatchRegion, watchRegionConfig } from './region';
-import { buildTitleWatch, type StoredWatch } from './watch';
+import { isProfileShareable } from './share';
+import { buildTitleWatch, watchHintFor, type StoredWatch } from './watch';
 
 const safeType = (t: TypeFilter | undefined): TypeFilter =>
   t === 'movie' || t === 'tv' ? t : 'all';
@@ -52,14 +57,16 @@ const errCode = (e: unknown) =>
   e instanceof AppError ? e.code : e instanceof Error ? e.name : 'error';
 
 function logDegraded(key: TitleKey, degraded: TitleDegraded, e: unknown) {
-  console.error('[dal.getTitle] degraded', { key, degraded, code: errCode(e) });
+  log.error('dal_degraded', { key, degraded, code: errCode(e) });
 }
 
 /**
  * Catalogue entry with the ADR-011 §4 fallbacks: DB → last-good copy → TMDB-derived summary.
  * `null` = unknown title (404). Throws `upstream_unavailable` only when both our DB and TMDB fail.
  */
-async function loadEntry(
+const loadEntry = cache(loadEntryUncached);
+
+async function loadEntryUncached(
   mediaType: MediaType,
   tmdbId: number,
 ): Promise<{ entry: CatalogEntry; degraded: TitleDegraded } | null> {
@@ -146,10 +153,84 @@ async function watchBlock(
       degraded,
     });
   } catch (e) {
-    console.error('[dal] where-to-watch unavailable, hiding the block', { code: errCode(e) });
+    log.warn('dal_watch_unavailable', { code: errCode(e) });
     return null;
   }
 }
+
+/**
+ * v1.6 (ADR-013 C-01): a list request's region → the supported region it resolves to (unsupported →
+ * the default region), or undefined when the call had none (then `watchHint` stays absent).
+ */
+function listRegion(code: string | undefined): string | undefined {
+  if (!code) return undefined;
+  return regionInfo(code, 'query', watchRegionConfig()).region;
+}
+
+/** Adds `watchHint` for `region` to every item (null when unknown/stale; never fails the list). */
+async function withHints<T extends TitleSummary>(items: T[], region: string | undefined) {
+  if (!region || items.length === 0) return items;
+  try {
+    const [providers, stored] = await Promise.all([
+      providerDirectory(),
+      container().catalog.storedWatch(items.map((t) => t.key)),
+    ]);
+    const now = new Date();
+    return items.map((t) => {
+      const w = stored.get(t.key);
+      return {
+        ...t,
+        watchHint: w ? watchHintFor(w.store, w.checkedAt, region, providers, now) : null,
+      };
+    });
+  } catch (e) {
+    log.warn('dal_watch_hint_unavailable', { code: errCode(e) });
+    return items.map((t) => ({ ...t, watchHint: null }));
+  }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Deduped per request: the share landing, its metadata and image routes all read it. */
+const getStubShare = cache(async (id: string): Promise<StubShareCard | null> => {
+  if (!UUID_RE.test(id)) return null;
+  const c = container();
+  const stub = await c.stubs.getById(id);
+  if (!stub) return null;
+  const ref = parseTitleKey(stub.titleKey);
+  const [profile, title] = await Promise.all([
+    c.profiles.getById(stub.userId),
+    ref ? c.catalog.get(ref.mediaType, ref.tmdbId) : Promise.resolve(null),
+  ]);
+  if (!profile || !isProfileShareable(profile) || !title) return null;
+  let host = 'localhost';
+  try {
+    host = new URL(env().siteUrl).host;
+  } catch {
+    /* keep the placeholder */
+  }
+  // Explicit picks only: never the note, review text or spoiler content (ADR-013 C-08).
+  return {
+    stubId: stub.id,
+    number: stub.number,
+    watchedOn: stub.watchedOn,
+    season: stub.season,
+    title: {
+      key: title.key,
+      mediaType: title.mediaType,
+      title: title.title,
+      year: title.year,
+      voteAverage: title.voteAverage,
+      imdbRating: title.imdbRating,
+      posterPath: title.posterPath,
+      palette: title.palette,
+    },
+    handle: profile.handle,
+    displayName: profile.displayName,
+    avatarColor: profile.avatarColor ?? null,
+    profileUrl: `${host}/u/${profile.handle}`,
+  };
+});
 
 const defaultRegion = () => regionInfo(null, 'default', watchRegionConfig());
 
@@ -188,28 +269,64 @@ export const dal: DataAccess = {
   getMode: () => env().mode,
 
   async listCatalog(query) {
+    const region = listRegion(query.region);
+    const provider =
+      region && Number.isInteger(query.provider) && query.provider! > 0
+        ? query.provider
+        : undefined;
     // Unknown sort/type values fall back to the defaults, never an error (ADR-003 §2).
-    return container().catalog.list({
+    const q: CatalogQuery = {
       type: safeType(query.type),
       sort: (SORT_KEYS as readonly string[]).includes(query.sort) ? query.sort : 'release_desc',
       genreIds: query.genreIds?.filter((g) => Number.isInteger(g) && g > 0).slice(0, 20),
       cursor: query.cursor,
       limit: clampLimit(query.limit),
-    });
+      ...(region ? { region } : {}),
+      ...(provider ? { provider } : {}),
+    };
+    const page = await container().catalog.list(q);
+    if (!region) return page;
+    return { ...page, items: await withHints(page.items, region), region };
   },
 
-  async listTrending(type, limit = 10) {
-    return container().catalog.trending(safeType(type), clampLimit(limit, 10));
+  async listTrending(type, limit = 10, opts = {}) {
+    const items = await container().catalog.trending(safeType(type), clampLimit(limit, 10));
+    return withHints(items, listRegion(opts.region));
   },
 
-  async searchCatalog(q, type = 'all', limit = 20) {
+  async searchCatalog(q, type = 'all', limit = 20, opts = {}) {
     const query = q.trim().slice(0, 100);
     const norm = normalizeSearch(query);
-    const items = norm
+    const region = listRegion(opts.region);
+    const found = norm
       ? await container().catalog.search(norm, safeType(type), clampLimit(limit))
       : [];
-    return { query, items, notInCatalog: query.length > 0 && items.length === 0 };
+    const items = await withHints(found, region);
+    return {
+      query,
+      items,
+      notInCatalog: query.length > 0 && items.length === 0,
+      ...(region ? { region } : {}),
+    };
   },
+
+  async resolveTitle(mediaType, tmdbId) {
+    const loaded = await loadEntry(mediaType, tmdbId);
+    return loaded ? { slug: loaded.entry.summary.slug } : null;
+  },
+
+  async listWatchProviders(region): Promise<WatchProviderChip[]> {
+    const code = listRegion(region);
+    if (!code) return [];
+    try {
+      return await container().watchProviders.chips(code);
+    } catch (e) {
+      log.warn('dal_watch_providers_unavailable', { code: errCode(e) });
+      return [];
+    }
+  },
+
+  getStubShare,
 
   getTitle,
 
@@ -277,10 +394,13 @@ export const dal: DataAccess = {
   async myWatchlist(opts = {}) {
     const s = await getSession();
     if (!s) throw new AppError('unauthenticated', 'Sign in to see your watchlist.');
-    return container().watchlist.list(s.user.id, {
+    const page = await container().watchlist.list(s.user.id, {
       cursor: opts.cursor,
       limit: clampLimit(opts.limit),
     });
+    const region = listRegion(opts.region);
+    if (!region) return page;
+    return { ...page, items: await withHints(page.items, region), region };
   },
 };
 
@@ -305,7 +425,7 @@ async function loadDetail(
     };
   } catch (e) {
     if (!(e instanceof AppError && e.code === 'not_implemented'))
-      console.error('[dal.getTitle] detail failed, degrading to index-only', e);
+      log.error('dal_detail_failed', { key: summary.key, code: errCode(e) });
     return indexOnly(summary, storedTagline);
   }
 }

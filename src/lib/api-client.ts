@@ -10,6 +10,10 @@ import type {
   CreateStubInput,
   DiaryResponse,
   HandleAvailableResponse,
+  ImportCommitInput,
+  ImportCommitResponse,
+  ImportPreviewInput,
+  ImportPreviewResponse,
   MagicLinkInput,
   MagicLinkResponse,
   MeResponse,
@@ -30,6 +34,7 @@ import type {
   UpsertReviewInput,
   WatchlistListResponse,
   WatchlistResponse,
+  WatchProvidersResponse,
 } from './contracts';
 import type { ApiErrorBody, ErrorCode } from './errors';
 import type { CatalogQuery, MediaType, ReviewSort, TitleKey, TypeFilter } from './types';
@@ -91,13 +96,19 @@ export const api = {
   me: () => request<MeResponse>('GET', '/api/me'),
 
   /* ---- catalogue (public) ---- */
+  /** v1.6: `q.region` → items carry `watchHint` (resend the echoed `region` on "Load more"); `q.provider` needs `region`. */
   catalog: (q: CatalogQuery) =>
     request<CatalogResponse>(
       'GET',
-      `/api/catalog${qs({ type: q.type, sort: q.sort, cursor: q.cursor, limit: q.limit, genre: q.genreIds?.join(',') })}`,
+      `/api/catalog${qs({ type: q.type, sort: q.sort, cursor: q.cursor, limit: q.limit, genre: q.genreIds?.join(','), region: q.region, provider: q.provider })}`,
     ),
-  search: (q: string, type: TypeFilter = 'all', limit = 20) =>
-    request<SearchResponse>('GET', `/api/search${qs({ q, type, limit })}`),
+  search: (q: string, type: TypeFilter = 'all', limit = 20, region?: string) =>
+    request<SearchResponse>('GET', `/api/search${qs({ q, type, limit, region })}`),
+  /** v1.6 (§5.23): browse "On {name}" chips for a region (public, CDN-cached per URL). */
+  watchProviders: (region: string) =>
+    request<WatchProvidersResponse>('GET', `/api/watch/providers${qs({ region })}`, undefined, {
+      cache: 'default',
+    }),
   titleReviews: (
     mediaType: MediaType,
     tmdbId: number,
@@ -129,8 +140,8 @@ export const api = {
     request<TitleStatesResponse>('GET', `/api/me/title-states${qs({ keys: keys.join(',') })}`),
   diary: (type: TypeFilter = 'all', cursor?: string | null) =>
     request<DiaryResponse>('GET', `/api/me/stubs${qs({ type, cursor })}`),
-  watchlist: (cursor?: string | null) =>
-    request<WatchlistListResponse>('GET', `/api/me/watchlist${qs({ cursor })}`),
+  watchlist: (cursor?: string | null, region?: string) =>
+    request<WatchlistListResponse>('GET', `/api/me/watchlist${qs({ cursor, region })}`),
 
   /* ---- stubs ---- */
   createStub: (input: CreateStubInput) =>
@@ -157,6 +168,12 @@ export const api = {
     request<SetWatchRegionResponse>('PUT', '/api/me/watch-region', { region }),
   updateProfile: (input: UpdateProfileInput) =>
     request<ProfileResponse>('PATCH', '/api/me/profile', input),
+  /** v1.6 (§5.26): matched counts + sample for parsed rows (send rows without review bodies). Writes nothing. */
+  importPreview: (input: ImportPreviewInput) =>
+    request<ImportPreviewResponse>('POST', '/api/me/imports/preview', input),
+  /** v1.6 (§5.27): one chunk (<= 1000 rows; the UI sends 500). Idempotent per (user, row). */
+  importCommit: (input: ImportCommitInput) =>
+    request<ImportCommitResponse>('POST', '/api/me/imports', input),
   /** Export is a plain navigation/download: <a href={exportUrl('letterboxd')} download>. */
   exportUrl: (format: 'letterboxd' | 'json') => `/api/me/export${qs({ format })}`,
 

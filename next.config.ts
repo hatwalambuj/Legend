@@ -41,6 +41,11 @@ const nextConfig: NextConfig = {
   },
   // sharp is only used by offline scripts (sync job, fixture builder), never by the app.
   serverExternalPackages: ['sharp', '@electric-sql/pglite'],
+  // ADR-013 C-08: the OG/story renderers read src/og/fonts/*.ttf at runtime (next/og needs ttf/otf/woff).
+  outputFileTracingIncludes: {
+    '/title/[type]/[slug]/opengraph-image': ['./src/og/fonts/**'],
+    '/share/stub/[id]/**': ['./src/og/fonts/**'],
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

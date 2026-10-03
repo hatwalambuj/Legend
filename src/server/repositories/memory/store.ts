@@ -15,12 +15,24 @@ import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSyn
 import { dirname, join } from 'node:path';
 import catalogJson from '@/fixtures/catalog.json';
 import seedJson from '@/fixtures/seed.json';
-import type { FixtureCatalog, FixtureSeed, FixtureTitle } from '@/fixtures/schema';
+import type { FixtureCatalog, FixtureSeed, FixtureStub, FixtureTitle } from '@/fixtures/schema';
+import type { AvatarColor } from '@/lib/types';
 import { env } from '@/server/env';
 
-/** Seed users may get an avatar URL via profile edits, so widen `avatarUrl`. */
+/** Seed users may get an avatar URL via profile edits, so widen `avatarUrl`. v1.6: `avatarColor`. */
 export type DemoUser = Omit<FixtureSeed['users'][number], 'avatarUrl'> & {
   avatarUrl: string | null;
+  avatarColor?: AvatarColor | null;
+};
+
+/**
+ * Stub row. v1.6 additions are optional so seed rows and older data files still load: `season`
+ * (ADR-013 C-10), `source` + `importKey` (C-11, mirror of `stubs.source` / `stubs.import_key`).
+ */
+export type DemoStub = FixtureStub & {
+  season?: number | null;
+  source?: 'app' | 'import';
+  importKey?: string | null;
 };
 
 /** Owner-only per-user settings (mirror of `public.user_settings`, ADR-012 §3). */
@@ -33,11 +45,16 @@ export interface DemoSetting {
 export interface DemoData {
   version: 1;
   users: DemoUser[];
-  stubs: FixtureSeed['stubs'];
+  stubs: DemoStub[];
   reviews: FixtureSeed['reviews'];
   watchlist: FixtureSeed['watchlist'];
   /** v1.5. Optional so data files written before it still load (treated as []). Seeded accounts have none. */
   settings?: DemoSetting[];
+  /**
+   * v1.6 (ADR-013 C-09): anonymous daily counters, `${day}|${name}|${dim}` → count (mirror of
+   * `public.events`). Optional so older data files still load.
+   */
+  events?: Record<string, number>;
 }
 
 const catalog = catalogJson as unknown as FixtureCatalog;

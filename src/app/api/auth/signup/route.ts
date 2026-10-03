@@ -2,6 +2,7 @@ import { signUpSchema, type AuthResponse } from '@/lib/contracts';
 import { authRateLimiter, container } from '@/server/container';
 import { assertSameOrigin, json, parseBody, route } from '@/server/http';
 import { env } from '@/server/env';
+import { recordEvent } from '@/server/events';
 import { clientIp, enforce, limitFor } from '@/server/rate-limit';
 
 /**
@@ -29,5 +30,7 @@ export const POST = route(async (req) => {
     displayName: input.displayName ?? input.handle,
   });
   const body: AuthResponse = session ? { session } : { session: null, confirmEmail: true };
+  // ADR-013 C-09: anonymous; `ref` only picks the dim (no id, email or handle is recorded).
+  recordEvent('signup_completed', input.ref === 'share' ? 'share' : '');
   return json(body, { status: session ? 201 : 202 });
 });

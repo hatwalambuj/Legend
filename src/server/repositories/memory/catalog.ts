@@ -18,12 +18,20 @@ import type {
   TitleKey,
   TitleSummary,
   TypeFilter,
+  WatchProviderChip,
 } from '@/lib/types';
 import watchJson from '@/fixtures/watch.json';
 import type { FixtureTitle, FixtureWatch } from '@/fixtures/schema';
 import { env, today } from '@/server/env';
-import type { CatalogIndexRepository, HealthProbe, WatchProviderRepository } from '@/server/ports';
-import type { ProviderDirectory, StoredWatch } from '@/server/watch';
+import { buildMatchIndex, matchOne, type MatchIndex } from '@/server/imports/match';
+import type {
+  CatalogIndexRepository,
+  CatalogMatchItem,
+  HealthProbe,
+  WatchProviderRepository,
+} from '@/server/ports';
+import { providerMonogram } from '@/lib/provider-links';
+import { watchHasProvider, type ProviderDirectory, type StoredWatch } from '@/server/watch';
 import { fixtureTitles } from './store';
 
 const watchFixtures = watchJson as unknown as FixtureWatch;
@@ -49,6 +57,33 @@ export class MemoryWatchProviders implements WatchProviderRepository {
 
   async all(): Promise<ProviderDirectory> {
     return MemoryWatchProviders.map;
+  }
+
+  /** Demo chips: fixture file order stands in for TMDB's per-region priority. */
+  async chips(region: string): Promise<WatchProviderChip[]> {
+    const now = new Date();
+    const listed = index().listed;
+    const out: WatchProviderChip[] = [];
+    const seen = new Set<string>();
+    for (const p of watchFixtures.providers) {
+      // Two ids can share a display name (e.g. Prime Video 9/119): one chip per name.
+      if (seen.has(p.name)) continue;
+      let count = 0;
+      for (const t of listed)
+        if (watchHasProvider(fixtureWatch(t.key, now.getTime()), region, p.id, now)) count++;
+      if (count < 1) continue;
+      seen.add(p.name);
+      const fallback = providerMonogram(p.id, p.name);
+      out.push({
+        providerId: p.id,
+        name: p.name,
+        logoPath: null,
+        monogram: (p.monogram || fallback.monogram).slice(0, 2),
+        count,
+      });
+      if (out.length >= 6) break;
+    }
+    return out;
   }
 }
 
@@ -143,6 +178,12 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
     let rows = byType(index().listed, q.type);
     if (q.genreIds?.length)
       rows = rows.filter((r) => r.genres.some((g) => q.genreIds!.includes(g.id)));
+    if (q.provider && q.region) {
+      const now = new Date();
+      rows = rows.filter((r) =>
+        watchHasProvider(fixtureWatch(r.key, now.getTime()), q.region!, q.provider!, now),
+      );
+    }
     const { items, nextCursor } = paginate(rows, q.sort, q.cursor, q.limit ?? 20);
     return { items, nextCursor, total: rows.length };
   }
@@ -187,6 +228,26 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
     return m;
   }
 
+  async storedWatch(keys: TitleKey[]): Promise<Map<TitleKey, StoredWatch>> {
+    const now = Date.now();
+    const out = new Map<TitleKey, StoredWatch>();
+    for (const k of keys) {
+      const w = fixtureWatch(k, now);
+      if (w) out.set(k, w);
+    }
+    return out;
+  }
+
+  async match(items: CatalogMatchItem[]): Promise<Map<string, TitleSummary>> {
+    const idx = matchIndex();
+    const out = new Map<string, TitleSummary>();
+    for (const item of items) {
+      const t = matchOne(idx, item);
+      if (t) out.set(item.ref, t);
+    }
+    return out;
+  }
+
   async count(): Promise<number> {
     return index().listed.length;
   }
@@ -201,6 +262,12 @@ export class MemoryCatalogIndex implements CatalogIndexRepository {
   }
 }
 
+let matchIdx: MatchIndex | null = null;
+function matchIndex(): MatchIndex {
+  matchIdx ??= buildMatchIndex(index().all);
+  return matchIdx;
+}
+
 /** Synchronous lookup (listed or not) for the demo user-data repositories. */
 export function summaryByKey(key: TitleKey): TitleSummary | undefined {
   return index().byKey.get(key);
@@ -209,4 +276,5 @@ export function summaryByKey(key: TitleKey): TitleSummary | undefined {
 /** Tests only. */
 export function resetCatalogIndexCache(): void {
   cache = null;
+  matchIdx = null;
 }

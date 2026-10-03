@@ -11,9 +11,11 @@
 import type { RateLimiter } from './rate-limit';
 import type { ProviderDirectory, StoredWatch } from './watch';
 import type {
+  AvatarColor,
   CatalogQuery,
   DiaryEntry,
   Genre,
+  ImportSource,
   MediaType,
   Page,
   ProfileStats,
@@ -32,7 +34,9 @@ import type {
   TypeFilter,
   WalletItem,
   WatchedWhere,
+  WatchProviderChip,
 } from '@/lib/types';
+import type { AnalyticsEventName } from '@/lib/analytics';
 
 /* ------------------------------------------------------------------ */
 /* Catalogue                                                           */
@@ -40,6 +44,11 @@ import type {
 
 /** The curated index (catalog_index table in live mode, fixtures in demo mode). */
 export interface CatalogIndexRepository {
+  /**
+   * v1.6: `query.provider` (with `query.region`) keeps rows whose stream/free/ads list in that region has
+   * the provider and whose watch data is fresh (<= 30 days). `query.region` alone filters nothing; the
+   * DAL adds `watchHint` from `storedWatch`.
+   */
   list(query: CatalogQuery): Promise<Page<TitleSummary>>;
   trending(type: TypeFilter, limit: number): Promise<TitleSummary[]>;
   /** `normalizedQuery` = normalizeSearch(q). Listed titles only. */
@@ -55,6 +64,17 @@ export interface CatalogIndexRepository {
     tmdbId: number,
   ): Promise<{ summary: TitleSummary; enrichment: TitleEnrichment; watch?: StoredWatch } | null>;
   getMany(keys: TitleKey[]): Promise<Map<TitleKey, TitleSummary>>;
+  /**
+   * v1.6 (ADR-013 C-01): stored availability of these titles (for `watchHint`). Live: served from the
+   * rows the last list/search read in this process when possible (no extra round trip), else one query.
+   * A key without data is absent.
+   */
+  storedWatch(keys: TitleKey[]): Promise<Map<TitleKey, StoredWatch>>;
+  /**
+   * v1.6 (ADR-013 C-11): match import rows against the index only (listed or not): tmdbId+type →
+   * imdbId → normalised title + year ±1 + type (highest vote_count). Map key = `ref`. No outbound call.
+   */
+  match(items: CatalogMatchItem[]): Promise<Map<string, TitleSummary>>;
   count(): Promise<number>;
   /** Last FULL catalogue sync (discover applied, status ok; F1). */
   lastSyncAt(): Promise<string | null>;
@@ -63,6 +83,16 @@ export interface CatalogIndexRepository {
    * public client, aborted after `timeoutMs`). Throws when the DB is unreachable.
    */
   probe(opts: { timeoutMs: number }): Promise<HealthProbe>;
+}
+
+export interface CatalogMatchItem {
+  ref: string;
+  mediaType?: MediaType;
+  tmdbId?: number;
+  imdbId?: string;
+  /** normalizeSearch(title) (= `catalog_index.sort_title`). */
+  titleNorm?: string;
+  year?: number;
 }
 
 export interface HealthProbe {
@@ -196,7 +226,12 @@ export interface ProfileRepository {
   stats(userId: string, year: number): Promise<ProfileStats>;
   update(
     userId: string,
-    patch: { displayName?: string; bio?: string; avatarUrl?: string | null },
+    patch: {
+      displayName?: string;
+      bio?: string;
+      avatarUrl?: string | null;
+      avatarColor?: AvatarColor | null;
+    },
   ): Promise<PublicProfile>;
 }
 
@@ -207,15 +242,24 @@ export interface StubRepository {
     watchedOn: string;
     watchedWhere: WatchedWhere | null;
     note: string;
+    /** v1.6 (ADR-013 C-10): TV only (checked by the service + DB trigger). */
+    season?: number | null;
   }): Promise<Stub>;
   /** Throws AppError not_found if the stub isn't the user's. */
   update(
     userId: string,
     id: string,
-    patch: { watchedOn?: string; watchedWhere?: WatchedWhere | null; note?: string },
+    patch: {
+      watchedOn?: string;
+      watchedWhere?: WatchedWhere | null;
+      note?: string;
+      season?: number | null;
+    },
   ): Promise<Stub>;
   delete(userId: string, id: string): Promise<Stub>;
   get(userId: string, id: string): Promise<Stub | null>;
+  /** v1.6 (ADR-013 C-08): public read of any stub by id (stubs are public-read, ADR-005); share routes only. */
+  getById(id: string): Promise<Stub | null>;
   /** Newest first; `total` counts every stub matching `type` (API_CONTRACT §5.10). */
   diary(
     userId: string,
@@ -275,6 +319,66 @@ export interface TitleStateRepository {
 export interface WatchProviderRepository {
   /** Throws when unavailable; the caller then hides the block (never renders unnamed tiles). */
   all(): Promise<ProviderDirectory>;
+  /**
+   * v1.6 (ADR-013 C-02): browse chips for a region: <= 6 providers by TMDB priority in the region, each
+   * with >= 1 listed title with fresh (<= 30 d) stream/free/ads data (live: rpc `watch_provider_counts`).
+   */
+  chips(region: string): Promise<WatchProviderChip[]>;
+}
+
+/* ------------------------------------------------------------------ */
+/* Analytics (ADR-013 C-09): anonymous daily counters                  */
+/* ------------------------------------------------------------------ */
+
+export interface EventCount {
+  name: AnalyticsEventName;
+  dim: string;
+  n: number;
+}
+
+/** Upsert-add into today's (UTC) bucket. Live: service-role `events_track`; demo: the store. */
+export interface EventRepository {
+  track(rows: EventCount[]): Promise<void>;
+}
+
+/* ------------------------------------------------------------------ */
+/* Imports (ADR-013 C-11)                                              */
+/* ------------------------------------------------------------------ */
+
+/** One row ready to write: already matched, validated and keyed by the import service. */
+export interface ImportApplyRow {
+  titleKey: TitleKey;
+  /** sha256 hex (64), or null when no stub is wanted. */
+  importKey: string | null;
+  /** Stub date; null = no stub. */
+  watchedOn: string | null;
+  season: number | null;
+  /** Review rating; null = no review. */
+  rating10: number | null;
+  body: string;
+  isSpoiler: boolean;
+}
+
+export interface ImportExisting {
+  /** `${titleKey}|${watchedOn}` of the user's stubs (any source). Re-uploads land here (duplicate). */
+  stubDays: Set<string>;
+  /** Titles the user already reviewed (never overwritten). */
+  reviewed: Set<TitleKey>;
+}
+
+export interface ImportRepository {
+  existing(userId: string, keys: TitleKey[]): Promise<ImportExisting>;
+  /** Stubs with `source='import'` created since `sinceIso` (24 h row budget). */
+  importedSince(userId: string, sinceIso: string): Promise<number>;
+  /**
+   * Inserts stubs (`on conflict (user_id, import_key) do nothing`, `source='import'`, no per-minute
+   * limit) and reviews only where none exist. Live: rpc `import_apply` (RLS applies). <= 1000 rows.
+   */
+  apply(
+    userId: string,
+    source: ImportSource,
+    rows: ImportApplyRow[],
+  ): Promise<{ stubs: number; reviews: number }>;
 }
 
 /** Owner-only per-user settings (`user_settings`, RLS). Never part of a public payload. */
@@ -302,4 +406,8 @@ export interface Container {
   settings: UserSettingsRepository;
   /** Non-write-path limits (export, auth). Stub/review limits live with the writes (DB trigger / repo). */
   rateLimiter: RateLimiter;
+  /** v1.6 (ADR-013 C-09). */
+  events: EventRepository;
+  /** v1.6 (ADR-013 C-11). */
+  imports: ImportRepository;
 }

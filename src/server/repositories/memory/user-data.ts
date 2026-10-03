@@ -27,6 +27,8 @@ import type {
   TitleState,
   TitleStats,
   TitleSummary,
+  AvatarColor,
+  ImportSource,
   TypeFilter,
   WalletItem,
   WatchedWhere,
@@ -34,6 +36,11 @@ import type {
 import { keysetPage } from '@/server/cursor';
 import { env } from '@/server/env';
 import type {
+  EventCount,
+  EventRepository,
+  ImportApplyRow,
+  ImportExisting,
+  ImportRepository,
   ProfileRepository,
   ReviewRepository,
   StubRepository,
@@ -43,9 +50,9 @@ import type {
 } from '@/server/ports';
 import { assertUnderLimit } from '@/server/rate-limit';
 import { averageOrNull, emptyTitleState } from '@/server/stats';
-import type { FixtureReview, FixtureStub } from '@/fixtures/schema';
+import type { FixtureReview } from '@/fixtures/schema';
 import { summaryByKey } from './catalog';
-import { demoStore, type DemoData, type DemoUser } from './store';
+import { demoStore, type DemoData, type DemoStub, type DemoUser } from './store';
 
 /* ------------------------------------------------------------------ */
 /* Shared helpers (pure over a DemoData snapshot)                      */
@@ -69,11 +76,12 @@ export function toPublicProfile(u: DemoUser): PublicProfile {
     bio: u.bio,
     avatarUrl: u.avatarUrl,
     createdAt: u.createdAt,
+    avatarColor: u.avatarColor ?? null,
   };
 }
 
 /** Chronological order of watches: (watchedOn, createdAt, id) ascending. */
-function watchOrder(a: FixtureStub, b: FixtureStub): number {
+function watchOrder(a: DemoStub, b: DemoStub): number {
   if (a.watchedOn !== b.watchedOn) return a.watchedOn < b.watchedOn ? -1 : 1;
   if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -81,7 +89,7 @@ function watchOrder(a: FixtureStub, b: FixtureStub): number {
 
 /** `Stub.number` for every stub of one user (one pass, grouped by title). */
 function stubNumbers(d: DemoData, userId: string): Map<string, number> {
-  const byTitle = new Map<TitleKey, FixtureStub[]>();
+  const byTitle = new Map<TitleKey, DemoStub[]>();
   for (const s of d.stubs) {
     if (s.userId !== userId) continue;
     const list = byTitle.get(s.titleKey);
@@ -94,7 +102,7 @@ function stubNumbers(d: DemoData, userId: string): Map<string, number> {
   return out;
 }
 
-function toStub(s: FixtureStub, number: number): Stub {
+function toStub(s: DemoStub, number: number): Stub {
   return {
     id: s.id,
     userId: s.userId,
@@ -103,12 +111,13 @@ function toStub(s: FixtureStub, number: number): Stub {
     watchedWhere: s.watchedWhere,
     note: s.note,
     number,
+    season: s.season ?? null,
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
   };
 }
 
-function numberOf(d: DemoData, s: FixtureStub): number {
+function numberOf(d: DemoData, s: DemoStub): number {
   return stubNumbers(d, s.userId).get(s.id) ?? 1;
 }
 
@@ -224,7 +233,12 @@ export class MemoryProfiles implements ProfileRepository {
 
   async update(
     userId: string,
-    patch: { displayName?: string; bio?: string; avatarUrl?: string | null },
+    patch: {
+      displayName?: string;
+      bio?: string;
+      avatarUrl?: string | null;
+      avatarColor?: AvatarColor | null;
+    },
   ): Promise<PublicProfile> {
     return demoStore().mutate((d) => {
       const u = d.users.find((x) => x.id === userId);
@@ -232,6 +246,7 @@ export class MemoryProfiles implements ProfileRepository {
       if (patch.displayName !== undefined) u.displayName = patch.displayName;
       if (patch.bio !== undefined) u.bio = patch.bio;
       if (patch.avatarUrl !== undefined) u.avatarUrl = patch.avatarUrl;
+      if (patch.avatarColor !== undefined) u.avatarColor = patch.avatarColor;
       return toPublicProfile(u);
     });
   }
@@ -248,21 +263,27 @@ export class MemoryStubs implements StubRepository {
     watchedOn: string;
     watchedWhere: WatchedWhere | null;
     note: string;
+    season?: number | null;
   }): Promise<Stub> {
     return demoStore().mutate((d) => {
+      // Like the v1.6 trigger: only `source='app'` stubs count, so an import never locks out stubbing.
       assertUnderLimit(
-        d.stubs.filter((s) => s.userId === input.userId).map((s) => s.createdAt),
+        d.stubs
+          .filter((s) => s.userId === input.userId && s.source !== 'import')
+          .map((s) => s.createdAt),
         env().rateLimits.stubsPerMin,
         ERROR_COPY.rate_limited_stub,
       );
       const now = nowIso();
-      const row: FixtureStub = {
+      const row: DemoStub = {
         id: randomUUID(),
         userId: input.userId,
         titleKey: input.titleKey,
         watchedOn: input.watchedOn,
         watchedWhere: input.watchedWhere,
         note: input.note,
+        season: input.season ?? null,
+        source: 'app',
         createdAt: now,
         updatedAt: now,
       };
@@ -274,7 +295,12 @@ export class MemoryStubs implements StubRepository {
   async update(
     userId: string,
     id: string,
-    patch: { watchedOn?: string; watchedWhere?: WatchedWhere | null; note?: string },
+    patch: {
+      watchedOn?: string;
+      watchedWhere?: WatchedWhere | null;
+      note?: string;
+      season?: number | null;
+    },
   ): Promise<Stub> {
     return demoStore().mutate((d) => {
       const row = d.stubs.find((s) => s.id === id && s.userId === userId);
@@ -282,6 +308,7 @@ export class MemoryStubs implements StubRepository {
       if (patch.watchedOn !== undefined) row.watchedOn = patch.watchedOn;
       if (patch.watchedWhere !== undefined) row.watchedWhere = patch.watchedWhere;
       if (patch.note !== undefined) row.note = patch.note;
+      if (patch.season !== undefined) row.season = patch.season;
       row.updatedAt = nowIso();
       return toStub(row, numberOf(d, row));
     });
@@ -303,6 +330,12 @@ export class MemoryStubs implements StubRepository {
   async get(userId: string, id: string): Promise<Stub | null> {
     const d = demoStore().get();
     const row = d.stubs.find((s) => s.id === id && s.userId === userId);
+    return row ? toStub(row, numberOf(d, row)) : null;
+  }
+
+  async getById(id: string): Promise<Stub | null> {
+    const d = demoStore().get();
+    const row = d.stubs.find((s) => s.id === id);
     return row ? toStub(row, numberOf(d, row)) : null;
   }
 
@@ -632,6 +665,114 @@ export class MemorySettings implements UserSettingsRepository {
         row.watchRegion = region;
         row.updatedAt = nowIso();
       } else list.push({ userId, watchRegion: region, updatedAt: nowIso() });
+    });
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Analytics (ADR-013 C-09): anonymous daily counters, no ids           */
+/* ------------------------------------------------------------------ */
+
+export class MemoryEvents implements EventRepository {
+  async track(rows: EventCount[]): Promise<void> {
+    if (rows.length === 0) return;
+    const day = new Date().toISOString().slice(0, 10);
+    demoStore().mutate((d) => {
+      const ev = (d.events ??= {});
+      for (const r of rows.slice(0, 50)) {
+        const k = `${day}|${r.name}|${r.dim}`;
+        ev[k] = (ev[k] ?? 0) + Math.max(0, Math.floor(r.n));
+      }
+    });
+  }
+}
+
+/** Demo counters for one day (tests, scripts). */
+export function demoEventCounts(day: string): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, n] of Object.entries(demoStore().get().events ?? {})) {
+    const [d, name, dim] = k.split('|');
+    if (d === day) out[dim ? `${name}:${dim}` : name!] = n;
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Imports (ADR-013 C-11): mirror of rpc import_apply                   */
+/* ------------------------------------------------------------------ */
+
+export class MemoryImports implements ImportRepository {
+  async existing(userId: string, keys: TitleKey[]): Promise<ImportExisting> {
+    const d = demoStore().get();
+    const want = new Set(keys);
+    const out: ImportExisting = { stubDays: new Set(), reviewed: new Set() };
+    for (const s of d.stubs)
+      if (s.userId === userId && want.has(s.titleKey))
+        out.stubDays.add(`${s.titleKey}|${s.watchedOn}`);
+    for (const r of d.reviews)
+      if (r.userId === userId && want.has(r.titleKey)) out.reviewed.add(r.titleKey);
+    return out;
+  }
+
+  async importedSince(userId: string, sinceIso: string): Promise<number> {
+    return demoStore()
+      .get()
+      .stubs.filter((s) => s.userId === userId && s.source === 'import' && s.createdAt > sinceIso)
+      .length;
+  }
+
+  async apply(
+    userId: string,
+    _source: ImportSource,
+    rows: ImportApplyRow[],
+  ): Promise<{ stubs: number; reviews: number }> {
+    return demoStore().mutate((d) => {
+      if (!d.users.some((u) => u.id === userId))
+        throw new AppError('unauthenticated', ERROR_COPY.unauthenticated);
+      const keys = new Set(
+        d.stubs.filter((s) => s.userId === userId && s.importKey).map((s) => s.importKey!),
+      );
+      const reviewed = new Set(d.reviews.filter((r) => r.userId === userId).map((r) => r.titleKey));
+      let stubs = 0;
+      let reviews = 0;
+      for (const r of rows.slice(0, 1000)) {
+        if (r.watchedOn && r.importKey && !keys.has(r.importKey)) {
+          const now = nowIso();
+          d.stubs.push({
+            id: randomUUID(),
+            userId,
+            titleKey: r.titleKey,
+            watchedOn: r.watchedOn,
+            watchedWhere: null,
+            note: '',
+            season: r.season,
+            source: 'import',
+            importKey: r.importKey,
+            createdAt: now,
+            updatedAt: now,
+          });
+          keys.add(r.importKey);
+          stubs++;
+        }
+        if (r.rating10 !== null && !reviewed.has(r.titleKey)) {
+          const now = nowIso();
+          d.reviews.push({
+            id: randomUUID(),
+            userId,
+            titleKey: r.titleKey,
+            rating10: r.rating10,
+            body: r.body,
+            isSpoiler: r.isSpoiler,
+            stubId: null,
+            createdAt: now,
+            updatedAt: now,
+            editedAt: null,
+          });
+          reviewed.add(r.titleKey);
+          reviews++;
+        }
+      }
+      return { stubs, reviews };
     });
   }
 }

@@ -33,6 +33,7 @@ function toSession(u: DemoUser): Session {
       handle: u.handle,
       displayName: u.displayName,
       avatarUrl: u.avatarUrl,
+      avatarColor: u.avatarColor ?? null,
       watchRegion: demoWatchRegion(demoStore().get(), u.id),
     },
   };
