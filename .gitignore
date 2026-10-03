@@ -25,3 +25,5 @@ blob-report/
 .DS_Store
 *.log
 .vercel
+playwright-report-live/
+test-results-live/

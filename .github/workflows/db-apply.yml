@@ -1,0 +1,61 @@
+name: Apply database migrations
+
+# C-14 / FOUNDER_INPUTS F3: applies supabase/migrations/*.sql to SUPABASE_DB_URL in name order, once
+# each, tracked with checksums in public._stubbed_migrations (scripts/db-apply.ts). Manual only.
+# Always prints the plan first; it applies ONLY when the `confirm` input is exactly "yes".
+# Refuses (applies nothing) on an edited applied file, a missing applied file or out-of-order files.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type yes to apply. Anything else = dry run (plan only).'
+        required: true
+        default: 'no'
+        type: string
+      baseline:
+        description: 'Schema was applied by hand earlier: record the files as applied without running them'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      # Session pooler connection string (IPv4; GitHub runners have no IPv6), role postgres.
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BASELINE: ${{ inputs.baseline && '--baseline' || '' }}
+    steps:
+      - name: Require the secret
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Add the SUPABASE_DB_URL secret (Supabase → Connect → Session pooler) to the production environment."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Ensure the psql client
+        run: |
+          command -v psql > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client > /dev/null; }
+          psql --version
+      - name: Plan (dry run)
+        run: npm run db:apply -- $BASELINE
+      - name: Apply
+        if: inputs.confirm == 'yes'
+        run: npm run db:apply -- $BASELINE --yes
+      - name: Not applied
+        if: inputs.confirm != 'yes'
+        run: echo "confirm was not \"yes\": plan only, nothing applied."

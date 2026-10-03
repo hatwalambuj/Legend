@@ -19,7 +19,11 @@
     "test:e2e": "playwright test",
     "sync:catalog": "tsx scripts/sync-catalog.ts",
     "fixtures:build": "tsx scripts/build-fixtures.ts",
-    "demo:reset": "tsx scripts/demo-reset.ts"
+    "demo:reset": "tsx scripts/demo-reset.ts",
+    "launch:check": "tsx scripts/launch-check.ts",
+    "db:apply": "tsx scripts/db-apply.ts",
+    "smoke:live": "tsx scripts/smoke-live.ts",
+    "check:provider-links": "tsx scripts/check-provider-links.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -75,6 +75,8 @@ export default defineConfig([
     'coverage/**',
     'playwright-report/**',
     'test-results/**',
+    'test-results-live/**',
+    'playwright-report-live/**',
     'docs/**',
   ]),
 ]);

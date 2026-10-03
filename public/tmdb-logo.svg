@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 24" width="96" height="24" role="img" aria-label="TMDB">
+  <!-- STUBBED-PLACEHOLDER-LOGO (npm run launch:check fails while this marker is here) -->
   <!-- PLACEHOLDER: replace with the official TMDB logo from themoviedb.org/about/logos-attribution before launch (DESIGN §8). -->
   <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#90CEA1"/><stop offset="1" stop-color="#01B4E4"/></linearGradient></defs>
   <rect width="96" height="24" rx="12" fill="url(#g)"/>

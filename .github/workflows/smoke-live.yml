@@ -1,0 +1,65 @@
+name: Live smoke (staging)
+
+# C-14 / FOUNDER_INPUTS F6 + F7: Playwright e2e-live/ against a real deploy with real keys, plus the
+# provider-link reachability check. Manual only. Creates ONE throwaway account and deletes it at the end
+# (Supabase "Confirm email" must be OFF). Evidence (health, posters, TMDB watch/providers keys, account
+# flow, provider-link statuses) is uploaded as the `live-smoke-evidence` artifact. No secret is printed.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Deploy to test, e.g. https://stubbed-git-main-you.vercel.app'
+        required: true
+        type: string
+      title:
+        description: 'Title to check (type:tmdbId)'
+        required: false
+        default: 'movie:693134'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      # Inputs go through env, never interpolated into a shell line.
+      SMOKE_URL: ${{ inputs.url }}
+      SMOKE_TITLE: ${{ inputs.title }}
+      # Base address on a real mail domain; the run signs up <local>+smoke<id>@<domain>. No mail is sent
+      # while Confirm email is OFF. Optional: falls back to smoke@example.com.
+      SMOKE_EMAIL: ${{ vars.SMOKE_EMAIL }}
+      TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}
+      TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Live smoke
+        run: npm run smoke:live
+      - name: Provider links reachable
+        if: always()
+        run: |
+          mkdir -p test-results-live/evidence
+          npm run check:provider-links -- --json test-results-live/evidence/provider-links.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-smoke-evidence
+          path: |
+            test-results-live
+            playwright-report-live
+          retention-days: 30
+          if-no-files-found: warn

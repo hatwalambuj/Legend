@@ -4,6 +4,8 @@ node_modules
 coverage
 playwright-report
 test-results
+test-results-live
+playwright-report-live
 package-lock.json
 docs/02-design/prototype.html
 src/fixtures/*.json
