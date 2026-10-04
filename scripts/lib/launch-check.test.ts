@@ -3,14 +3,17 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import {
   BASELINE_MIGRATIONS,
+  checkBrand,
   checkEnv,
   checkLogo,
   checkMigrations,
+  compareMigrations,
   exitCode,
   formatReport,
   mergeDotenv,
   PLACEHOLDER_LOGO_MARKER,
   probeLive,
+  probeMigrations,
   redact,
   type CheckResult,
 } from './launch-check';
@@ -225,6 +228,106 @@ describe('probeLive (mocked fetch, no network)', () => {
     const f = fakeFetch();
     const r = await probeLive({}, f);
     expect(r.every((x) => x.status === 'skip')).toBe(true);
+    expect(f).not.toHaveBeenCalled();
+  });
+});
+
+describe('checkBrand (C-14 / F8)', () => {
+  it('warns while unset, default or invalid, and reminds of the trademark search', () => {
+    for (const v of [undefined, '', 'Stubbed', ' Stubbed ', '<script>']) {
+      const r = checkBrand({ NEXT_PUBLIC_BRAND_NAME: v });
+      expect(r.status, String(v)).toBe('warn');
+      expect(r.fix).toMatch(/trademark.*F8/);
+    }
+    expect(byId(checkEnv(LIVE), 'NEXT_PUBLIC_BRAND_NAME')?.status).toBe('warn');
+  });
+  it('a custom name is a manual F8 reminder, never a failure, and is never printed', () => {
+    const r = checkBrand({ NEXT_PUBLIC_BRAND_NAME: 'Reelbox' });
+    expect(r.status).toBe('manual');
+    expect(r.fix).toMatch(/F8/);
+    expect(allText([r])).not.toContain('Reelbox');
+    expect(exitCode(checkEnv({ ...LIVE, NEXT_PUBLIC_BRAND_NAME: 'Reelbox' }))).toBe(0);
+  });
+});
+
+describe('migrations applied (AR-C1)', () => {
+  const files = ['20260926000000_init.sql', '20261003090000_a.sql', '20261003091000_b.sql', 'x.md'];
+  const live = {
+    NEXT_PUBLIC_SUPABASE_URL: LIVE.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: LIVE.SUPABASE_SERVICE_ROLE_KEY,
+  };
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+  it('checkMigrations adds the manual reminder only offline', () => {
+    expect(byId(checkMigrations([...BASELINE_MIGRATIONS]), 'migrations-applied')?.status).toBe(
+      'manual',
+    );
+    expect(
+      byId(checkMigrations([...BASELINE_MIGRATIONS], true), 'migrations-applied'),
+    ).toBeUndefined();
+  });
+
+  it('compareMigrations passes when up to date and names pending and unknown files', () => {
+    expect(compareMigrations(files, files.slice(0, 3), 's').status).toBe('pass');
+    const r = compareMigrations(
+      files,
+      ['20260926000000_init.sql', '20991231000000_future.sql'],
+      's',
+    );
+    expect(r.status).toBe('fail');
+    expect(r.fix).toContain(
+      '2 migration file(s) not applied yet: 20261003090000_a.sql, 20261003091000_b.sql',
+    );
+    expect(r.fix).toMatch(/db:apply -- --yes/);
+    expect(r.fix).toContain('20991231000000_future.sql');
+    expect(r.fix).not.toContain('x.md');
+  });
+
+  it('prefers psql when SUPABASE_DB_URL is set, and redacts its errors', async () => {
+    const f = vi.fn();
+    const read = vi.fn(async () => files.slice(0, 2));
+    const r = await probeMigrations(LIVE, files, f, read);
+    expect(read).toHaveBeenCalledWith(LIVE.SUPABASE_DB_URL);
+    expect(f).not.toHaveBeenCalled();
+    expect(r.status).toBe('fail');
+    expect(r.fix).toContain('20261003091000_b.sql');
+    const bad = await probeMigrations(LIVE, files, f, async () => {
+      throw new Error(`connect failed ${LIVE.SUPABASE_DB_URL}`);
+    });
+    expect(bad.status).toBe('fail');
+    expect(allText([bad])).not.toContain('dbpass-secret');
+  });
+
+  it('falls back to a read-only REST GET with the service_role key', async () => {
+    const f = vi.fn(async (_url: string, _init?: RequestInit) =>
+      json(files.slice(0, 3).map((name) => ({ name }))),
+    );
+    const r = await probeMigrations(live, files, f);
+    expect(r.status).toBe('pass');
+    const [url, init] = f.mock.calls[0]!;
+    expect(url).toBe('https://abc.supabase.co/rest/v1/_stubbed_migrations?select=name&order=name');
+    expect(init?.method ?? 'GET').toBe('GET');
+    expect(allText([r])).not.toContain(LIVE.SUPABASE_SERVICE_ROLE_KEY);
+  });
+
+  it('fails clearly when the tracking table is missing or the key is refused', async () => {
+    const missing = await probeMigrations(live, files, async () =>
+      json({ code: 'PGRST205', message: 'not found' }, 404),
+    );
+    expect(missing.fix).toMatch(/No migration tracking table.*--baseline/);
+    const denied = await probeMigrations(live, files, async () => json({}, 401));
+    expect(denied.fix).toMatch(/HTTP 401/);
+    const down = await probeMigrations(live, files, async () => {
+      throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNRESET' } });
+    });
+    expect(down.fix).toMatch(/ECONNRESET/);
+  });
+
+  it('is a manual item when nothing can read the database', async () => {
+    const f = vi.fn();
+    const r = await probeMigrations({ SUPABASE_DB_URL: LIVE.SUPABASE_DB_URL }, files, f);
+    expect(r.status).toBe('manual');
     expect(f).not.toHaveBeenCalled();
   });
 });

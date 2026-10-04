@@ -9,11 +9,22 @@
  * Env: SMOKE_URL (required), TMDB_READ_TOKEN or TMDB_API_KEY (the watch/providers evidence),
  * SMOKE_EMAIL (base address on a real mail domain; Supabase may reject example.com),
  * SMOKE_TITLE (default movie:693134, Dune: Part Two). Evidence JSON → test-results-live/evidence/.
+ *
+ * Close-out checks that only show up on a real deploy (ADR-013 C-14, AR-C5): real 404 / 308 status
+ * codes (C-03), "On {Service}" chips on /browse (C-02), and the OG + story PNGs at their exact sizes
+ * (C-08: font tracing and the image runtime only fail on the platform).
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type APIResponse, type TestInfo } from '@playwright/test';
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type APIResponse,
+  type TestInfo,
+} from '@playwright/test';
 import { enrichmentAppends } from '../src/server/jobs/enrich';
+import { pngSize } from '../scripts/lib/png';
 
 const [TYPE = 'movie', ID = '693134'] = (process.env.SMOKE_TITLE ?? 'movie:693134').split(':');
 const TMDB_ID = Number(ID);
@@ -30,6 +41,16 @@ async function ok(res: APIResponse, what: string, status?: number) {
   const text = res.ok() ? '' : (await res.text()).slice(0, 300);
   expect(res.ok(), `${what}: HTTP ${res.status()} ${text}`).toBe(true);
   if (status) expect(res.status(), what).toBe(status);
+}
+
+/** GET `path` (same origin, no secret in it) and assert a PNG of exactly `width`×`height`. */
+async function expectPng(request: APIRequestContext, path: string, width: number, height: number) {
+  const res = await request.get(path);
+  expect(res.status(), `${path}: HTTP status`).toBe(200);
+  expect(res.headers()['content-type'], `${path}: content-type`).toMatch(/^image\/png\b/);
+  const size = pngSize(await res.body());
+  expect(size, `${path}: PNG size`).toEqual({ width, height });
+  return { path, httpStatus: res.status(), contentType: res.headers()['content-type'], ...size };
 }
 
 function throwawayAccount() {
@@ -122,6 +143,55 @@ test('title page shows TMDB + IMDb ratings and Where to watch', async ({ page },
   });
 });
 
+test('real status codes: unknown title is 404, a wrong slug is a 308 to the canonical URL', async ({
+  request,
+}, info) => {
+  const notFound: Record<string, number> = {};
+  for (const url of ['/title/movie/0-x', '/title/movie/999999999-made-up']) {
+    const r = await request.get(url, { maxRedirects: 0 });
+    notFound[url] = r.status();
+    expect(r.status(), `${url} (a soft 404 would be 200)`).toBe(404);
+  }
+  const from = `/title/${TYPE}/${TMDB_ID}-wrong-slug`;
+  const r = await request.get(from, { maxRedirects: 0 });
+  const location = r.headers()['location'] ?? '';
+  const to = new URL(location, 'http://x').pathname;
+  await evidence(info, 'status-codes', { notFound, redirect: { from, status: r.status(), to } });
+  expect(r.status(), `${from} redirect status`).toBe(308);
+  expect(to).toMatch(new RegExp(`^/title/${TYPE}/${TMDB_ID}-[a-z0-9-]+$`));
+  expect(to).not.toBe(from);
+});
+
+test('/browse shows "On {Service}" provider chips (US)', async ({ page, baseURL }, info) => {
+  const api = await page.request.get('/api/watch/providers?region=US');
+  expect(api.status(), '/api/watch/providers?region=US').toBe(200);
+  const { providers = [] } = (await api.json()) as { providers?: { providerId: number }[] };
+  expect(providers.length, 'provider chips need the watch step of the sync').toBeGreaterThan(0);
+  // Pin the region so the chips do not depend on the runner's geo header.
+  await page.context().addCookies([{ name: 'stubbed_region', value: 'US', url: baseURL! }]);
+  await page.goto('/browse');
+  const nav = page.getByTestId('provider-filter');
+  await expect(nav).toBeVisible();
+  const chips = nav.locator(
+    '[data-testid^="provider-chip-"]:not([data-testid="provider-chip-all"])',
+  );
+  await expect(chips.first()).toBeVisible();
+  await evidence(info, 'browse-provider-chips', {
+    apiProviders: providers.length,
+    chips: await chips.count(),
+  });
+});
+
+test('title OG image is a 1200×630 PNG', async ({ page }, info) => {
+  await page.goto(`/title/${TYPE}/${TMDB_ID}`);
+  const og = await page.locator('meta[property="og:image"]').first().getAttribute('content');
+  expect(og, 'og:image meta tag').toBeTruthy();
+  const u = new URL(og!, page.url());
+  // Path only, fetched from the deploy under test: og:image is absolute on NEXT_PUBLIC_SITE_URL, which
+  // may be another host than a preview deploy. The smoke never calls a host it read from the page.
+  await evidence(info, 'og-image', await expectPng(page.request, u.pathname + u.search, 1200, 630));
+});
+
 test('throwaway account: sign-up → stub → review → export → delete', async ({ page }, info) => {
   const acc = throwawayAccount();
   let created = false;
@@ -146,6 +216,12 @@ test('throwaway account: sign-up → stub → review → export → delete', asy
     });
     await ok(stubRes, 'stub', 201);
     const { stub } = (await stubRes.json()) as { stub: { id: string; titleKey: string } };
+    const story = await expectPng(
+      page.request,
+      `/share/stub/${encodeURIComponent(stub.id)}/story`,
+      1080,
+      1920,
+    );
 
     const review = await page.request.put('/api/reviews', {
       data: {
@@ -178,6 +254,7 @@ test('throwaway account: sign-up → stub → review → export → delete', asy
       steps: [
         'signup 201',
         'stub 201',
+        `story ${story.width}x${story.height} png`,
         `review ${review.status()}`,
         'export 200',
         'delete 204',

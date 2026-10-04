@@ -4,6 +4,8 @@ name: Live smoke (staging)
 # provider-link reachability check. Manual only. Creates ONE throwaway account and deletes it at the end
 # (Supabase "Confirm email" must be OFF). Evidence (health, posters, TMDB watch/providers keys, account
 # flow, provider-link statuses) is uploaded as the `live-smoke-evidence` artifact. No secret is printed.
+# First step (AR-C1, "migrate, then deploy"): fails, naming the files, when supabase/migrations/ has
+# a file the live database has not applied yet. Read-only. Run this workflow before promoting a deploy.
 on:
   workflow_dispatch:
     inputs:
@@ -46,6 +48,14 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Migrations applied (read-only)
+        # psql + SUPABASE_DB_URL when the secret exists, else Supabase REST with the service_role key.
+        # launch:check prints variable names and file names only.
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run launch:check -- --migrations
       - run: npx playwright install --with-deps chromium
       - name: Live smoke
         run: npm run smoke:live

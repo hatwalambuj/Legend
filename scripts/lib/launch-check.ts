@@ -9,9 +9,13 @@
  *   the production boot (`parseEnv`), the placeholder TMDB logo, the placeholder contact email and the
  *   migration files (count, naming, order).
  * - `--live` probes: TMDB (+ `watch/providers` append), OMDb, Supabase Auth settings (email on, sign-up
- *   on, Confirm email OFF), the `health_probe` RPC (migrations applied) and the deployed /api/health.
+ *   on, Confirm email OFF), the `health_probe` RPC and the deployed /api/health.
+ * - `--live` migrations (AR-C1, "migrate, then deploy"): reads the applied file names from
+ *   `public._stubbed_migrations` (read-only: psql with SUPABASE_DB_URL, else PostgREST with the
+ *   service_role key) and fails naming every supabase/migrations/ file that is not applied yet.
  */
 import { parseEnv as parseDotenv } from 'node:util';
+import { brandName, DEFAULT_BRAND_NAME } from '../../src/lib/brand';
 import { CONTACT_EMAIL_PLACEHOLDER, resolveContactEmail } from '../../src/lib/contact';
 import { parseEnv as parseServerEnv } from '../../src/server/env';
 
@@ -171,6 +175,8 @@ export function checkEnv(env: Env): CheckResult[] {
     'Get a free key at omdbapi.com/apikey.aspx, click the activation link, add it as the GitHub secret OMDB_API_KEY (§2).',
   );
 
+  r.push(checkBrand(env));
+
   // Optional but worth knowing.
   if (val(env, 'TRUSTED_PROXY') || truthy(val(env, 'VERCEL')))
     r.push({ id: 'TRUSTED_PROXY', status: 'pass', title: 'Proxy trust is configured' });
@@ -281,6 +287,28 @@ export function checkEnv(env: Env): CheckResult[] {
   return r;
 }
 
+/**
+ * C-14 / C-15 / F8: the brand name. Warns while it resolves to the default (unset or invalid). Never a
+ * failure: launching as the default is allowed once the trademark search (F8) is done. Never prints it.
+ */
+export function checkBrand(env: Env): CheckResult {
+  const raw = val(env, 'NEXT_PUBLIC_BRAND_NAME');
+  const tm = 'Run a trademark search for the name first (USPTO / EUIPO, FOUNDER_INPUTS F8).';
+  if (!raw || brandName(raw) === DEFAULT_BRAND_NAME)
+    return {
+      id: 'NEXT_PUBLIC_BRAND_NAME',
+      status: 'warn',
+      title: `NEXT_PUBLIC_BRAND_NAME is ${raw ? 'invalid or the default' : 'unset'} (site shows "${DEFAULT_BRAND_NAME}")`,
+      fix: `${tm} To rename, set NEXT_PUBLIC_BRAND_NAME (1-24 letters, digits, space . ' & -) in Vercel and redeploy (it is inlined at build time).`,
+    };
+  return {
+    id: 'NEXT_PUBLIC_BRAND_NAME',
+    status: 'manual',
+    title: 'NEXT_PUBLIC_BRAND_NAME is set to a custom name',
+    fix: `${tm} A rename needs a rebuild (inlined at build time).`,
+  };
+}
+
 /** F1: the official TMDB logo replaced the placeholder. `svg` = file contents, null when missing. */
 export function checkLogo(svg: string | null): CheckResult {
   const title = 'public/tmdb-logo.svg is the official TMDB logo';
@@ -295,8 +323,15 @@ export function checkLogo(svg: string | null): CheckResult {
 
 const MIGRATION_NAME = /^(\d{14})_[a-z0-9_]+\.sql$/;
 
-/** F3: supabase/migrations/ file names (`*.sql` only): naming, unique ordered timestamps, baseline. */
-export function checkMigrations(files: string[]): CheckResult[] {
+const MIGRATIONS_APPLIED_TITLE = 'Every supabase/migrations file is applied to the live database';
+const DB_APPLY_FIX =
+  'Run `npm run db:apply` (dry run) then `npm run db:apply -- --yes` with SUPABASE_DB_URL, or the "Apply database migrations" workflow, BEFORE deploying (F3).';
+
+/**
+ * F3: supabase/migrations/ file names (`*.sql` only): naming, unique ordered timestamps, baseline.
+ * `live` = the caller compares with the database (probeMigrations), so no manual reminder is added.
+ */
+export function checkMigrations(files: string[], live = false): CheckResult[] {
   const sql = files.filter((f) => f.endsWith('.sql')).sort();
   const r: CheckResult[] = [];
   const badNames = sql.filter((f) => !MIGRATION_NAME.test(f));
@@ -317,13 +352,105 @@ export function checkMigrations(files: string[]): CheckResult[] {
       ? { id: 'migrations', status: 'fail', title, fix: `${problems.join('; ')}.` }
       : { id: 'migrations', status: 'pass', title },
   );
-  r.push({
-    id: 'migrations-applied',
-    status: 'manual',
-    title: 'Migrations are applied to the live database',
-    fix: 'Run `npm run db:apply` (dry run) then `npm run db:apply -- --yes` with SUPABASE_DB_URL, or the "Apply database migrations" workflow (F3).',
-  });
+  if (!live)
+    r.push({
+      id: 'migrations-applied',
+      status: 'manual',
+      title: `${MIGRATIONS_APPLIED_TITLE} (add --live to compare)`,
+      fix: DB_APPLY_FIX,
+    });
   return r;
+}
+
+/**
+ * AR-C1: on-disk migration files vs the names recorded in `public._stubbed_migrations`. Fails naming
+ * every pending file (deploying now would run code against a schema it does not have) and every
+ * recorded name missing on disk (this checkout is older than the database).
+ */
+export function compareMigrations(files: string[], applied: string[], source: string): CheckResult {
+  const onDisk = files.filter((f) => f.endsWith('.sql')).sort();
+  const done = new Set(applied);
+  const pending = onDisk.filter((f) => !done.has(f));
+  const unknown = [...done].filter((a) => !onDisk.includes(a)).sort();
+  const title = `${MIGRATIONS_APPLIED_TITLE} (${source})`;
+  const problems = [
+    pending.length
+      ? `${pending.length} migration file(s) not applied yet: ${pending.join(', ')}. ${DB_APPLY_FIX}`
+      : null,
+    unknown.length
+      ? `The database records file(s) this checkout does not have: ${unknown.join(', ')}. Pull the latest main before deploying.`
+      : null,
+  ].filter((x): x is string => x !== null);
+  return problems.length
+    ? { id: 'migrations-applied', status: 'fail', title, fix: problems.join(' ') }
+    : { id: 'migrations-applied', status: 'pass', title };
+}
+
+/** Reads applied migration names (read-only) with psql; supplied by the CLI when psql is installed. */
+export type ReadApplied = (dbUrl: string) => Promise<string[]>;
+
+/**
+ * AR-C1 `--live`: applied migrations vs `files`. Source order: psql via SUPABASE_DB_URL (`readViaPsql`),
+ * else PostgREST `GET /rest/v1/_stubbed_migrations?select=name` with the service_role key (the table
+ * is revoked from anon/authenticated only). Read-only either way; never prints a value or a keyed URL.
+ */
+export async function probeMigrations(
+  env: Env,
+  files: string[],
+  fetchImpl: FetchLike = fetch,
+  readViaPsql?: ReadApplied,
+  timeoutMs = 10_000,
+): Promise<CheckResult> {
+  const fail = (fix: string): CheckResult => ({
+    id: 'migrations-applied',
+    status: 'fail',
+    title: MIGRATIONS_APPLIED_TITLE,
+    fix: redact(fix, env),
+  });
+  const dbUrl = val(env, 'SUPABASE_DB_URL');
+  if (dbUrl && readViaPsql) {
+    try {
+      return compareMigrations(files, await readViaPsql(dbUrl), 'read with psql');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message.split('\n')[0] : 'error';
+      return fail(`Could not read public._stubbed_migrations with psql (${msg}).`);
+    }
+  }
+  const sbUrl = val(env, 'NEXT_PUBLIC_SUPABASE_URL');
+  const service = val(env, 'SUPABASE_SERVICE_ROLE_KEY');
+  if (!sbUrl || !service || !isHttpsPublic(sbUrl))
+    return {
+      id: 'migrations-applied',
+      status: 'manual',
+      title: `${MIGRATIONS_APPLIED_TITLE} (not compared: needs SUPABASE_DB_URL + psql, or the Supabase URL + service_role key)`,
+      fix: DB_APPLY_FIX,
+    };
+  try {
+    const base = sbUrl.replace(/\/+$/, '');
+    const res = await fetchImpl(`${base}/rest/v1/_stubbed_migrations?select=name&order=name`, {
+      headers: { apikey: service, Authorization: `Bearer ${service}`, Accept: 'application/json' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (res.ok) {
+      const rows = (await res.json()) as unknown;
+      if (!Array.isArray(rows)) return fail('Unexpected answer from Supabase REST.');
+      const names = rows
+        .map((x) => (x as { name?: unknown }).name)
+        .filter((n): n is string => typeof n === 'string');
+      return compareMigrations(files, names, 'read via Supabase REST');
+    }
+    const body = (await res.json().catch(() => ({}))) as { code?: string };
+    if (res.status === 404 || body.code === 'PGRST205' || body.code === '42P01')
+      return fail(
+        `No migration tracking table (public._stubbed_migrations): nothing was applied with db:apply. ${DB_APPLY_FIX} If every file was applied by hand, record them once with \`npm run db:apply -- --baseline --yes\`.`,
+      );
+    return fail(
+      `Supabase REST answered HTTP ${res.status} reading the migration table: check SUPABASE_SERVICE_ROLE_KEY, or set SUPABASE_DB_URL (with psql installed).`,
+    );
+  } catch (e) {
+    return fail(`Request failed (${errName(e)}). Check the value and network.`);
+  }
 }
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
