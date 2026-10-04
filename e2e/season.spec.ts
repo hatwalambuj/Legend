@@ -28,7 +28,9 @@ test.describe('C-Q3 season stubs', () => {
     await expect(season.locator('option').nth(3)).toHaveText('S03');
     await season.selectOption('3');
     const [res] = await Promise.all([
-      page.waitForResponse((r) => r.url().endsWith('/api/stubs') && r.request().method() === 'POST'),
+      page.waitForResponse(
+        (r) => r.url().endsWith('/api/stubs') && r.request().method() === 'POST',
+      ),
       sheet.getByRole('button', { name: 'Stub it' }).click(),
     ]);
     const body = (await res.json()) as { stub: { id: string; season: number | null } };
@@ -69,7 +71,10 @@ test.describe('C-Q3 season stubs', () => {
     expect(r.ok()).toBe(true);
     await page.goto(`/u/${acc.handle}`);
     await waitForSession(page, true);
-    const item = page.locator('li').filter({ has: page.getByTestId('wallet-stub') }).first();
+    const item = page
+      .locator('li')
+      .filter({ has: page.getByTestId('wallet-stub') })
+      .first();
     await expect(item).toBeVisible();
     const share = item.getByTestId('share-button');
     test.fixme(
@@ -77,7 +82,10 @@ test.describe('C-Q3 season stubs', () => {
       'Wallet Share/season not in this build yet: backend is adding WalletItem.latestStubId/latestSeason (WalletStub.tsx, v1.6.1).',
     );
     await expect(item.getByTestId('wallet-season')).toHaveText('S03');
-    await expect(item.getByTestId('wallet-stub')).toHaveAttribute('aria-label', /, season 3, stubbed 1 time/);
+    await expect(item.getByTestId('wallet-stub')).toHaveAttribute(
+      'aria-label',
+      /, season 3, stubbed 1 time/,
+    );
     await expect(share).toHaveAccessibleName(/^Share stub for /);
     await expect(item.getByTestId('share-story')).toBeVisible(); // owner-only
     await shot(page, info, 'wallet-season');

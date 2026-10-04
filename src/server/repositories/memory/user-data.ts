@@ -13,6 +13,7 @@
  * Every list/read resolves titles in one pass (no per-row lookups).
  */
 import { randomUUID } from 'node:crypto';
+import { CLIENT_EVENT_NAMES } from '@/lib/analytics';
 import { AppError, ERROR_COPY } from '@/lib/errors';
 import type {
   DiaryEntry,
@@ -683,8 +684,12 @@ export class MemorySettings implements UserSettingsRepository {
 /* Analytics (ADR-013 C-09): anonymous daily counters, no ids           */
 /* ------------------------------------------------------------------ */
 
-/** Distinct (name, dim) counters created per UTC day (same ceiling as SQL `events_track`). */
+/** New (name, dim) counters per UTC day for client-source names (same caps as SQL `events_track`). */
 export const EVENTS_MAX_ROWS_PER_DAY = 1000;
+/** New (name, dim) counters per UTC day for server-source names (AR-C4: never starved by clients). */
+export const EVENTS_MAX_SERVER_ROWS_PER_DAY = 300;
+
+const isClientEvent = (name: string) => (CLIENT_EVENT_NAMES as readonly string[]).includes(name);
 
 export class MemoryEvents implements EventRepository {
   async track(rows: EventCount[]): Promise<void> {
@@ -692,13 +697,18 @@ export class MemoryEvents implements EventRepository {
     const day = new Date().toISOString().slice(0, 10);
     demoStore().mutate((d) => {
       const ev = (d.events ??= {});
-      // Mirrors events_track (20261003096000): <= EVENTS_MAX_ROWS_PER_DAY new keys per day (SR-1).
-      let today = Object.keys(ev).filter((k) => k.startsWith(`${day}|`)).length;
+      // Mirrors events_track (20261004091000): separate new-key caps per source (SR-1, AR-C4).
+      const today = { client: 0, server: 0 };
+      for (const k of Object.keys(ev)) {
+        if (k.startsWith(`${day}|`)) today[isClientEvent(k.split('|')[1]!) ? 'client' : 'server']++;
+      }
       for (const r of rows.slice(0, 50)) {
         const k = `${day}|${r.name}|${r.dim}`;
         if (ev[k] === undefined) {
-          if (today >= EVENTS_MAX_ROWS_PER_DAY) continue;
-          today++;
+          const src = isClientEvent(r.name) ? 'client' : 'server';
+          const cap = src === 'client' ? EVENTS_MAX_ROWS_PER_DAY : EVENTS_MAX_SERVER_ROWS_PER_DAY;
+          if (today[src] >= cap) continue;
+          today[src]++;
         }
         ev[k] = (ev[k] ?? 0) + Math.max(0, Math.floor(r.n));
       }

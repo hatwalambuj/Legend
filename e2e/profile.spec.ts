@@ -222,7 +222,9 @@ test.describe('C-Q3 avatar colour (ADR-013 C-12)', () => {
     await expect(group).toBeVisible();
     const ocean = group.getByRole('radio', { name: 'Ocean' });
     const [res] = await Promise.all([
-      page.waitForResponse((r) => r.url().endsWith('/api/me/profile') && r.request().method() !== 'GET'),
+      page.waitForResponse(
+        (r) => r.url().endsWith('/api/me/profile') && r.request().method() !== 'GET',
+      ),
       ocean.click(),
     ]);
     expect(res.ok()).toBe(true);
@@ -239,7 +241,9 @@ test.describe('C-Q3 avatar colour (ADR-013 C-12)', () => {
 
     await page.reload();
     await expect(
-      page.getByRole('radiogroup', { name: 'Avatar colour' }).getByRole('radio', { name: 'Forest' }),
+      page
+        .getByRole('radiogroup', { name: 'Avatar colour' })
+        .getByRole('radio', { name: 'Forest' }),
     ).toHaveAttribute('aria-checked', 'true');
     const me = (await (await page.request.get('/api/me')).json()) as {
       session: { user: { avatarColor: string | null } };

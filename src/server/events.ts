@@ -51,3 +51,44 @@ export function recordEvents(events: { name: string; dim: string }[]): void {
 export function recordEvent(name: AnalyticsEventName, dim = ''): void {
   recordEvents([{ name, dim }]);
 }
+
+/* ---------------- error counters (arch review AR-C2) ---------------- */
+
+/** Where a server error happened: Next `routeType`s plus `api` for errors caught by `route()`. */
+export type ServerErrorKind = 'render' | 'route' | 'action' | 'proxy' | 'api';
+
+/**
+ * The coarse, PII-free route area of a path: its first static segment (`/api/` is skipped), e.g.
+ * `/api/titles/movie/x` → `titles`, `/title/[type]/[slug]` → `title`, `/` → `home`. Query, hash,
+ * route groups and anything that is not a short lowercase word collapse to `other`.
+ */
+export function errorArea(path: string | undefined): string {
+  const segs = (path ?? '')
+    .split(/[?#]/, 1)[0]!
+    .split('/')
+    .filter((s) => s && !/^\(.*\)$/.test(s));
+  const first = segs[0] === 'api' ? segs[1] : segs[0];
+  if (first === undefined) return segs[0] === 'api' ? 'other' : 'home';
+  return /^[a-z][a-z0-9-]{0,23}$/.test(first) ? first : 'other';
+}
+
+/** `server_error` dim; unknown kinds (e.g. a future Next `routeType`) count as `route`. */
+export function serverErrorDim(kind: string, path: string | undefined): string {
+  const k = (['render', 'route', 'action', 'proxy', 'api'] as const).includes(
+    kind as ServerErrorKind,
+  )
+    ? kind
+    : kind === 'middleware'
+      ? 'proxy'
+      : 'route';
+  return `${k}:${errorArea(path)}`;
+}
+
+/** Counts one caught server error in `events` (Hobby keeps logs ~1 h). Never throws. */
+export function recordServerError(kind: string, path: string | undefined): void {
+  try {
+    recordEvent('server_error', serverErrorDim(kind, path));
+  } catch {
+    /* counters are best-effort */
+  }
+}

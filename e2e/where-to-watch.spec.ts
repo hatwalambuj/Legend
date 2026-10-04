@@ -550,7 +550,10 @@ test.describe('Placement, stub mark, a11y', () => {
       expect(await mark.evaluate((el) => !el.closest('a') && !el.querySelector('a, [href]'))).toBe(
         true,
       );
-      await expect(t.getByRole('link')).toHaveAttribute('aria-label', new RegExp(`, on ${service}$`));
+      await expect(t.getByRole('link')).toHaveAttribute(
+        'aria-label',
+        new RegExp(`, on ${service}$`),
+      );
     };
     await page.goto('/browse'); // default region US (watch.json: Dune → Max)
     await expectMark(DUNE, 'Max');
@@ -592,7 +595,9 @@ test.describe('Placement, stub mark, a11y', () => {
     await expect(page).toHaveURL(/\/browse\?type=movie&sort=rating_desc&provider=8$/);
     await expect(nav.getByTestId('provider-chip-8')).toHaveAttribute('aria-current', 'true');
     const want = (await (
-      await page.request.get('/api/catalog?region=US&provider=8&type=movie&sort=rating_desc&limit=50')
+      await page.request.get(
+        '/api/catalog?region=US&provider=8&type=movie&sort=rating_desc&limit=50',
+      )
     ).json()) as { items: { key: string; voteAverage: number }[] };
     const grid = page.locator('article[data-testid^="ticket-"]');
     await expect(grid).toHaveCount(want.items.length);

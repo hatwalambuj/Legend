@@ -2,8 +2,11 @@
  * ADR-013 close-out migrations against real Postgres (PGlite): watch filter + chips (C-02), stub season
  * (C-10), enrich core refresh + mark gone (C-06), avatar colour (C-12), events (C-09), imports (C-11).
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { PGlite } from '@electric-sql/pglite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { CLIENT_EVENT_NAMES } from '@/lib/analytics';
 import { asUser, createDb, createUser, titleId } from './pg';
 
 const A = '0a000000-0000-4000-8000-0000000000c1';
@@ -193,6 +196,24 @@ describe('C-06 enrich core refresh', () => {
     ).not.toBeNull();
     await db.query(`update public.catalog_index set source_status = 'active' where id = $1`, [id]);
   });
+
+  it('gone rows are never due for enrichment; back to active → due again (AR-C3)', async () => {
+    const id = await titleId(db, 'movie:238');
+    await db.query(
+      `update public.catalog_index set is_listed = false, enriched_at = null,
+              synced_at = now() - interval '300 days' where id = $1`,
+      [id],
+    );
+    const due = async () =>
+      (await db.query<{ id: number }>(`select id from public.catalog_enrich_due(1000, 30)`)).rows.map(
+        (r) => Number(r.id),
+      );
+    expect((await due())[0]).toBe(id);
+    await db.query(`select public.catalog_mark_gone($1::bigint[])`, [[id]]);
+    expect(await due()).not.toContain(id);
+    await db.query(`update public.catalog_index set source_status = 'active' where id = $1`, [id]);
+    expect(await due()).toContain(id);
+  });
 });
 
 describe('C-12 avatar colour', () => {
@@ -285,14 +306,56 @@ describe('C-09 events', () => {
       JSON.stringify([
         { name: 'provider_clicked', dim: 'stream:US:1:home', n: 1 },
         { name: 'stub_created', dim: '', n: 1 },
+        { name: 'provider_clicked', dim: 'stream:US:9998:home', n: 1 },
       ]),
     ]);
-    expect(await total()).toBe(1000);
+    // The new client dim is dropped; the server event has its own cap (AR-C4).
+    expect(await total()).toBe(1001);
     const one = await db.query<{ count: string }>(
       `select count::text from public.events where dim = 'stream:US:1:home'`,
     );
     expect(one.rows[0]!.count).toBe('2');
     await db.query('delete from public.events');
+  });
+
+  it('server events have their own 300/day cap and are never starved by client events (AR-C4)', async () => {
+    await db.query('delete from public.events');
+    const track = (rows: unknown[]) =>
+      db.query(`select public.events_track($1::jsonb)`, [JSON.stringify(rows)]);
+    for (let b = 0; b < 21; b++)
+      await track(
+        Array.from({ length: 50 }, (_, i) => ({
+          name: 'provider_clicked',
+          dim: `stream:US:${1 + b * 50 + i}:home`,
+        })),
+      );
+    await track([
+      { name: 'stub_created', dim: '' },
+      { name: 'server_error', dim: 'api:titles' },
+      { name: 'provider_clicked', dim: 'stream:US:9999:home' },
+    ]);
+    const count = async (where: string) =>
+      Number(
+        (await db.query<{ n: string }>(`select count(*)::text as n from public.events where ${where}`))
+          .rows[0]!.n,
+      );
+    expect(await count(`name = 'provider_clicked'`)).toBe(1000);
+    expect(await count(`name in ('stub_created', 'server_error')`)).toBe(2);
+    for (let b = 0; b < 7; b++)
+      await track(
+        Array.from({ length: 50 }, (_, i) => ({ name: 'server_error', dim: `route:a${b * 50 + i}` })),
+      );
+    expect(await count(`name <> 'provider_clicked'`)).toBe(300);
+    expect(await count('true')).toBe(1300);
+    await db.query('delete from public.events');
+  });
+
+  it("events_track's client-name list matches CLIENT_EVENT_NAMES (AR-C4)", () => {
+    const files = ['20261004091000_events_source_caps.sql'];
+    const sql = readFileSync(join(process.cwd(), 'supabase/migrations', files[0]!), 'utf8');
+    const list = /v_clients text\[\] := array\[([^\]]+)\]/.exec(sql)![1]!;
+    const names = [...list.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+    expect(names.sort()).toEqual([...CLIENT_EVENT_NAMES].sort());
   });
 });
 

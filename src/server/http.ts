@@ -7,6 +7,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { z } from 'zod';
 import { AppError, ERROR_COPY, isAppError } from '@/lib/errors';
 import { env, type TrustedProxy } from '@/server/env';
+import { recordServerError } from '@/server/events';
 import { log } from '@/server/log';
 
 /**
@@ -46,11 +47,13 @@ export function noContent(): NextResponse {
   return res;
 }
 
-export function errorResponse(e: unknown): NextResponse {
+/** `path` (the request pathname) only feeds the coarse `server_error` area (AR-C2), never a log. */
+export function errorResponse(e: unknown, path?: string): NextResponse {
   const err = isAppError(e)
     ? e
     : new AppError('internal', 'Something went wrong. Try again.', { cause: e });
   if (!isAppError(e)) log.error('api_unhandled_error', { error: e });
+  if (err.status >= 500) recordServerError('api', path);
   const res = NextResponse.json(err.toBody(), { status: err.status });
   // API_CONTRACT §4: every error is `private, no-store` + `Vary: Cookie`.
   res.headers.set('Cache-Control', CACHE.private);
@@ -65,9 +68,17 @@ export function route<Ctx>(fn: (req: NextRequest, ctx: Ctx) => Promise<Response>
     try {
       return await fn(req, ctx);
     } catch (e) {
-      return errorResponse(e);
+      return errorResponse(e, pathOf(req));
     }
   };
+}
+
+function pathOf(req: Request): string | undefined {
+  try {
+    return new URL(req.url).pathname;
+  } catch {
+    return undefined;
+  }
 }
 
 function zodFields(error: z.ZodError): Record<string, string> {

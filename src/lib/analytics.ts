@@ -31,6 +31,13 @@ export const ANALYTICS_EVENTS = {
   watchlist_added: { client: false, dim: /^$/ },
   export_downloaded: { client: false, dim: /^(letterboxd|json)$/ },
   import_completed: { client: false, dim: /^(letterboxd|imdb|tvtime)$/ },
+  /** A report accepted by POST /api/log, counted by `kind` only (AR-C2: no message, stack or path). */
+  client_error: { client: false, dim: /^(boundary|global|unhandled|rejection)$/ },
+  /** A caught server error, `<render|route|action|proxy|api>:<first route segment>` (AR-C2). */
+  server_error: {
+    client: false,
+    dim: /^(render|route|action|proxy|api):[a-z][a-z0-9-]{0,23}$/,
+  },
   share_generated: {
     client: true,
     dim: /^(title|wallet|review|stub):(native|copy|fallback|story)$/,

@@ -23,11 +23,14 @@ vi.mock('next/cache', () => ({ revalidateTag: () => undefined }));
 
 const { authRateLimiter, resetContainer } = await import('@/server/container');
 const { resetDemoStoreSingleton } = await import('@/server/repositories/memory/store');
-const { demoEventCounts, EVENTS_MAX_ROWS_PER_DAY, MemoryEvents } =
+const { demoEventCounts, EVENTS_MAX_ROWS_PER_DAY, EVENTS_MAX_SERVER_ROWS_PER_DAY, MemoryEvents } =
   await import('@/server/repositories/memory/user-data');
 const { resetEnvCache } = await import('@/server/env');
 const { ipKey, limitFor, LIMITS } = await import('@/server/rate-limit');
 const { dal } = await import('@/server/dal');
+const { errorArea, serverErrorDim } = await import('@/server/events');
+const { route } = await import('@/server/http');
+const { onRequestError } = await import('@/instrumentation');
 const signin = await import('@/app/api/auth/signin/route');
 const signup = await import('@/app/api/auth/signup/route');
 const me = await import('@/app/api/me/route');
@@ -435,6 +438,40 @@ describe('C-09 events', () => {
     expect(Object.keys(counts)).toHaveLength(EVENTS_MAX_ROWS_PER_DAY);
     expect(counts['provider_clicked:stream:US:1:home']).toBe(2);
   });
+
+  it('server events have their own daily cap, so client events cannot starve them (AR-C4)', async () => {
+    const repo = new MemoryEvents();
+    for (let b = 0; b * 50 < EVENTS_MAX_ROWS_PER_DAY + 50; b++)
+      await repo.track(
+        Array.from({ length: 50 }, (_, i) => ({
+          name: 'provider_clicked' as const,
+          dim: `stream:US:${1 + b * 50 + i}:home`,
+          n: 1,
+        })),
+      );
+    await repo.track([
+      { name: 'stub_created', dim: '', n: 1 },
+      { name: 'server_error', dim: 'api:titles', n: 1 },
+    ]);
+    let counts = demoEventCounts(day());
+    expect(counts.stub_created).toBe(1);
+    expect(counts['server_error:api:titles']).toBe(1);
+    // The server cap is separate and bounded too.
+    for (let b = 0; b * 50 < EVENTS_MAX_SERVER_ROWS_PER_DAY + 50; b++)
+      await repo.track(
+        Array.from({ length: 50 }, (_, i) => ({
+          name: 'server_error' as const,
+          dim: `route:a${b * 50 + i}`,
+          n: 1,
+        })),
+      );
+    counts = demoEventCounts(day());
+    const server = Object.keys(counts).filter((k) => !k.startsWith('provider_clicked'));
+    expect(server).toHaveLength(EVENTS_MAX_SERVER_ROWS_PER_DAY);
+    expect(Object.keys(counts)).toHaveLength(
+      EVENTS_MAX_ROWS_PER_DAY + EVENTS_MAX_SERVER_ROWS_PER_DAY,
+    );
+  });
 });
 
 describe('C-13 POST /api/log', () => {
@@ -469,6 +506,12 @@ describe('C-13 POST /api/log', () => {
     });
     expect(JSON.stringify(line)).not.toContain('203.0.113.9');
     expect(JSON.stringify(line)).not.toContain('secret');
+    // AR-C2: also counted, by kind only (no message, path or id).
+    const counts = demoEventCounts(new Date().toISOString().slice(0, 10));
+    expect(counts['client_error:unhandled']).toBe(1);
+    expect(Object.keys(counts).filter((k) => k.startsWith('client_error'))).toEqual([
+      'client_error:unhandled',
+    ]);
     const big = await call(
       logRoute.POST as Handler,
       req(
@@ -490,6 +533,53 @@ describe('C-13 POST /api/log', () => {
       req('POST', '/api/log', { kind: 'global', message: 'x', path: '/' }),
     );
     expect(r.status).toBe(429);
+  });
+});
+
+describe('AR-C2 server error counters', () => {
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  it('errorArea / serverErrorDim are coarse and PII-free', () => {
+    expect(errorArea('/api/titles/movie/1-x?q=a@b.co')).toBe('titles');
+    expect(errorArea('/title/[type]/[slug]')).toBe('title');
+    expect(errorArea('/(app)/me/wallet')).toBe('me');
+    expect(errorArea('/')).toBe('home');
+    expect(errorArea(undefined)).toBe('home');
+    expect(errorArea('/api')).toBe('other');
+    expect(errorArea('/[id]/x')).toBe('other');
+    expect(errorArea('/User@Mail.com')).toBe('other');
+    expect(serverErrorDim('render', '/me')).toBe('render:me');
+    expect(serverErrorDim('middleware', '/')).toBe('proxy:home');
+    expect(serverErrorDim('weird', '/x')).toBe('route:x');
+  });
+
+  it('route() counts unhandled and 5xx errors, not 4xx', async () => {
+    const boom = route(async () => {
+      throw new Error('secret a@b.co');
+    });
+    const notFound = route(async () => {
+      const { AppError } = await import('@/lib/errors');
+      throw new AppError('not_found', 'nope');
+    });
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect((await boom(req('GET', '/api/titles/movie/1?x=y'), {})).status).toBe(500);
+    spy.mockRestore();
+    expect((await notFound(req('GET', '/api/reviews'), {})).status).toBe(404);
+    const counts = demoEventCounts(today());
+    expect(counts['server_error:api:titles']).toBe(1);
+    expect(Object.keys(counts).some((k) => k.includes('reviews'))).toBe(false);
+  });
+
+  it('onRequestError logs and counts route type + first route segment (node runtime only)', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const ctx = { routerKind: 'App Router', routePath: '/title/[type]/[slug]', routeType: 'render' };
+    vi.stubEnv('NEXT_RUNTIME', 'edge');
+    await onRequestError(new Error('x'), { path: '/', method: 'GET', headers: {} }, ctx as never);
+    vi.stubEnv('NEXT_RUNTIME', 'nodejs');
+    await onRequestError(new Error('x'), { path: '/', method: 'GET', headers: {} }, ctx as never);
+    vi.unstubAllEnvs();
+    spy.mockRestore();
+    expect(demoEventCounts(today())['server_error:render:title']).toBe(1);
   });
 });
 

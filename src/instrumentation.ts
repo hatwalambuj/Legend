@@ -18,4 +18,13 @@ export const onRequestError: Instrumentation.onRequestError = async (err, _reque
     ...(digest ? { digest: digest.slice(0, 64) } : {}),
     message: message.slice(0, 300),
   });
+  // AR-C2: Hobby keeps logs ~1 h, so also count it (`server_error`, route type + first route segment).
+  // Node only: the counter needs the data container, which the edge runtime does not load.
+  if (process.env.NEXT_RUNTIME !== 'nodejs') return;
+  try {
+    const { recordServerError } = await import('./server/events');
+    recordServerError(context.routeType, context.routePath);
+  } catch (e) {
+    log.warn('events_write_failed', { error: e });
+  }
 };

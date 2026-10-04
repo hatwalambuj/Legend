@@ -152,7 +152,7 @@ describe('analytics queue (C-09)', () => {
   afterEach(() => vi.useRealTimers());
 
   it('every event has a dim rule; dims are validated', () => {
-    expect(Object.keys(ANALYTICS_EVENTS)).toHaveLength(10);
+    expect(Object.keys(ANALYTICS_EVENTS)).toHaveLength(12);
     expect(isValidDim('worth_it_viewed', 'widely_loved')).toBe(true);
     expect(isValidDim('worth_it_viewed', 'great')).toBe(false);
     expect(

@@ -42,3 +42,46 @@ export function formatMetrics(rows: MetricsWeek[]): string {
   });
   return [head, ...lines].join('\n');
 }
+
+/** One `events` row (AR-C2 error counters). */
+export interface ErrorCountRow {
+  day: string;
+  name: string;
+  dim: string;
+  count: number | string;
+}
+
+export const ERROR_EVENT_NAMES = ['client_error', 'server_error'] as const;
+
+/** UTC `YYYY-MM-DD` of `days - 1` days before `now` (the first day of a `days`-day window). */
+export function windowStart(days: number, now = new Date()): string {
+  return new Date(now.getTime() - (days - 1) * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Error counts of the last 7 days (Vercel Hobby keeps runtime logs ~1 h, so this is the history):
+ * one line per `name:dim`, total first, then per-day counts, highest total first.
+ */
+export function formatErrorCounts(rows: ErrorCountRow[]): string {
+  const head = 'errors (last 7 days, UTC)';
+  if (rows.length === 0) return `${head}\n  none`;
+  const by = new Map<string, { total: number; days: Map<string, number> }>();
+  for (const r of rows) {
+    const k = r.dim ? `${r.name}:${r.dim}` : r.name;
+    const e = by.get(k) ?? { total: 0, days: new Map<string, number>() };
+    const n = Number(r.count);
+    e.total += n;
+    e.days.set(r.day, (e.days.get(r.day) ?? 0) + n);
+    by.set(k, e);
+  }
+  const lines = [...by]
+    .sort(([a, x], [b, y]) => y.total - x.total || a.localeCompare(b))
+    .map(([k, e]) => {
+      const days = [...e.days]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([d, n]) => `${d.slice(5)}=${n}`)
+        .join(' ');
+      return `  ${k.padEnd(28)} ${String(e.total).padStart(6)}  ${days}`;
+    });
+  return [head, ...lines].join('\n');
+}

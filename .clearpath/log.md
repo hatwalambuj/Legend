@@ -63,3 +63,5 @@ confidence: high
 - blocked (contract): WalletItem has no stub id/season → wallet-stub Share/Story/S03 not possible; diary row has them.
 - deviations: one src/og/ShareCard.tsx (not Title/Story/StubCard files); review-quote graft unused (no review share route); ogText() strips glyphs outside Latin so next/og never fetches Google fonts; ticket-providers keeps role/label alongside aria-hidden for the pre-ADR W7-AC1 E2E until C-Q1.
 - 2026-10-04 backend: unblocked wallet share — WalletItem.latestStubId/latestSeason (contract v1.6.1, migration 20261004090000, not applied); WalletStub shows S03 + Share stub + owner Story image. Gates green.
+
+- 2026-10-04 devops: AR-C1 closed (launch:check --live/--migrations compares _stubbed_migrations vs supabase/migrations, smoke-live.yml pre-step, README "migrate, then deploy"); AR-C5 closed (brand warn + F8, smoke 404/308/chips/OG+story PNG size; scripts/lib/png.ts). Gate green except 2 tests/ files formatted by parallel agent.

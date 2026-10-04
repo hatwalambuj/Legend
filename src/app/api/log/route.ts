@@ -1,6 +1,7 @@
 import { clientLogSchema } from '@/lib/contracts';
 import { authRateLimiter } from '@/server/container';
 import { env } from '@/server/env';
+import { recordEvent } from '@/server/events';
 import { assertSameOrigin, noContent, parseBodyLimited, route } from '@/server/http';
 import { log, stripQuery, uaFamily } from '@/server/log';
 import { clientIp, enforce, ipKey, limitFor, LIMITS } from '@/server/rate-limit';
@@ -11,7 +12,7 @@ const MAX_BYTES = 4 * 1024;
 /**
  * POST /api/log (API_CONTRACT §5.25): one redacted `client_error` JSON line in our own server logs.
  * No third party, no IP (the limiter key is a salted in-memory hash), the UA family only, and the path
- * without query or hash. Limits: 10/min per IP and 300/min per process.
+ * without query or hash. Also counted as `client_error:<kind>` in `events` (AR-C2). Limits: 10/min per IP and 300/min per process.
  */
 export const POST = route(async (req) => {
   assertSameOrigin(req);
@@ -39,5 +40,7 @@ export const POST = route(async (req) => {
     path: stripQuery(body.path).slice(0, 200),
     uaFamily: uaFamily(req.headers.get('user-agent')),
   });
+  // AR-C2: Hobby keeps logs ~1 h, so also count it by `kind` only (no message, stack, path or id).
+  recordEvent('client_error', body.kind);
   return noContent();
 });
