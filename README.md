@@ -1,12 +1,19 @@
 # Stubbed
 
-**The collectible diary for movies and TV.** Every watch earns a ticket stub, and the catalogue only includes the good stuff: titles rated **6.5 or higher** on TMDB (plus a vote floor, so a 9.0 from seven votes doesn't count).
+## What is Stubbed
 
-Browse and sort by release date or rating, see the **TMDB score and the IMDb rating** on every ticket, get a quick **"Worth it?"** summary on every title, read reviews, then sign up to **stub** what you watch (every rewatch adds another stub) and write reviews. Reviews and ratings live only in Stubbed — nothing is posted to other sites — and you can export your data to Letterboxd CSV or JSON at any time.
+- **A collectible diary for movies and TV.** Every watch earns a ticket stub; every rewatch adds another.
+- **Only the good stuff:** titles rated **6.5 or higher** on TMDB, with a vote floor (a 9.0 from seven votes doesn't count).
+- Every title shows the **TMDB score**, the **IMDb rating** (via OMDb), a rules-based **"Worth it?"** summary and **Where to watch** for your region.
+- Browse and sort by release date or rating, filter by streaming service, search, read reviews.
+- Sign up to stub what you watch (with a season for shows), write reviews, keep a watchlist and a public wallet.
+- Share a title, wallet, review or stub, with preview cards and a story-sized stub image.
+- Import from Letterboxd, IMDb ratings or TV Time (beta); export to Letterboxd CSV or JSON at any time.
+- Reviews and ratings live only in Stubbed: **nothing is posted to other sites**. Analytics are first-party counts only.
+- **No AI anywhere**: every feature is built from stored data, rules and templates. Runs on free tiers ($0).
+- Status: feature-complete and tested in demo mode. **Not yet run on real keys**: follow [LAUNCH.md](docs/09-closeout/LAUNCH.md).
 
-No AI anywhere: every feature, including "Worth it?", is built from stored data, rules and templates.
-
-> Status: MVP feature-complete and tested in demo mode (unit, DB and Playwright E2E suites). Not yet run against real Supabase, TMDB and OMDb keys: follow **Going live** below, then do the staging smoke test before announcing ([GAP review](docs/07-gap-review/GAP_REVIEW.md) §6).
+**Start here:** [Launch runbook](docs/09-closeout/LAUNCH.md) (founder, step by step) · [Founder inputs F1–F12](docs/09-closeout/FOUNDER_INPUTS.md) · [Release notes](docs/09-closeout/RELEASE_NOTES.md) · Architecture: [ADRs](docs/04-architecture/) ([close-out ADR-013](docs/04-architecture/ADR-013-closeout.md)), [API contract](docs/04-architecture/API_CONTRACT.md), [work split](docs/04-architecture/WORK_SPLIT.md) · "Architecture in one screen" below.
 
 ## Quick start (demo mode: no keys, no network)
 
@@ -28,7 +35,7 @@ Posters load from TMDB's CDN in a normal browser. If they can't load (offline, o
 
 ## Going live
 
-Do these in order. Keep every key out of git; only `NEXT_PUBLIC_*` values ever reach the browser.
+The founder's numbered runbook with checks for every step is [LAUNCH.md](docs/09-closeout/LAUNCH.md); this section is the reference behind it. Do these in order. Keep every key out of git; only `NEXT_PUBLIC_*` values ever reach the browser.
 
 ### 0. Name and licences (before you spend anything)
 - **Trademark:** run a clearance search for "Stubbed" (USPTO and EUIPO, classes 9, 41, 42). Watch for **AMC Stubs** and apps like MyStubs or TicketStub; a one-off opinion from a trademark attorney is worth it. Fallback name: **Punched** ([naming](docs/01-product/naming.md)). Register the domain and handles before announcing.
@@ -64,14 +71,16 @@ Do these in order. Keep every key out of git; only `NEXT_PUBLIC_*` values ever r
 | `SUPABASE_SERVICE_ROLE_KEY` (export, detail cache, **account deletion**) | ✓ | ✓ secret |
 | `REVALIDATE_SECRET` (`openssl rand -hex 32`, same value in both) | ✓ | ✓ secret |
 | `NEXT_PUBLIC_CONTACT_EMAIL` (inbox for Contact and review reports) | ✓ | — |
+| `NEXT_PUBLIC_BRAND_NAME` (only after a rename, see F8; build-time) | ✓ | — |
 | `OMDB_API_KEY` | — | ✓ secret |
 
 - **Do not** set any `DEMO_*` variable or `IMAGE_MODE=off` on the real site. A production server **refuses to start in demo mode** (no keys, or only some of them) unless `DEMO_MODE_PUBLIC=true` is set. Only set that for a deliberate throwaway demo: its data resets, the demo accounts are shared, and it must never be presented as the product.
 - Add your custom domain.
 
 ### 5. GitHub Actions (the nightly job)
-- Repo → Settings → Environments → create **`production`** (`.github/workflows/nightly-sync.yml` uses it).
+- Repo → Settings → Environments → create **`production`** (all four ops workflows use it: `nightly-sync.yml`, `db-apply.yml`, `smoke-live.yml`, `backup.yml`).
 - Settings → Secrets and variables → Actions: add the secrets and the `NEXT_PUBLIC_SITE_URL` variable from the table above (repo level or in the `production` environment). Optional tuning variables: `SYNC_GUARD_MIN_MOVIE`, `SYNC_GUARD_MIN_TV`, `OMDB_DAILY_BUDGET`, `SYNC_ENRICH_MAX`.
+- Also: secret `SUPABASE_DB_URL` (session pooler string; `db-apply.yml`, `smoke-live.yml`, `backup.yml`), secret `BACKUP_PASSPHRASE` (`backup.yml`) and variable `SMOKE_EMAIL` (an address on a real mail domain, `smoke-live.yml`).
 
 ### Environment
 M1 additions (ADR-001 §A3, ADR-011). Set them in Vercel unless noted:
@@ -82,6 +91,14 @@ M1 additions (ADR-001 §A3, ADR-011). Set them in Vercel unless noted:
 | `HEALTH_MAX_SYNC_AGE_HOURS` | `36` | `/api/health` reports `degraded` when the last full sync is older |
 | `SYNC_RECHECK_MAX` | `500` | GitHub Actions variable. More titles missing from discover than this aborts the apply for a human to look at |
 | `SUPABASE_DB_URL`, `BACKUP_PASSPHRASE` | — | GitHub Actions **secrets** for the backup workflow (see "Backups and restore") |
+
+Close-out additions (ADR-013 §16):
+
+| Variable | Default | What |
+|---|---|---|
+| `NEXT_PUBLIC_BRAND_NAME` | `Stubbed` | Brand name in the UI and share images (1–24 letters, digits, space `. ' & -`). Inlined at build time: a rename needs a redeploy |
+| `ANALYTICS_ENABLED` | `true` | First-party anonymous daily counts in our own DB. `false` turns `/api/events` and server events into no-ops |
+| `IMPORT_MAX_ROWS_PER_DAY` | `20000` | Per-user cap on imported rows per 24 h |
 
 Monitoring (free): two uptime monitors (UptimeRobot or Better Stack), every 5 minutes: `https://<domain>/api/health` alerts when the site or database is **down** (503), `https://<domain>/api/health?strict=1` also alerts when the catalogue sync is **stale** (> 36 h). The first one also keeps Supabase Free from pausing.
 
@@ -137,6 +154,9 @@ Self-hosting instead of Vercel: `npm run build && npm start` with the same varia
 | `npm run sync:catalog` | Nightly job: TMDB → `catalog_index`, enrich, IMDb ratings (`--dry-run`, `--from-fixtures`, `--only=discover\|enrich\|imdb`) |
 | `npm run fixtures:build` | Regenerate `src/fixtures/*.json` from `scripts/fixtures/*.source.ts` |
 | `npm run demo:reset` | Reset the demo JSON store |
+| `npm run launch:check` / `db:apply` / `smoke:live` / `check:provider-links` | Launch kit, see "Launch kit" above |
+| `npm run format` / `format:check` | Prettier write / check (CI runs the check) |
+| `npx tsx scripts/metrics.ts` | Weekly product metrics and 7 days of error counts (service role key needed) |
 
 Playwright is pinned to **1.56.1** to match the pre-installed `chromium-1194` in the build container. There, never run `playwright install`; CI does it itself.
 
@@ -150,6 +170,7 @@ Playwright is pinned to **1.56.1** to match the pre-installed `chromium-1194` in
 - **Auth** ([ADR-005](docs/04-architecture/ADR-005-auth.md)): Supabase Auth in production, a local signed-cookie auth in demo mode.
 - **Demo mode** ([ADR-006](docs/04-architecture/ADR-006-demo-fixture-mode.md)): the same ports, backed by an in-memory store persisted to a JSON file.
 - **Images and colour** ([ADR-007](docs/04-architecture/ADR-007-images-and-poster-palette.md)): images are hot-linked from TMDB. The poster palette is computed once per title at ingest with `sharp`, so the background adapts to each poster with guaranteed contrast.
+- **Identity** ([ADR-010](docs/04-architecture/ADR-010-identity.md)), **free-tier operations** ([ADR-011](docs/04-architecture/ADR-011-operations-free-tier.md): sync guardrails, health, keep-alive, backups), **Where to watch** ([ADR-012](docs/04-architecture/ADR-012-where-to-watch.md)), **close-out** ([ADR-013](docs/04-architecture/ADR-013-closeout.md): share images, imports, seasons, first-party analytics and error logs, brand config).
 - **Contract**: [API_CONTRACT.md](docs/04-architecture/API_CONTRACT.md). **Who owns what**: [WORK_SPLIT.md](docs/04-architecture/WORK_SPLIT.md).
 
 ```
@@ -159,12 +180,14 @@ src/
   lib/                 shared, frozen: types, zod contracts, errors, api-client, sort/cursor, curation, images, palette, format
                        (+ worth-it.ts / vibes.ts: "Worth it?" rules, Backend-tuned)
   server/              Backend: dal.ts (what pages call), ports, repositories (memory | supabase), providers, auth, jobs
+  og/                  share/OG image cards (next/og) + bundled font
   fixtures/            demo seed (generated)
   styles/tokens.css    design tokens (DESIGN.md §2)
 supabase/migrations/   schema + RLS + triggers + catalogue RPCs
-scripts/               sync-catalog, build-fixtures, demo-reset
-tests/                 shared-lib + DB tests · e2e/ Playwright
-docs/                  brief → PRD → design → system design → ADRs → review → QA
+scripts/               sync-catalog, build-fixtures, demo-reset, metrics + launch kit (launch-check, db-apply, smoke-live, check-provider-links)
+tests/                 shared-lib, server/route and DB (PGlite) tests
+e2e/                   Playwright, demo mode · e2e-live/ Playwright against a real deploy (smoke:live)
+docs/                  brief → PRD → design → system design → ADRs → review → QA → close-out (09-closeout)
 ```
 
 ## Attribution
