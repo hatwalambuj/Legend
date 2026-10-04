@@ -21,7 +21,8 @@ export function ReviewComposer({
 }: {
   target: StubTarget;
   existing: Review | null;
-  onSaved: (r: Review) => void;
+  /** `created` = a first review (ADR-013 C-04: R10 count +1). */
+  onSaved: (r: Review, created: boolean) => void;
 }) {
   const app = useApp();
   const uid = useId();
@@ -53,7 +54,7 @@ export function ReviewComposer({
         // Keep the "STUB #N" link on edits: the upsert replaces stubId, and omitting it would unlink it.
         stubId: existing?.stubId ?? null,
       });
-      onSaved(res.review);
+      onSaved(res.review, res.created === true);
       if (res.suggestStub) {
         app.toast({
           message: (

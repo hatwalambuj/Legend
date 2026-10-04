@@ -1,0 +1,30 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+.swatch[aria-checked='true'] {
+  border-color: var(--fg);
+  outline: 2px solid var(--bg);
+  outline-offset: -4px;
+}
+.swatch:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}

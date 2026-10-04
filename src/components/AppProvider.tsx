@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { api, ApiError } from '@/lib/api-client';
 import { ERROR_COPY } from '@/lib/errors';
+import { reportError } from '@/lib/report-error';
 import type { AppMode, Session, TitleKey, TitleState } from '@/lib/types';
 import {
   AppContext,
@@ -31,6 +32,7 @@ import {
 import { AuthSheet } from './AuthSheet';
 import { ConfirmDialog } from './ConfirmDialog';
 import { findTicket, haptic, shake, tearToWallet } from './lib/motion';
+import { captureShareRef } from './lib/share-ref';
 import { StubSheet } from './StubSheet';
 import { Toaster } from './Toaster';
 
@@ -85,6 +87,31 @@ export function AppProvider({
   useEffect(() => {
     statesRef.current = states;
   }, [states]);
+
+  /* ---------------- share ref (C-07) + client error reports (C-13) ---------------- */
+  useEffect(() => {
+    captureShareRef(window.location.search);
+    const onError = (e: ErrorEvent) =>
+      reportError({
+        kind: 'unhandled',
+        message: e.message || String(e.error ?? 'Error'),
+        stack: e.error instanceof Error ? e.error.stack : undefined,
+      });
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const r: unknown = e.reason;
+      reportError({
+        kind: 'rejection',
+        message: r instanceof Error ? r.message : String(r),
+        stack: r instanceof Error ? r.stack : undefined,
+      });
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
 
   /* ---------------- toasts ---------------- */
   const dismissToast = useCallback((id: number) => {
@@ -336,6 +363,7 @@ export function AppProvider({
           watchedOn: opts.watchedOn,
           watchedWhere: opts.watchedWhere ?? null,
           note: opts.note ?? '',
+          ...(target.mediaType === 'tv' && opts.season ? { season: opts.season } : {}),
         });
         walletWrites.current++; // settled: a count read started before now may predate this write
         setTitleState(target.key, () => res.state);

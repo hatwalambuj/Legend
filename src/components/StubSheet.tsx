@@ -1,9 +1,11 @@
 'use client';
 /**
  * "Stub with details" (DESIGN §5.3, C2): watched-on date (max today, min Jan 1 of release year − 1),
- * where (segmented), note (≤ 280). Also used to edit an existing diary stub.
+ * where (segmented), note (≤ 280), and for shows an optional season (ADR-013 C-10). Also used to edit an
+ * existing diary stub.
  */
 import { useId, useState } from 'react';
+import { seasonLabel } from '@/lib/format';
 import type { WatchedWhere } from '@/lib/types';
 import { useApp, type StubOptions, type StubTarget } from '@/hooks/useApp';
 import { Icon } from './Icon';
@@ -14,6 +16,14 @@ export interface StubDetails {
   watchedOn: string;
   watchedWhere: WatchedWhere | null;
   note: string;
+  /** TV only; null = the whole show. */
+  season: number | null;
+}
+
+/** "Whole show" + S01..S{n}; n is capped at 200 (the API bound). */
+export function seasonOptions(seasonCount: number | null | undefined): number[] {
+  const n = Math.min(200, Math.max(0, Math.floor(seasonCount ?? 0)));
+  return Array.from({ length: n }, (_, i) => i + 1);
 }
 
 export function StubDetailsForm({
@@ -39,6 +49,8 @@ export function StubDetailsForm({
   const [date, setDate] = useState(initial?.watchedOn ?? today);
   const [where, setWhere] = useState<WatchedWhere | null>(initial?.watchedWhere ?? null);
   const [note, setNote] = useState(initial?.note ?? '');
+  const seasons = target.mediaType === 'tv' ? seasonOptions(target.seasonCount) : [];
+  const [season, setSeason] = useState<number | null>(initial?.season ?? null);
   const [error, setError] = useState<string | null>(null);
   const uid = useId();
   const min = minDate ?? `${target.year - 1}-01-01`;
@@ -52,7 +64,12 @@ export function StubDetailsForm({
         e.preventDefault();
         if (!date || date > max) return setError("Pick a date that isn't in the future.");
         if (date < min) return setError(`Pick a date from ${min.slice(0, 4)} or later.`);
-        onSubmit({ watchedOn: date, watchedWhere: where, note: note.trim() });
+        onSubmit({
+          watchedOn: date,
+          watchedWhere: where,
+          note: note.trim(),
+          season: seasons.length && season && season <= seasons.length ? season : null,
+        });
       }}
     >
       <SheetTitle id={headingId}>{heading}</SheetTitle>
@@ -82,6 +99,28 @@ export function StubDetailsForm({
           </span>
         )}
       </div>
+      {seasons.length > 0 && (
+        <div className="field">
+          <label htmlFor={`${uid}-season`}>
+            Season <span style={{ textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+          </label>
+          <span className="select">
+            <select
+              id={`${uid}-season`}
+              data-testid="stub-season"
+              value={season ?? ''}
+              onChange={(e) => setSeason(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">Whole show</option>
+              {seasons.map((n) => (
+                <option key={n} value={n}>
+                  {seasonLabel(n)}
+                </option>
+              ))}
+            </select>
+          </span>
+        </div>
+      )}
       <div className="field">
         <span className="lbl" id={`${uid}-where`}>
           Where
@@ -160,7 +199,12 @@ export function StubSheet({
           submitLabel="Stub it"
           onCancel={onClose}
           onSubmit={(d) =>
-            onSubmit(target, { watchedOn: d.watchedOn, watchedWhere: d.watchedWhere, note: d.note })
+            onSubmit(target, {
+              watchedOn: d.watchedOn,
+              watchedWhere: d.watchedWhere,
+              note: d.note,
+              season: d.season,
+            })
           }
         />
       )}

@@ -126,6 +126,12 @@ export default function AboutPage() {
                 Posters load straight from TMDB&apos;s image servers, which means TMDB can see your
                 IP address when an image loads.
               </li>
+              <li id="what-we-count" data-testid="what-we-count">
+                <strong>What we count:</strong> anonymous daily totals only, such as how many stubs,
+                reviews and shares happened today. No cookies, no IP address, no user id and no
+                title is stored with a count. If your browser sends Global Privacy Control or Do Not
+                Track, we count nothing from you.
+              </li>
               <li>
                 No ads, no trackers, no selling data. Delete a stub or review any time, or{' '}
                 <Link className="link" href="/me/settings#delete">

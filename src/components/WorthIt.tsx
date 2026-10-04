@@ -5,6 +5,7 @@
  */
 import type { WorthIt as WorthItData } from '@/lib/types';
 import { LikeLine } from './LikeLine';
+import { WorthItSeen } from './WorthItSeen';
 import styles from './WorthIt.module.css';
 
 export function WorthIt({ data }: { data: WorthItData }) {
@@ -65,6 +66,7 @@ export function WorthIt({ data }: { data: WorthItData }) {
         </div>
         {likeCandidates.length > 0 && <LikeLine candidates={likeCandidates} />}
       </div>
+      <WorthItSeen verdict={verdict.key} />
     </section>
   );
 }

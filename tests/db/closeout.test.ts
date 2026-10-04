@@ -263,6 +263,37 @@ describe('C-09 events', () => {
     expect(Number(m.rows[0]!.events.stub_created)).toBe(4);
     await db.query(`select public.events_purge(400)`);
   });
+
+  it('events_track creates at most 1,000 distinct rows per day; existing rows still count (SR-1)', async () => {
+    await db.query('delete from public.events');
+    const batch = (from: number) =>
+      JSON.stringify(
+        Array.from({ length: 50 }, (_, i) => ({
+          name: 'provider_clicked',
+          dim: `stream:US:${from + i}:home`,
+          n: 1,
+        })),
+      );
+    for (let b = 0; b < 21; b++)
+      await db.query(`select public.events_track($1::jsonb)`, [batch(1 + b * 50)]);
+    const total = async () =>
+      Number(
+        (await db.query<{ n: string }>('select count(*)::text as n from public.events')).rows[0]!.n,
+      );
+    expect(await total()).toBe(1000);
+    await db.query(`select public.events_track($1::jsonb)`, [
+      JSON.stringify([
+        { name: 'provider_clicked', dim: 'stream:US:1:home', n: 1 },
+        { name: 'stub_created', dim: '', n: 1 },
+      ]),
+    ]);
+    expect(await total()).toBe(1000);
+    const one = await db.query<{ count: string }>(
+      `select count::text from public.events where dim = 'stream:US:1:home'`,
+    );
+    expect(one.rows[0]!.count).toBe('2');
+    await db.query('delete from public.events');
+  });
 });
 
 describe('C-11 imports', () => {

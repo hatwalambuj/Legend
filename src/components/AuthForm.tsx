@@ -11,6 +11,7 @@ import { ERROR_COPY } from '@/lib/errors';
 import type { Session } from '@/lib/types';
 import { useApp } from '@/hooks/useApp';
 import { Icon } from './Icon';
+import { readShareRef } from './lib/share-ref';
 import styles from './AuthForm.module.css';
 
 export type AuthView = 'signin' | 'signup';
@@ -123,6 +124,7 @@ export function AuthForm({
               email: values.email.trim(),
               password: values.password,
               handle: values.handle.trim().toLowerCase(),
+              ...(readShareRef() ? { ref: 'share' as const } : {}),
             })
           : await api.signIn({ email: values.email.trim(), password: values.password });
       if (res.session) onSuccess(res.session);

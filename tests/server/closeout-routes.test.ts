@@ -23,7 +23,8 @@ vi.mock('next/cache', () => ({ revalidateTag: () => undefined }));
 
 const { authRateLimiter, resetContainer } = await import('@/server/container');
 const { resetDemoStoreSingleton } = await import('@/server/repositories/memory/store');
-const { demoEventCounts } = await import('@/server/repositories/memory/user-data');
+const { demoEventCounts, EVENTS_MAX_ROWS_PER_DAY, MemoryEvents } =
+  await import('@/server/repositories/memory/user-data');
 const { resetEnvCache } = await import('@/server/env');
 const { ipKey, limitFor, LIMITS } = await import('@/server/rate-limit');
 const { dal } = await import('@/server/dal');
@@ -419,6 +420,20 @@ describe('C-09 events', () => {
     );
     expect(r.status).toBe(429);
     expect(r.headers.get('retry-after')).toBeTruthy();
+  });
+  it('the demo counters create at most EVENTS_MAX_ROWS_PER_DAY keys a day; known keys still count (SR-1)', async () => {
+    const repo = new MemoryEvents();
+    const dims = (from: number) =>
+      Array.from({ length: 50 }, (_, i) => ({
+        name: 'provider_clicked' as const,
+        dim: `stream:US:${from + i}:home`,
+        n: 1,
+      }));
+    for (let b = 0; b * 50 < EVENTS_MAX_ROWS_PER_DAY + 50; b++) await repo.track(dims(1 + b * 50));
+    await repo.track([{ name: 'provider_clicked', dim: 'stream:US:1:home', n: 1 }]);
+    const counts = demoEventCounts(day());
+    expect(Object.keys(counts)).toHaveLength(EVENTS_MAX_ROWS_PER_DAY);
+    expect(counts['provider_clicked:stream:US:1:home']).toBe(2);
   });
 });
 

@@ -71,35 +71,36 @@ test('home is live (no demo pill) and loads real TMDB posters', async ({ page },
   await evidence(info, 'home-posters', { posterImgs: await posters.count() });
 });
 
-test('TMDB detail response includes the "watch/providers" key', async ({ playwright }, info) => {
+// Plain `fetch`, not a Playwright request context: the runner traces every APIRequestContext (headers
+// and query included) and `trace: 'retain-on-failure'` uploads it in the evidence artifact, which would
+// carry the TMDB token (security review SR-2).
+test('TMDB detail response includes the "watch/providers" key', async ({}, info) => {
   const token = process.env.TMDB_READ_TOKEN?.trim();
   const apiKey = process.env.TMDB_API_KEY?.trim();
   expect(token || apiKey, 'set TMDB_READ_TOKEN (or TMDB_API_KEY) for this check').toBeTruthy();
-  const ctx = await playwright.request.newContext({
-    baseURL: 'https://api.themoviedb.org',
-    extraHTTPHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+  const mediaType = TYPE === 'tv' ? 'tv' : 'movie';
+  const appends = enrichmentAppends(mediaType);
+  const url = new URL(`https://api.themoviedb.org/3/${mediaType}/${TMDB_ID}`);
+  url.searchParams.set('append_to_response', appends);
+  if (!token && apiKey) url.searchParams.set('api_key', apiKey);
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    signal: AbortSignal.timeout(20_000),
   });
-  try {
-    const mediaType = TYPE === 'tv' ? 'tv' : 'movie';
-    const params: Record<string, string> = { append_to_response: enrichmentAppends(mediaType) };
-    if (!token && apiKey) params.api_key = apiKey;
-    const res = await ctx.get(`/3/${mediaType}/${TMDB_ID}`, { params });
-    await ok(res, 'TMDB detail');
-    const body = (await res.json()) as Record<string, unknown>;
-    const wp = body['watch/providers'] as { results?: Record<string, unknown> } | undefined;
-    // Evidence: key names and region codes only (no token, no full payload).
-    await evidence(info, 'tmdb-watch-providers', {
-      request: `GET /3/${mediaType}/${TMDB_ID}?append_to_response=${params.append_to_response}`,
-      httpStatus: res.status(),
-      topLevelKeys: Object.keys(body).sort(),
-      hasWatchProvidersKey: 'watch/providers' in body,
-      regions: wp?.results ? Object.keys(wp.results).sort() : null,
-    });
-    expect(Object.keys(body)).toContain('watch/providers');
-    expect(typeof wp?.results).toBe('object');
-  } finally {
-    await ctx.dispose();
-  }
+  // Status only on failure: never the URL (it may carry api_key).
+  expect(res.ok, `TMDB detail: HTTP ${res.status}`).toBe(true);
+  const body = (await res.json()) as Record<string, unknown>;
+  const wp = body['watch/providers'] as { results?: Record<string, unknown> } | undefined;
+  // Evidence: key names and region codes only (no token, no full payload).
+  await evidence(info, 'tmdb-watch-providers', {
+    request: `GET /3/${mediaType}/${TMDB_ID}?append_to_response=${appends}`,
+    httpStatus: res.status,
+    topLevelKeys: Object.keys(body).sort(),
+    hasWatchProvidersKey: 'watch/providers' in body,
+    regions: wp?.results ? Object.keys(wp.results).sort() : null,
+  });
+  expect(Object.keys(body)).toContain('watch/providers');
+  expect(typeof wp?.results).toBe('object');
 });
 
 test('title page shows TMDB + IMDb ratings and Where to watch', async ({ page }, info) => {

@@ -1,11 +1,15 @@
 'use client';
-/** Owner menu on a diary row: Edit (same sheet as C2, prefilled) and Delete (confirm, C4-AC1). */
+/**
+ * Owner menu on a diary row: Edit (same sheet as C2, prefilled), Share stub and Story image (ADR-013
+ * C-07/C-08) and Delete (confirm, C4-AC1).
+ */
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api, ApiError } from '@/lib/api-client';
 import type { DiaryEntry } from '@/lib/types';
 import { useApp, useTitleState } from '@/hooks/useApp';
 import { Icon } from './Icon';
+import { shareStory, shareTitle, useShare } from './ShareButton';
 import { Sheet } from './Sheet';
 import { StubDetailsForm } from './StubSheet';
 import { stubTarget } from './Ticket';
@@ -18,6 +22,7 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const target = stubTarget(entry.title);
+  const { share, sheet } = useShare('stub');
 
   const fail = (e: unknown) =>
     app.toast({
@@ -75,6 +80,26 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
           >
             Edit
           </button>
+          <button
+            type="button"
+            data-testid="share-stub"
+            onClick={() => {
+              setOpen(false);
+              void share({ kind: 'stub', stubId: entry.id, title: shareTitle(entry.title) });
+            }}
+          >
+            Share stub
+          </button>
+          <button
+            type="button"
+            data-testid="share-story"
+            onClick={() => {
+              setOpen(false);
+              void shareStory(entry.id, entry.number, entry.title.title);
+            }}
+          >
+            Story image
+          </button>
           <button type="button" onClick={() => void remove()}>
             Delete
           </button>
@@ -88,6 +113,7 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
               watchedOn: entry.watchedOn,
               watchedWhere: entry.watchedWhere,
               note: entry.note,
+              season: entry.season ?? null,
             }}
             headingId={`edit-${entry.id}`}
             heading="Edit stub"
@@ -96,7 +122,12 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
             onSubmit={async (d) => {
               setEditing(false);
               try {
-                const res = await api.updateStub(entry.id, d);
+                const res = await api.updateStub(entry.id, {
+                  watchedOn: d.watchedOn,
+                  watchedWhere: d.watchedWhere,
+                  note: d.note,
+                  ...(entry.title.mediaType === 'tv' ? { season: d.season } : {}),
+                });
                 app.setTitleState(entry.titleKey, () => res.state);
                 app.toast({ message: 'Stub updated' });
                 router.refresh();
@@ -107,6 +138,7 @@ export function DiaryRowMenu({ entry }: { entry: DiaryEntry }) {
           />
         )}
       </Sheet>
+      {sheet}
     </>
   );
 }

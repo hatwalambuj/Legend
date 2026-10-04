@@ -36,7 +36,14 @@ function titleHint(t: TitleSummary): TicketHint | null {
 }
 
 export function stubTarget(t: TitleSummary): StubTarget {
-  return { key: t.key, mediaType: t.mediaType, tmdbId: t.tmdbId, title: t.title, year: t.year };
+  return {
+    key: t.key,
+    mediaType: t.mediaType,
+    tmdbId: t.tmdbId,
+    title: t.title,
+    year: t.year,
+    seasonCount: t.mediaType === 'tv' ? t.seasonCount : null,
+  };
 }
 
 /** data-* attributes the adaptive background follows on hover/focus (DESIGN §4.1). */

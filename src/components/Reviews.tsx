@@ -1,10 +1,11 @@
 'use client';
 /**
- * Reviews on the title page (DESIGN §7.5): "On Stubbed · N" / "From TMDB · N", Newest / Highest rated,
+ * Reviews on the title page (DESIGN §7.5): "On {brand} · N" / "From TMDB · N", Newest / Highest rated,
  * composer (signed in) or "Sign in to review", own review pinned on top with Edit / Delete.
  */
 import { useState } from 'react';
 import { api, ApiError } from '@/lib/api-client';
+import { BRAND_NAME } from '@/lib/brand';
 import type { Page, Review, ReviewSort, TmdbReview } from '@/lib/types';
 import { useApp, useTitleState, type StubTarget } from '@/hooks/useApp';
 import { DEGRADED_DESC_ID } from './DegradedBanner';
@@ -12,16 +13,36 @@ import { EmptyState } from './EmptyState';
 import { Icon } from './Icon';
 import { ReviewCard, TmdbReviewCard } from './ReviewCard';
 import { ReviewComposer } from './ReviewComposer';
+import { ShareButton, type ShareTitle } from './ShareButton';
 import styles from './Reviews.module.css';
+
+/**
+ * R10 count (ADR-013 C-04): the server count, +1 for a review created here that the list doesn't hold
+ * yet, −1 for a deleted one (a deleted server-list review was counted, CODE_REVIEW F4).
+ */
+export function stubbedReviewCount(
+  reviewCount: number,
+  list: Pick<Review, 'id'>[],
+  addedId: string | null,
+  deletedId: string | null,
+): number {
+  const inList = (id: string | null) => id !== null && list.some((r) => r.id === id);
+  const added = addedId && addedId !== deletedId && !inList(addedId) ? 1 : 0;
+  const removed = inList(deletedId) ? 1 : 0;
+  return Math.max(0, Math.max(reviewCount, list.length) + added - removed);
+}
 
 export function Reviews({
   target,
   initial,
   tmdbReviews,
   reviewCount,
+  share,
   paused = false,
 }: {
   target: StubTarget;
+  /** ADR-013 C-07: a Share action on the own review card (links to the title page). */
+  share?: ShareTitle;
   initial: Page<Review>;
   tmdbReviews: TmdbReview[];
   reviewCount: number;
@@ -37,11 +58,10 @@ export function Reviews({
   const [cursor, setCursor] = useState(initial.nextCursor);
   const [busy, setBusy] = useState(false);
   const [deletedId, setDeletedId] = useState<string | null>(null);
+  const [addedId, setAddedId] = useState<string | null>(null);
 
   const others = list.filter((r) => r.id !== mine?.id && r.id !== deletedId);
-  // A deleted review that was in the server list was counted; drop it (CODE_REVIEW F4).
-  const stubbedCount =
-    Math.max(reviewCount, list.length) - (list.some((r) => r.id === deletedId) ? 1 : 0);
+  const stubbedCount = stubbedReviewCount(reviewCount, list, addedId, deletedId);
 
   async function load(nextSort: ReviewSort, more = false) {
     setBusy(true);
@@ -61,7 +81,11 @@ export function Reviews({
     }
   }
 
-  function saved(r: Review) {
+  function saved(r: Review, created: boolean) {
+    if (created) {
+      setAddedId(r.id);
+      if (deletedId === r.id) setDeletedId(null);
+    }
     app.setTitleState(target.key, (s) => ({ ...s, myReview: r }));
   }
 
@@ -133,7 +157,7 @@ export function Reviews({
       <div className={styles.tabs}>
         <div className="seg" role="group" aria-label="Review source">
           <button type="button" aria-pressed={src === 'stubbed'} onClick={() => setSrc('stubbed')}>
-            On Stubbed · {stubbedCount}
+            On {BRAND_NAME} · {stubbedCount}
           </button>
           <button type="button" aria-pressed={src === 'tmdb'} onClick={() => setSrc('tmdb')}>
             From TMDB · {tmdbReviews.length}
@@ -180,6 +204,13 @@ export function Reviews({
               mine
               menu={
                 <span className={styles.ownMenu}>
+                  {share && (
+                    <ShareButton
+                      target={{ kind: 'review', title: share, rating10: mine.rating10 }}
+                      surface="review"
+                      label="Share your review"
+                    />
+                  )}
                   <button
                     type="button"
                     className="btn btn--ghost btn--sm"

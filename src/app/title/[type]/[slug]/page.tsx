@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
 import { CastList } from '@/components/CastList';
 import { DegradedBanner } from '@/components/DegradedBanner';
@@ -9,11 +9,13 @@ import { formatDate } from '@/components/lib/display';
 import { safe } from '@/components/lib/safe';
 import { Reviews } from '@/components/Reviews';
 import { ScoreChips } from '@/components/ScoreChips';
+import { shareTitle } from '@/components/ShareButton';
 import { stubTarget, Ticket } from '@/components/Ticket';
 import { TitleActions } from '@/components/TitleActions';
+import { TitleSkeleton } from '@/components/TitleSkeleton';
 import { WhereToWatch } from '@/components/WhereToWatch';
 import { WorthIt } from '@/components/WorthIt';
-import { paletteOrDefault, tmdbImage } from '@/lib/images';
+import { paletteOrDefault } from '@/lib/images';
 import { normalizeRegionCode } from '@/lib/regions';
 import { isMediaType, parseTitleSlug, titleHref } from '@/lib/routes';
 import type { TitleDetail, WatchRegionInfo } from '@/lib/types';
@@ -23,6 +25,9 @@ import { regionInfo, watchRegionConfig } from '@/server/region';
 import styles from './title.module.css';
 
 // OWNER: Frontend. Title detail (DESIGN §7.4, §7.4.1, §7.4.2, §7.5).
+// ADR-013 C-03: existence + canonical slug are checked before any Suspense boundary (real 404 / 308);
+// the body streams inside <Suspense fallback={<TitleSkeleton/>}>. og:image comes from the
+// opengraph-image.tsx file convention (C-08), so generateMetadata sets no openGraph.images.
 export const dynamic = 'force-dynamic';
 
 type Params = Promise<{ type: string; slug: string }>;
@@ -60,7 +65,6 @@ export async function generateMetadata({
   const [{ type, slug }, sp] = await Promise.all([params, searchParams]);
   const t = await load(type, slug, firstParam(sp.region));
   if (!t) return { title: "This ticket doesn't exist" };
-  const og = tmdbImage(t.posterPath, 'w780', dal.getMode().images);
   const title = `${t.title} (${t.year})`;
   return {
     title,
@@ -71,9 +75,6 @@ export async function generateMetadata({
       description: t.worthIt.metaDescription,
       type: t.mediaType === 'movie' ? 'video.movie' : 'video.tv_show',
       url: titleHref(t),
-      images: og
-        ? [{ url: og, width: 780, height: 1170, alt: `Poster for ${t.title}` }]
-        : undefined,
     },
   };
 }
@@ -111,12 +112,26 @@ export default async function TitlePage({
   searchParams: Search;
 }) {
   const [{ type, slug }, sp] = await Promise.all([params, searchParams]);
-  const t = await load(type, slug, firstParam(sp.region));
-  if (!t) notFound();
-  if (parseTitleSlug(slug)?.slug !== t.slug) {
-    const region = normalizeRegionCode(firstParam(sp.region));
-    permanentRedirect(region ? `${titleHref(t)}?region=${region}` : titleHref(t));
+  const parsed = parseTitleSlug(slug);
+  if (!isMediaType(type) || !parsed) notFound();
+  const route = await dal.resolveTitle(type, parsed.tmdbId);
+  if (!route) notFound();
+  const region = firstParam(sp.region);
+  if (parsed.slug !== route.slug) {
+    const href = titleHref({ mediaType: type, tmdbId: parsed.tmdbId, slug: route.slug });
+    const code = normalizeRegionCode(region);
+    permanentRedirect(code ? `${href}?region=${code}` : href);
   }
+  return (
+    <Suspense fallback={<TitleSkeleton />}>
+      <TitleBody type={type} slug={slug} region={region} />
+    </Suspense>
+  );
+}
+
+async function TitleBody({ type, slug, region }: { type: string; slug: string; region?: string }) {
+  const t = await load(type, slug, region);
+  if (!t) notFound();
 
   const [stats, reviews] = await Promise.all([
     safe(dal.getTitleStats(t.key), null, 'getTitleStats'),
@@ -192,7 +207,7 @@ export default async function TitlePage({
           </div>
           <div className={styles.info}>
             <ScoreChips title={t} stats={stats} />
-            <TitleActions target={target} paused={paused} />
+            <TitleActions target={target} share={shareTitle(t)} paused={paused} />
             {/* DESIGN §7.4.2: under the stubbed line, above Worth it?. null → not rendered (SSR, no CLS). */}
             {t.watch && <WhereToWatch initial={t.watch} target={target} paused={paused} />}
             <WorthIt data={t.worthIt} />
@@ -258,6 +273,7 @@ export default async function TitlePage({
               initial={reviews}
               tmdbReviews={t.tmdbReviews}
               reviewCount={stats?.reviewCount ?? reviews.items.length}
+              share={shareTitle(t)}
               paused={paused}
             />
           </div>

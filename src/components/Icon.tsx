@@ -18,7 +18,8 @@ export type IconName =
   | 'eye-off'
   | 'alert'
   | 'close'
-  | 'grid';
+  | 'grid'
+  | 'share';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   ticket: (
@@ -109,6 +110,16 @@ const PATHS: Record<IconName, React.ReactNode> = {
     />
   ),
   play: <path fill="currentColor" d="M8 5.5v13l10.5-6.5z" />,
+  share: (
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 4v11M8 8l4-4 4 4M6 13v5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-5"
+    />
+  ),
   ext: (
     <path
       fill="none"

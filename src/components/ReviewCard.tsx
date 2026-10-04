@@ -28,7 +28,12 @@ export function ReviewCard({
 }) {
   return (
     <article className={`${styles.rv} ${mine ? styles.mine : ''}`} data-testid="review-card">
-      <Avatar handle={r.author.handle} name={r.author.displayName} size={40} />
+      <Avatar
+        handle={r.author.handle}
+        name={r.author.displayName}
+        color={r.author.avatarColor ?? null}
+        size={40}
+      />
       <div className={styles.main}>
         {eyebrow}
         <div className={styles.head}>

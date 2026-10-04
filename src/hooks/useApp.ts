@@ -14,12 +14,16 @@ export interface StubTarget {
   tmdbId: number;
   title: string;
   year: number;
+  /** v1.6 (ADR-013 C-10): TV only; null/absent hides the season picker. */
+  seasonCount?: number | null;
 }
 
 export interface StubOptions {
   watchedOn?: string;
   watchedWhere?: WatchedWhere | null;
   note?: string;
+  /** v1.6 (ADR-013 C-10): TV only; null = the whole show. */
+  season?: number | null;
   /** Skip the "Stub again today?" confirm (already confirmed). */
   confirmed?: boolean;
   /** Element that triggered the stub (used to find the ticket to tear). */

@@ -70,7 +70,7 @@ export function HeaderUser() {
       className={styles.avatarLink}
       aria-label={`Your profile (@${u.handle})`}
     >
-      <Avatar handle={u.handle} name={u.displayName} size={36} />
+      <Avatar handle={u.handle} name={u.displayName} color={u.avatarColor ?? null} size={36} />
     </Link>
   );
 }

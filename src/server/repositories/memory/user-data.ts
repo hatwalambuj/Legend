@@ -673,14 +673,23 @@ export class MemorySettings implements UserSettingsRepository {
 /* Analytics (ADR-013 C-09): anonymous daily counters, no ids           */
 /* ------------------------------------------------------------------ */
 
+/** Distinct (name, dim) counters created per UTC day (same ceiling as SQL `events_track`). */
+export const EVENTS_MAX_ROWS_PER_DAY = 1000;
+
 export class MemoryEvents implements EventRepository {
   async track(rows: EventCount[]): Promise<void> {
     if (rows.length === 0) return;
     const day = new Date().toISOString().slice(0, 10);
     demoStore().mutate((d) => {
       const ev = (d.events ??= {});
+      // Mirrors events_track (20261003096000): <= EVENTS_MAX_ROWS_PER_DAY new keys per day (SR-1).
+      let today = Object.keys(ev).filter((k) => k.startsWith(`${day}|`)).length;
       for (const r of rows.slice(0, 50)) {
         const k = `${day}|${r.name}|${r.dim}`;
+        if (ev[k] === undefined) {
+          if (today >= EVENTS_MAX_ROWS_PER_DAY) continue;
+          today++;
+        }
         ev[k] = (ev[k] ?? 0) + Math.max(0, Math.floor(r.n));
       }
     });

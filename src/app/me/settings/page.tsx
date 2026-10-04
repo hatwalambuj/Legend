@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
+import { AvatarColorPicker } from '@/components/AvatarColorPicker';
 import { DeleteAccount } from '@/components/DeleteAccount';
 import { EditProfile } from '@/components/Owner';
 import { safe } from '@/components/lib/safe';
@@ -10,7 +11,7 @@ import { SignOutButton } from '@/components/SignOutButton';
 import { WatchRegionSetting } from '@/components/WatchRegionSelect';
 import { api } from '@/lib/api-client';
 import { NEUTRAL_PALETTE } from '@/lib/images';
-import { profileHref } from '@/lib/routes';
+import { importHref, profileHref } from '@/lib/routes';
 import { dal } from '@/server/dal';
 import styles from './settings.module.css';
 
@@ -42,6 +43,11 @@ export default async function SettingsPage() {
               </Link>
             </p>
             {profile && <EditProfile profile={profile.profile} />}
+            <AvatarColorPicker
+              handle={u.handle}
+              name={u.displayName}
+              initial={profile?.profile.avatarColor ?? u.avatarColor ?? null}
+            />
           </section>
           <section className={styles.card} aria-labelledby="set-account">
             <h2 id="set-account">Account</h2>
@@ -88,6 +94,17 @@ export default async function SettingsPage() {
               >
                 JSON
               </a>
+            </div>
+          </section>
+          <section className={styles.card} id="import" aria-labelledby="set-import">
+            <h2 id="set-import">Import</h2>
+            <p>
+              Bring your history from Letterboxd, IMDb or TV Time. Your file stays on this device.
+            </p>
+            <div className={styles.row}>
+              <Link className="btn btn--ghost" href={importHref()} data-testid="import-link">
+                Import watch history
+              </Link>
             </div>
           </section>
           <section className={styles.card} aria-labelledby="set-out">

@@ -8,10 +8,20 @@ import { useApp, useTitleState, type StubTarget } from '@/hooks/useApp';
 import { DEGRADED_DESC_ID } from './DegradedBanner';
 import { Icon } from './Icon';
 import { formatDate, starsLabel, starsText } from './lib/display';
+import { ShareButton, type ShareTitle } from './ShareButton';
 import styles from './TitleActions.module.css';
 
 /** `paused` (degraded === 'catalog', ADR-011 §4): CTAs stay focusable but aria-disabled and inert. */
-export function TitleActions({ target, paused = false }: { target: StubTarget; paused?: boolean }) {
+export function TitleActions({
+  target,
+  share,
+  paused = false,
+}: {
+  target: StubTarget;
+  /** ADR-013 C-07: the Share button (works signed out). */
+  share?: ShareTitle;
+  paused?: boolean;
+}) {
   const app = useApp();
   const state = useTitleState(target.key);
   const n = state?.stubCount ?? 0;
@@ -71,6 +81,14 @@ export function TitleActions({ target, paused = false }: { target: StubTarget; p
           <Icon name={watchlisted ? 'check' : 'bookmark'} size={18} />
           <span>{watchlisted ? 'On watchlist' : 'Watchlist'}</span>
         </button>
+        {share && (
+          <ShareButton
+            target={{ kind: 'title', title: share }}
+            surface="title"
+            label={`Share ${share.title}`}
+            className="btn btn--ghost btn--lg"
+          />
+        )}
       </div>
       <p className={styles.line} aria-live="polite" data-testid="stub-count" data-count={n}>
         {n ? (

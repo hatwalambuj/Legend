@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorthIt } from './WorthIt';
 import { makeTitle, makeWorthIt, renderWithApp } from './test-utils';
+
+const trackEvent = vi.fn();
+vi.mock('@/lib/analytics', () => ({ trackEvent: (...a: unknown[]) => trackEvent(...a) }));
 
 afterEach(cleanup);
 
@@ -86,5 +89,39 @@ describe('"Worth it?" slip (DESIGN §7.4.1, ADR-009)', () => {
     });
     expect(screen.getByTestId('worth-it-like').textContent).toContain('You stubbed');
     expect(screen.getByTestId('worth-it-like').textContent).toContain('Beta');
+  });
+});
+
+describe('worth_it_viewed (ADR-013 C-09)', () => {
+  it('fires once after 1 s at >= 50 % visible, and not for a short glance', () => {
+    vi.useFakeTimers();
+    let cb: IntersectionObserverCallback = () => {};
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(c: IntersectionObserverCallback) {
+          cb = c;
+        }
+        observe() {}
+        disconnect = disconnect;
+      },
+    );
+    const see = (ratio: number) =>
+      cb([{ intersectionRatio: ratio } as IntersectionObserverEntry], {} as IntersectionObserver);
+    renderWithApp(<WorthIt data={makeWorthIt()} />);
+    see(0.6);
+    vi.advanceTimersByTime(500);
+    see(0.1);
+    vi.advanceTimersByTime(1000);
+    expect(trackEvent).not.toHaveBeenCalled();
+    see(0.8);
+    vi.advanceTimersByTime(1000);
+    see(0.8);
+    vi.advanceTimersByTime(1000);
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+    expect(trackEvent).toHaveBeenCalledWith('worth_it_viewed', { verdict: 'widely_loved' });
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 });

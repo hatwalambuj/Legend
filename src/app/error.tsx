@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { EmptyState } from '@/components/EmptyState';
+import { reportError } from '@/lib/report-error';
 
 export default function ErrorPage({
   error,
@@ -13,6 +14,13 @@ export default function ErrorPage({
 }) {
   useEffect(() => {
     console.error(error);
+    // ADR-013 C-13: one small first-party beacon to /api/log (no query, no user data).
+    reportError({
+      kind: 'boundary',
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+    });
   }, [error]);
   return (
     <div className="wrap" style={{ paddingBlock: 72 }}>

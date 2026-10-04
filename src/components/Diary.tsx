@@ -3,6 +3,7 @@
  * right printing "#N STUB" (which watch this was). Owner rows get an Edit / Delete menu.
  */
 import Link from 'next/link';
+import { seasonLabel } from '@/lib/format';
 import { titleHref } from '@/lib/routes';
 import type { DiaryEntry } from '@/lib/types';
 import { DiaryRowMenu } from './DiaryRowMenu';
@@ -20,13 +21,15 @@ export function DiaryRow({
 }) {
   const t = e.title;
   const where = whereLabel(e.watchedWhere);
+  // ADR-013 C-10: "S03" for a season stub (null = the whole show).
+  const season = t.mediaType === 'tv' ? seasonLabel(e.season) : '';
   return (
     <li className={styles.item}>
       <Link
         href={titleHref(t)}
         className={styles.row}
         data-testid="diary-row"
-        aria-label={`${t.title}, ${kindLabel(t.mediaType).toLowerCase()}, watched ${formatDate(e.watchedOn)}, stub number ${e.number}${where ? `, ${where.toLowerCase()}` : ''}`}
+        aria-label={`${t.title}, ${kindLabel(t.mediaType).toLowerCase()}, ${season ? `season ${e.season}, ` : ''}watched ${formatDate(e.watchedOn)}, stub number ${e.number}${where ? `, ${where.toLowerCase()}` : ''}`}
         {...tintAttrs(t)}
       >
         <span className={styles.date} aria-hidden="true">
@@ -46,6 +49,12 @@ export function DiaryRow({
           <b>{t.title}</b>
           <span>
             {kindLabel(t.mediaType)} · {t.year}
+            {season && (
+              <>
+                {' · '}
+                <span data-testid="diary-season">{season}</span>
+              </>
+            )}
             {e.number > 1 ? ' · Rewatch' : ''}
           </span>
         </span>

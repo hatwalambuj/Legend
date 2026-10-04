@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import type { ProfilePage as ProfileData } from '@/lib/types';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { cache } from 'react';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { cache, Suspense } from 'react';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
 import { Avatar } from '@/components/Avatar';
 import { DiaryList } from '@/components/Diary';
@@ -9,8 +10,11 @@ import { EmptyState } from '@/components/EmptyState';
 import { first, type SearchParams } from '@/components/lib/params';
 import { safe } from '@/components/lib/safe';
 import { EditProfile, OwnerOnly, OwnerSwitch, OwnerWatchlist } from '@/components/Owner';
+import { ProfileSkeleton } from '@/components/ProfileSkeleton';
 import { ReviewCard } from '@/components/ReviewCard';
+import { ShareButton } from '@/components/ShareButton';
 import { WalletGrid } from '@/components/WalletStub';
+import { BRAND_NAME } from '@/lib/brand';
 import { NEUTRAL_PALETTE } from '@/lib/images';
 import { profileHref, titleHref } from '@/lib/routes';
 import { dal } from '@/server/dal';
@@ -18,6 +22,8 @@ import { today } from '@/server/env';
 import styles from './profile.module.css';
 
 // OWNER: Frontend. Profile / stub wallet (DESIGN §7.7). Tabs via ?tab= (server-rendered panels).
+// ADR-013 C-03: the profile lookup runs before any Suspense boundary (real 404; a non-lowercase handle
+// → 308); the tab panel streams inside <Suspense fallback={<ProfileSkeleton/>}>.
 export const dynamic = 'force-dynamic';
 
 type Tab = 'wallet' | 'diary' | 'reviews' | 'watchlist';
@@ -36,7 +42,7 @@ export async function generateMetadata({
   if (!p) return { title: "No one's holding that ticket" };
   return {
     title: `${p.profile.displayName} (@${p.profile.handle})`,
-    description: `${p.stats.totalStubs} stubs on Stubbed. ${p.profile.bio}`.trim(),
+    description: `${p.stats.totalStubs} stubs on ${BRAND_NAME}. ${p.profile.bio}`.trim(),
   };
 }
 
@@ -47,10 +53,18 @@ export default async function ProfilePage({
   params: Promise<{ handle: string }>;
   searchParams: Promise<SearchParams>;
 }) {
-  const { handle } = await params;
-  const sp = await searchParams;
+  const [{ handle }, sp] = await Promise.all([params, searchParams]);
   const data = await load(handle);
   if (!data) notFound();
+  if (handle !== handle.toLowerCase()) {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(sp)) {
+      const one = first(v);
+      if (one !== undefined) qs.set(k, one);
+    }
+    const q = qs.toString();
+    permanentRedirect(`${profileHref(data.profile.handle)}${q ? `?${q}` : ''}`);
+  }
   const { profile, stats } = data;
   const tabParam = first(sp.tab) as Tab | undefined;
   const tab: Tab = tabParam && TABS.includes(tabParam) ? tabParam : 'wallet';
@@ -58,16 +72,6 @@ export default async function ProfilePage({
   const base = profileHref(profile.handle);
   const since = profile.createdAt.slice(0, 4);
   const year = today().slice(0, 4);
-
-  const [wallet, diary, reviews] = await Promise.all([
-    tab === 'wallet'
-      ? safe(dal.listWallet(profile.handle, { cursor }), EMPTY, 'listWallet')
-      : EMPTY,
-    tab === 'diary' ? safe(dal.listDiary(profile.handle, { cursor }), EMPTY, 'listDiary') : EMPTY,
-    tab === 'reviews'
-      ? safe(dal.listProfileReviews(profile.handle, { cursor }), EMPTY, 'listProfileReviews')
-      : EMPTY,
-  ]);
 
   const tabLink = (t: Tab, label: string) => (
     <Link
@@ -78,16 +82,6 @@ export default async function ProfilePage({
       {label}
     </Link>
   );
-  const nextHref = (c: string | null) =>
-    c ? `${base}?tab=${tab}&cursor=${encodeURIComponent(c)}` : null;
-  const next =
-    tab === 'wallet'
-      ? nextHref(wallet.nextCursor)
-      : tab === 'diary'
-        ? nextHref(diary.nextCursor)
-        : tab === 'reviews'
-          ? nextHref(reviews.nextCursor)
-          : null;
 
   return (
     <>
@@ -99,6 +93,7 @@ export default async function ProfilePage({
               <Avatar
                 handle={profile.handle}
                 name={profile.displayName}
+                color={profile.avatarColor ?? null}
                 size={84}
                 className={styles.avatar}
               />
@@ -149,76 +144,124 @@ export default async function ProfilePage({
           <OwnerOnly handle={profile.handle}>{tabLink('watchlist', 'Watchlist')}</OwnerOnly>
         </nav>
 
-        <div className={styles.panel}>
-          {tab === 'wallet' &&
-            (wallet.items.length ? (
-              <WalletGrid items={wallet.items} />
-            ) : (
-              <OwnerSwitch
-                handle={profile.handle}
-                owner={
-                  <EmptyState
-                    title="Your wallet is empty"
-                    action={
-                      <Link href="/browse" className="btn btn--primary">
-                        Browse 6.5+ titles
-                      </Link>
-                    }
-                  >
-                    Every watch earns a stub. Find something good and tap Stub it.
-                  </EmptyState>
+        <Suspense key={`${tab}-${cursor ?? ''}`} fallback={<ProfileSkeleton />}>
+          <ProfilePanel data={data} tab={tab} cursor={cursor} />
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
+async function ProfilePanel({
+  data,
+  tab,
+  cursor,
+}: {
+  data: ProfileData;
+  tab: Tab;
+  cursor: string | null;
+}) {
+  const { profile } = data;
+  const base = profileHref(profile.handle);
+  const [wallet, diary, reviews] = await Promise.all([
+    tab === 'wallet'
+      ? safe(dal.listWallet(profile.handle, { cursor }), EMPTY, 'listWallet')
+      : EMPTY,
+    tab === 'diary' ? safe(dal.listDiary(profile.handle, { cursor }), EMPTY, 'listDiary') : EMPTY,
+    tab === 'reviews'
+      ? safe(dal.listProfileReviews(profile.handle, { cursor }), EMPTY, 'listProfileReviews')
+      : EMPTY,
+  ]);
+
+  const nextHref = (c: string | null) =>
+    c ? `${base}?tab=${tab}&cursor=${encodeURIComponent(c)}` : null;
+  const next =
+    tab === 'wallet'
+      ? nextHref(wallet.nextCursor)
+      : tab === 'diary'
+        ? nextHref(diary.nextCursor)
+        : tab === 'reviews'
+          ? nextHref(reviews.nextCursor)
+          : null;
+
+  return (
+    <div className={styles.panel}>
+      {tab === 'wallet' && wallet.items.length > 0 && (
+        <div className={styles.walletHead}>
+          <ShareButton
+            target={{ kind: 'wallet', handle: profile.handle, displayName: profile.displayName }}
+            surface="wallet"
+            label={`Share ${profile.displayName}'s stub wallet`}
+          />
+        </div>
+      )}
+      {tab === 'wallet' &&
+        (wallet.items.length ? (
+          <WalletGrid items={wallet.items} />
+        ) : (
+          <OwnerSwitch
+            handle={profile.handle}
+            owner={
+              <EmptyState
+                title="Your wallet is empty"
+                action={
+                  <Link href="/browse" className="btn btn--primary">
+                    Browse 6.5+ titles
+                  </Link>
                 }
-                visitor={
-                  <EmptyState title="No stubs yet">
-                    @{profile.handle} hasn&apos;t stubbed anything yet.
-                  </EmptyState>
+              >
+                Every watch earns a stub. Find something good and tap Stub it.
+              </EmptyState>
+            }
+            visitor={
+              <EmptyState title="No stubs yet">
+                @{profile.handle} hasn&apos;t stubbed anything yet.
+              </EmptyState>
+            }
+          />
+        ))}
+      {tab === 'diary' &&
+        (diary.items.length ? (
+          <>
+            <OwnerOnly handle={profile.handle}>
+              <p className={styles.ownerNote}>
+                <Link href="/me/stubs" className="link">
+                  Edit or delete stubs in My stubs
+                </Link>
+              </p>
+            </OwnerOnly>
+            <DiaryList entries={diary.items} />
+          </>
+        ) : (
+          <EmptyState title="No stubs yet">The diary fills up one watch at a time.</EmptyState>
+        ))}
+      {tab === 'reviews' &&
+        (reviews.items.length ? (
+          <div>
+            {reviews.items.map((r) => (
+              <ReviewCard
+                key={r.id}
+                review={r}
+                reportTitle={`${r.title.title} (${r.title.year})`}
+                eyebrow={
+                  <Link href={titleHref(r.title)} className={`eyebrow ${styles.rvTitle}`}>
+                    {r.title.title} · {r.title.year}
+                  </Link>
                 }
               />
             ))}
-          {tab === 'diary' &&
-            (diary.items.length ? (
-              <>
-                <OwnerOnly handle={profile.handle}>
-                  <p className={styles.ownerNote}>
-                    <Link href="/me/stubs" className="link">
-                      Edit or delete stubs in My stubs
-                    </Link>
-                  </p>
-                </OwnerOnly>
-                <DiaryList entries={diary.items} />
-              </>
-            ) : (
-              <EmptyState title="No stubs yet">The diary fills up one watch at a time.</EmptyState>
-            ))}
-          {tab === 'reviews' &&
-            (reviews.items.length ? (
-              <div>
-                {reviews.items.map((r) => (
-                  <ReviewCard
-                    key={r.id}
-                    review={r}
-                    reportTitle={`${r.title.title} (${r.title.year})`}
-                    eyebrow={
-                      <Link href={titleHref(r.title)} className={`eyebrow ${styles.rvTitle}`}>
-                        {r.title.title} · {r.title.year}
-                      </Link>
-                    }
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState title="No reviews yet">Stars are enough. Words are a bonus.</EmptyState>
-            ))}
-          {tab === 'watchlist' && <OwnerWatchlist handle={profile.handle} />}
-          {next && (
-            <div className={styles.more}>
-              <Link href={next} className="btn btn--ghost">
-                Older
-              </Link>
-            </div>
-          )}
+          </div>
+        ) : (
+          <EmptyState title="No reviews yet">Stars are enough. Words are a bonus.</EmptyState>
+        ))}
+      {tab === 'watchlist' && <OwnerWatchlist handle={profile.handle} />}
+      {next && (
+        <div className={styles.more}>
+          <Link href={next} className="btn btn--ghost">
+            Older
+          </Link>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 }
