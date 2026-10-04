@@ -15,9 +15,9 @@ test('the brand name comes from config: header, <title>, og:site_name, review co
   await expect(home).toBeVisible();
   await expect(home).toHaveText(new RegExp(BRAND));
   await expect(page).toHaveTitle(new RegExp(`^${BRAND} — `));
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', BRAND);
   await page.goto('/title/movie/693134');
   await expect(page).toHaveTitle(new RegExp(` · ${BRAND}$`));
-  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', BRAND);
   await expect(
     page.getByRole('button', { name: new RegExp(`^On ${BRAND} · \\d+$`) }),
   ).toBeVisible();
