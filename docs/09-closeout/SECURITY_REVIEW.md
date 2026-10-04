@@ -40,3 +40,22 @@ Two findings were at confidence 80 or higher. Both are fixed and covered by regr
 
 — clearpath: mode=review · evidence=labeled · verify=SHIP
    memory=unchanged · unverified=OG/story route handlers under src/app (FE-owned, not in scope); live Supabase getClaims JWKS behaviour
+
+---
+
+## Frontend/routes (close-out review, 2026-10-04)
+
+This covers what the backend pass above left out: share, OG and story routes, proxy redirects, client import parsing, Web Share, error reporting, avatar colour, provider params and the loading/404 behaviour. **No security findings ≥ 80.** One correctness fix (CR-CO-1, og:image 308) is recorded in `docs/08-clearpath/CODE_REVIEW.md`.
+
+- **Share/OG/story routes** (`src/app/share/stub/[id]/{opengraph-image,story}/route.tsx`, `src/app/title/[type]/[slug]/opengraph-image/route.tsx`). **Observed:** no cookie is read or set, and the proxy skips the session refresh for these paths (`src/proxy.ts:23-29`). Card props are explicit picks (`src/og/render.tsx:38-49`): no note or review text. The download filename is built from an integer only (`storyFileName(share.number)`). Unknown id → 404 `private, no-store`. Query strings can't force renders: the canonical `?v=` is checked in the proxy and again in the route.
+- **Proxy redirects** (`src/server/share-cache.ts`). **Observed:** `Location` is built from `url.pathname` plus a server-generated search on the same origin (`new URL(path+search, url)`). It is not an open redirect.
+- **ImportFlow / `src/lib/import`.** **Observed:** `MAX_FILE_BYTES` is checked before `arrayBuffer()`. The ZIP reader enforces ≤50 entries, ≤20 MB per entry and ≤50 MB in total while streaming. It rejects encryption, zip64 and out-of-range offsets (`zip.ts:36-80`). Parsed text renders only as React text. Review bodies are not sent at preview time (`ImportFlow.tsx:108-110`).
+- **ShareButton / Web Share.** **Observed:** the URL base is `NEXT_PUBLIC_SITE_URL` (only when it is `http(s)`) or `location.origin`, and the paths come from `routes.ts` helpers with `encodeURIComponent`. The story fetch is same-origin.
+- **Error boundaries → `/api/log`.** **Observed:** the client sends kind, message (≤300), digest (≤64), stack (≤2000) and `location.pathname` only. Reports are deduped and capped at 5 per page, with `credentials: 'omit'`. The server applies zod caps, `redact()` (emails, JWTs, bearer, URL queries) and per-IP + per-process limits.
+- **Avatar colour.** **Observed:** the value is allowlisted three times, by the zod enum (`contracts.ts:202`), `isAvatarColor` on read (`rows.ts:139,200`) and a DB `check`. It reaches CSS only as `var(--avatar-<key>-a)`.
+- **ProviderFilter URL params.** **Observed:** `^[1-9]\d{0,8}$`, then `Number`, then re-serialised via `URLSearchParams` (`params.ts:24`, `listHref`).
+- **Removed `loading.tsx`.** **Observed:** title and profile existence plus the canonical 308 run before `<Suspense>`, so unknown ids return a real 404 status (not a streamed 200), and nothing private renders in a skeleton.
+- Below threshold: the own-data CSV formula-injection note above still applies to `notImportedCsv` (the user's own titles; confidence about 40).
+
+— clearpath: mode=review · evidence=labeled · verify=SHIP
+   memory=unchanged · unverified=live CDN cache keying, browser `DecompressionStream` limits on very old Safari

@@ -250,3 +250,50 @@ E2E not run (QA owns W-20). Migration not applied to any live project, which is 
 
 — clearpath: mode=review · evidence=labeled · verify=SHIP
    memory=unchanged · unverified=real TMDB payload sizes (measured synthetic only), live Postgres TOAST behaviour vs PGlite, W2-AC5 link templates, e2e (QA)
+
+---
+
+# Close-out review (2026-10-04)
+
+**Scope (Observed, `git diff --stat b4287cd..HEAD -- src scripts supabase .github e2e-live`):** 175 files. Excluded: `docs/`, `e2e/` (QA editing), screenshots, fixtures JSON, `src/og/fonts/*` (binary + licence). Backend/launch-kit security was covered in `docs/09-closeout/SECURITY_REVIEW.md`. This pass covers frontend + route handlers, plus a correctness pass over the whole diff.
+
+**Rules applied:** ADR-013 C-03 (404/308 before any Suspense boundary), C-08 (share images: no note/review text, no Set-Cookie, no fetch at render), arch review R1 ("one canonical URL per content version", `src/server/share-cache.ts:1-15`), AGENTS.md ("read `node_modules/next/dist/docs/` before writing code"). For the file-metadata rule: `generate-metadata.md:114` says "File-based metadata has the higher priority and will override the `metadata` object and `generateMetadata` function".
+
+## Findings
+
+| id | severity | category | file | line | evidence | confidence | recommendation | status |
+|---|---|---|---|---|---|---|---|---|
+| CR-CO-1 | medium | bug (SEO/sharing) | `src/server/share-cache.ts` / `src/proxy.ts` | share-cache.ts:62-72 (pre-fix), proxy.ts:23-29 | **Observed:** every page's `og:image` was Next's file-convention URL `…/opengraph-image?<contenthash>`. In the build output this is `url:f+"?1adcf28b8130d06b"`, and `next-metadata-image-loader.js:64` builds it as `hashQuery = '?' + contentHash`. `shareImageRedirect` 308s any search that isn't `?v=<version>`, and the old unit test asserted that `?0123456789abcdef` redirects. So every crawler og:image fetch cost a 308. **Inferred:** crawlers that don't follow og:image redirects show no card. Next's hash can't be accepted without reopening R1 (any 16-hex value would force a render). Because file-based metadata overrides `generateMetadata`, the convention had to go. | 95 | Turn both og images into route handlers at the same path, and have `generateMetadata` emit `canonicalOgImage()` (the exact `?v=` URL). Also accept the previous bucket's `v`, so a URL emitted just before a rollover still returns 200. | **fixed** |
+
+No other findings ≥ 80.
+
+### Fix (CR-CO-1): 6 files, about 90 lines; rollback = `git checkout` of the files below + `git mv` the two routes back
+- `src/app/title/[type]/[slug]/opengraph-image.tsx` → `opengraph-image/route.tsx`, and `src/app/share/stub/[id]/opengraph-image.tsx` → `opengraph-image/route.tsx`. Each is now a `GET` handler. A non-canonical query gets a 308 before any render (same guard as `story/route.tsx`). Unknown title or stub → 404 `private, no-store`. Cache-Control is unchanged.
+- `src/server/share-cache.ts`: new `canonicalOgImage(pagePath, kind)`, `redirectImage`, `notFoundImage`. The previous bucket is accepted, so renders stay bounded (at most 2 keys per version window). The stub 10-min deletion ceiling still holds because every render re-reads the stub.
+- `src/app/title/[type]/[slug]/page.tsx` and `src/app/share/stub/[id]/page.tsx`: `openGraph.images = [{ url: canonicalOgImage(...), 1200×630, image/png, alt }]`. Twitter inherits it.
+- Tests (`src/og/share-images.test.tsx`, +3): (1) the metadata URL equals `…/opengraph-image?v=<shareVersion>` for both pages, the proxy passes it (`x-middleware-next: 1`), and the route returns 200; (2) the previous bucket is accepted and anything older is redirected; (3) the og routes themselves 308 junk and 404 unknown stubs.
+- **Observed on a production build** (`next start`, DEMO_MODE_PUBLIC): the title page emits `og:image` and `twitter:image` = `…/opengraph-image?v=dev-20730`, and that URL returns `200 image/png` with `immutable`. The stub landing og URL returns `200 image/png`. Unknown title → 404. The old `?1adcf28b8130d06b` URL still 308s, as intended.
+
+### Checked, no finding ≥ 80 (Observed)
+- Title + profile pages: existence and slug/handle-case 308 run before `<Suspense>` (`title/[type]/[slug]/page.tsx:114-124`, `u/[handle]/page.tsx:58-66`). The removed root `loading.tsx` no longer turns 404s into streamed 200s.
+- `ShareButton`/`share.ts`: URLs are built from `NEXT_PUBLIC_SITE_URL` (only when it is `http(s)`) or `location.origin`, plus app-built paths. The payload carries title, year and rating only.
+- `ImportFlow` + `src/lib/import/*`: file-size cap before reading. ZIP limits are enforced while streaming (entries, per-entry bytes, total bytes). Encryption and zip64 are rejected. All untrusted text renders as React text (no `dangerouslySetInnerHTML` anywhere in the diff).
+- `ProviderFilter`/`parseBrowse`: `provider` must match `^[1-9]\d{0,8}$` and is re-serialised with `URLSearchParams`.
+
+### Out of scope / noted for QA (not a code finding)
+- **Observed:** `e2e/share.spec.ts:216-217` expects `GET ${base}/opengraph-image` with `maxRedirects: 0` → 404 after delete. A bare URL gets a 308 by design (R1; true before this fix too). QA should request `canonicalOgImage(...)` or follow redirects. I did not edit `e2e/`.
+
+## Verifier checklist
+- [x] Read every changed or judged file, plus callers (`proxy.ts`, `story/route.tsx`, both pages, `next.config.ts` tracing key, which is unchanged because the route path is the same).
+- [x] Rules quoted (R1, C-03, C-08, Next metadata priority).
+- [x] Git history: R1 canonical keys came in `3c23771`. This fix keeps its invariant: query strings still can't force unbounded renders.
+- [x] No speculative code. Safety intact: no cookies on image routes, 404 `no-store`.
+- [x] Gate run (below).
+
+## Gate
+`npm run lint` pass · `npm run typecheck` pass · `npm test` 83 files / 718 tests pass · `npm run build` pass · `npm run format:check` pass. E2E not run (QA owns it).
+
+**Verdict: SHIP.** CR-CO-1 is fixed and tested. Open: the QA e2e expectation above.
+
+— clearpath: mode=review · evidence=labeled · verify=SHIP
+   memory=unchanged · unverified=real social crawler behaviour on 308 (inferred from the ticket), live Vercel CDN keying, e2e (QA)
