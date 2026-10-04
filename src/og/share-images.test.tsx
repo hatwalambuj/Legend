@@ -12,6 +12,15 @@ vi.mock('next/headers', () => ({
 const story = await import('@/app/share/stub/[id]/story/route');
 const stubOg = await import('@/app/share/stub/[id]/opengraph-image');
 const titleOg = await import('@/app/title/[type]/[slug]/opengraph-image');
+const {
+  canonicalShareSearch,
+  SHARE_CACHE_CONTROL,
+  shareImageKind,
+  shareImageRedirect,
+  shareVersion,
+} = await import('@/server/share-cache');
+const { proxy } = await import('@/proxy');
+const { NextRequest } = await import('next/server');
 const { ogText, titleTier, watchLine, watchedLabel } = await import('./ShareCard');
 
 const SEED_STUB = '10000000-0000-4000-8000-000000000001';
@@ -39,13 +48,15 @@ const params = <T,>(p: T) => ({ params: Promise.resolve(p) });
 describe('story route', () => {
   it('renders a 1080×1920 PNG with no cookie and a branded download name', async () => {
     const res = await story.GET(
-      new Request(`http://localhost/share/stub/${SEED_STUB}/story?download=1`),
+      new Request(
+        `http://localhost/share/stub/${SEED_STUB}/story?v=${shareVersion('story')}&download=1`,
+      ),
       params({ id: SEED_STUB }),
     );
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('image/png');
     expect(res.headers.get('set-cookie')).toBeNull();
-    expect(res.headers.get('cache-control')).toBe('public, s-maxage=600');
+    expect(res.headers.get('cache-control')).toBe('public, max-age=600, s-maxage=600');
     expect(res.headers.get('content-disposition')).toMatch(
       /^attachment; filename="stubbed-stub-\d+\.png"$/,
     );
@@ -55,7 +66,7 @@ describe('story route', () => {
   it('404s an unknown or malformed stub', async () => {
     for (const id of ['0a000000-0000-4000-8000-000000000000', 'nope']) {
       const res = await story.GET(
-        new Request(`http://localhost/share/stub/${id}/story`),
+        new Request(`http://localhost/share/stub/${id}/story?v=${shareVersion('story')}`),
         params({ id }),
       );
       expect(res.status).toBe(404);
@@ -74,10 +85,71 @@ describe('og images', () => {
       params({ type: 'movie', slug: '693134-dune-part-two' }),
     )) as Response;
     expect(res.headers.get('cache-control')).toBe(
-      'public, s-maxage=86400, stale-while-revalidate=604800',
+      'public, max-age=31536000, s-maxage=31536000, immutable',
     );
     expect(pngSize(await res.arrayBuffer())).toEqual({ width: 1200, height: 630 });
   }, 30_000);
+});
+
+describe('canonical cache keys (R1: query strings cannot force renders)', () => {
+  const env = { VERCEL_GIT_COMMIT_SHA: 'abcdef1234' };
+  const T = Date.UTC(2026, 9, 4, 12, 0, 0);
+  const title = 'http://l/title/movie/693134-dune-part-two/opengraph-image';
+  const stub = `http://l/share/stub/${SEED_STUB}`;
+
+  it('classifies only the three image routes', () => {
+    expect(shareImageKind('/title/movie/1-x/opengraph-image')).toBe('title_og');
+    expect(shareImageKind(`/share/stub/${SEED_STUB}/opengraph-image`)).toBe('stub_og');
+    expect(shareImageKind(`/share/stub/${SEED_STUB}/story`)).toBe('story');
+    expect(shareImageKind('/title/movie/1-x')).toBeNull();
+    expect(shareImageKind(`/share/stub/${SEED_STUB}`)).toBeNull();
+  });
+
+  it('versions = release + bucket (1 day for titles, 10 min for stubs)', () => {
+    expect(shareVersion('title_og', T, env)).toBe(`abcdef1-${Math.floor(T / 86_400_000)}`);
+    expect(shareVersion('story', T, env)).toBe(`abcdef1-${Math.floor(T / 600_000)}`);
+    expect(shareVersion('title_og', T + 86_400_000, env)).not.toBe(
+      shareVersion('title_og', T, env),
+    );
+    expect(SHARE_CACHE_CONTROL.title_og).toContain('immutable');
+    expect(SHARE_CACHE_CONTROL.stub_og).not.toContain('immutable');
+  });
+
+  it('redirects every non-canonical query; the canonical URL passes', () => {
+    const v = shareVersion('title_og', T, env);
+    for (const q of ['', '?0123456789abcdef', '?x=1', `?v=${v}&x=1`, `?x=1&v=${v}`, '?v=old']) {
+      const to = shareImageRedirect(new URL(title + q), T, env);
+      expect(to?.toString()).toBe(`${title}?v=${v}`);
+    }
+    expect(shareImageRedirect(new URL(`${title}?v=${v}`), T, env)).toBeNull();
+    // download=1 survives only on the story route, in a fixed position.
+    const sv = shareVersion('story', T, env);
+    expect(
+      shareImageRedirect(new URL(`${stub}/story?download=1&v=${sv}&r=9`), T, env)?.search,
+    ).toBe(`?v=${sv}&download=1`);
+    expect(shareImageRedirect(new URL(`${stub}/story?v=${sv}&download=1`), T, env)).toBeNull();
+    expect(canonicalShareSearch('stub_og', new URLSearchParams('download=1'), T, env)).toBe(
+      `?v=${shareVersion('stub_og', T, env)}`,
+    );
+    expect(shareImageRedirect(new URL('http://l/title/movie/1-x?x=1'), T, env)).toBeNull();
+  });
+
+  it('proxy 308s junk params without touching data; the canonical URL goes through', async () => {
+    const bust = await proxy(new NextRequest(`${title}?cb=${Math.random()}`));
+    expect(bust.status).toBe(308);
+    expect(bust.headers.get('location')).toBe(`${title}?v=${shareVersion('title_og')}`);
+    const ok = await proxy(new NextRequest(`${title}?v=${shareVersion('title_og')}`));
+    expect(ok.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('the story route itself also 308s a non-canonical query before any render', async () => {
+    const res = await story.GET(
+      new Request(`${stub}/story?download=1&cb=1`),
+      params({ id: SEED_STUB }),
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe(`${stub}/story?v=${shareVersion('story')}&download=1`);
+  });
 });
 
 describe('card helpers (SYNTHESIS grafts)', () => {

@@ -205,9 +205,9 @@ describe('C-06 enrich core refresh', () => {
       [id],
     );
     const due = async () =>
-      (await db.query<{ id: number }>(`select id from public.catalog_enrich_due(1000, 30)`)).rows.map(
-        (r) => Number(r.id),
-      );
+      (
+        await db.query<{ id: number }>(`select id from public.catalog_enrich_due(1000, 30)`)
+      ).rows.map((r) => Number(r.id));
     expect((await due())[0]).toBe(id);
     await db.query(`select public.catalog_mark_gone($1::bigint[])`, [[id]]);
     expect(await due()).not.toContain(id);
@@ -336,14 +336,20 @@ describe('C-09 events', () => {
     ]);
     const count = async (where: string) =>
       Number(
-        (await db.query<{ n: string }>(`select count(*)::text as n from public.events where ${where}`))
-          .rows[0]!.n,
+        (
+          await db.query<{ n: string }>(
+            `select count(*)::text as n from public.events where ${where}`,
+          )
+        ).rows[0]!.n,
       );
     expect(await count(`name = 'provider_clicked'`)).toBe(1000);
     expect(await count(`name in ('stub_created', 'server_error')`)).toBe(2);
     for (let b = 0; b < 7; b++)
       await track(
-        Array.from({ length: 50 }, (_, i) => ({ name: 'server_error', dim: `route:a${b * 50 + i}` })),
+        Array.from({ length: 50 }, (_, i) => ({
+          name: 'server_error',
+          dim: `route:a${b * 50 + i}`,
+        })),
       );
     expect(await count(`name <> 'provider_clicked'`)).toBe(300);
     expect(await count('true')).toBe(1300);

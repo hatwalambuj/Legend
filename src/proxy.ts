@@ -9,6 +9,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isSecureRequest } from '@/server/auth/cookies';
 import { env } from '@/server/env';
+import { shareImageKind, shareImageRedirect } from '@/server/share-cache';
 
 export function hasSupabaseAuthCookie(req: Pick<NextRequest, 'cookies'>): boolean {
   return req.cookies
@@ -17,6 +18,15 @@ export function hasSupabaseAuthCookie(req: Pick<NextRequest, 'cookies'>): boolea
 }
 
 export async function proxy(request: NextRequest) {
+  // Share/OG images (R1): one canonical URL per content version, so query strings can't force renders.
+  // They read no cookie, so they also skip the session refresh (never Set-Cookie on a public image).
+  if (shareImageKind(request.nextUrl.pathname)) {
+    const to = shareImageRedirect(new URL(request.url));
+    if (!to) return NextResponse.next();
+    const res = NextResponse.redirect(to, 308);
+    res.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    return res;
+  }
   const e = env();
   if (e.mode.data !== 'supabase' || !e.supabase || !hasSupabaseAuthCookie(request))
     return NextResponse.next();

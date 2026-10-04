@@ -1,7 +1,8 @@
 /**
  * Title og:image + twitter fallback, 1200×630 PNG (ADR-013 C-08, A5-AC3). The file convention sets the
  * meta tags; generateMetadata sets no openGraph.images. Palette fallback when there's no poster; no
- * fetch in demo/placeholder image mode. OWNER: Frontend.
+ * fetch in demo/placeholder image mode. src/proxy.ts redirects every request to the canonical
+ * `?v=<release>-<UTC day>` URL (R1), so the response is long-lived `immutable` under that key. OWNER: Frontend.
  */
 import { notFound } from 'next/navigation';
 import { isMediaType, parseTitleSlug } from '@/lib/routes';
@@ -9,6 +10,7 @@ import { BRAND_NAME } from '@/lib/brand';
 import { OgCard } from '@/og/ShareCard';
 import { renderCard, siteHost, titleCardProps } from '@/og/render';
 import { dal } from '@/server/dal';
+import { SHARE_CACHE_CONTROL } from '@/server/share-cache';
 
 export const revalidate = 86400;
 export const size = { width: 1200, height: 630 };
@@ -27,6 +29,6 @@ export default async function Image({
   if (!t) notFound();
   const props = await titleCardProps(t, siteHost());
   return renderCard(<OgCard {...props} />, 'og', {
-    'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
+    'Cache-Control': SHARE_CACHE_CONTROL.title_og,
   });
 }

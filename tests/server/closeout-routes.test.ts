@@ -572,7 +572,11 @@ describe('AR-C2 server error counters', () => {
 
   it('onRequestError logs and counts route type + first route segment (node runtime only)', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const ctx = { routerKind: 'App Router', routePath: '/title/[type]/[slug]', routeType: 'render' };
+    const ctx = {
+      routerKind: 'App Router',
+      routePath: '/title/[type]/[slug]',
+      routeType: 'render',
+    };
     vi.stubEnv('NEXT_RUNTIME', 'edge');
     await onRequestError(new Error('x'), { path: '/', method: 'GET', headers: {} }, ctx as never);
     vi.stubEnv('NEXT_RUNTIME', 'nodejs');
