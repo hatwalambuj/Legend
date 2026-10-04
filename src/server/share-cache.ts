@@ -3,8 +3,10 @@
  * satori + resvg renders are CPU-heavy and the CDN keys on the full query string, so `?x=random` used
  * to force a fresh render per request. Now every image URL has exactly one canonical form:
  *   `<path>?v=<content version>` (+ `&download=1` on the story route)
- * and `src/proxy.ts` 308-redirects anything else (Next's own `?<hash>` meta URL, junk params, reorders,
- * a stale `v`) to it. A redirect costs no data read and no render, so cache-busting can't force renders:
+ * and `src/proxy.ts` 308-redirects anything else (junk params, reorders, a stale `v`) to it. The og
+ * images are route handlers (not the `opengraph-image.tsx` convention, whose `?<build hash>` meta URL
+ * would always redirect); page metadata emits `canonicalOgImage()`, so crawlers get a 200 directly.
+ * The previous bucket's `v` is also accepted, so an og:image emitted just before a rollover still 200s. A redirect costs no data read and no render, so cache-busting can't force renders:
  * at most one render per image per content version. Pure and runtime-agnostic (proxy + routes).
  * OWNER: Backend.
  *
@@ -74,6 +76,37 @@ export function shareImageRedirect(
   if (!kind) return null;
   const search = canonicalShareSearch(kind, url.searchParams, nowMs, env);
   if (url.search === search) return null;
-  const to = new URL(url.pathname + search, url);
-  return to;
+  const prev = canonicalShareSearch(
+    kind,
+    url.searchParams,
+    nowMs - SHARE_BUCKET_SEC[kind] * 1000,
+    env,
+  );
+  if (url.search === prev) return null;
+  return new URL(url.pathname + search, url);
+}
+
+/** The og:image URL (path + canonical query) page metadata must emit: exactly the URL served with 200. */
+export function canonicalOgImage(
+  pagePath: string,
+  kind: 'title_og' | 'stub_og',
+  nowMs = Date.now(),
+  env: Record<string, string | undefined> = process.env,
+): string {
+  return `${pagePath}/opengraph-image${canonicalShareSearch(kind, new URLSearchParams(), nowMs, env)}`;
+}
+
+/** Shared 308 / 404 responses for the image routes: short public cache, never a Set-Cookie. */
+export function redirectImage(to: URL): Response {
+  return new Response(null, {
+    status: 308,
+    headers: { Location: to.toString(), 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+  });
+}
+
+export function notFoundImage(): Response {
+  return new Response('Not found', {
+    status: 404,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'private, no-store' },
+  });
 }

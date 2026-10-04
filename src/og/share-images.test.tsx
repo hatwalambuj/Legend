@@ -10,9 +10,12 @@ vi.mock('next/headers', () => ({
 }));
 
 const story = await import('@/app/share/stub/[id]/story/route');
-const stubOg = await import('@/app/share/stub/[id]/opengraph-image');
-const titleOg = await import('@/app/title/[type]/[slug]/opengraph-image');
+const stubOg = await import('@/app/share/stub/[id]/opengraph-image/route');
+const titleOg = await import('@/app/title/[type]/[slug]/opengraph-image/route');
+const titlePage = await import('@/app/title/[type]/[slug]/page');
+const stubPage = await import('@/app/share/stub/[id]/page');
 const {
+  canonicalOgImage,
   canonicalShareSearch,
   SHARE_CACHE_CONTROL,
   shareImageKind,
@@ -76,14 +79,19 @@ describe('story route', () => {
 
 describe('og images', () => {
   it('stub og is 1200×630', async () => {
-    const res = (await stubOg.default(params({ id: SEED_STUB }))) as Response;
+    const url = `http://localhost${canonicalOgImage(`/share/stub/${SEED_STUB}`, 'stub_og')}`;
+    const res = await stubOg.GET(new Request(url), params({ id: SEED_STUB }));
+    expect(res.status).toBe(200);
     expect(pngSize(await res.arrayBuffer())).toEqual({ width: 1200, height: 630 });
   }, 30_000);
 
   it('title og is 1200×630 with the long cache', async () => {
-    const res = (await titleOg.default(
+    const url = `http://localhost${canonicalOgImage('/title/movie/693134-dune-part-two', 'title_og')}`;
+    const res = await titleOg.GET(
+      new Request(url),
       params({ type: 'movie', slug: '693134-dune-part-two' }),
-    )) as Response;
+    );
+    expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe(
       'public, max-age=31536000, s-maxage=31536000, immutable',
     );
@@ -140,6 +148,58 @@ describe('canonical cache keys (R1: query strings cannot force renders)', () => 
     expect(bust.headers.get('location')).toBe(`${title}?v=${shareVersion('title_og')}`);
     const ok = await proxy(new NextRequest(`${title}?v=${shareVersion('title_og')}`));
     expect(ok.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('page metadata emits exactly the og:image URL the proxy and route serve with 200 (no redirect)', async () => {
+    const titleMeta = await titlePage.generateMetadata({
+      params: Promise.resolve({ type: 'movie', slug: '693134-dune-part-two' }),
+      searchParams: Promise.resolve({}),
+    });
+    const stubMeta = await stubPage.generateMetadata(params({ id: SEED_STUB }));
+    const urls = [titleMeta, stubMeta].map((m) => {
+      const imgs = m.openGraph?.images;
+      const first = (Array.isArray(imgs) ? imgs[0] : imgs) as { url: string; width: number };
+      expect(first.width).toBe(1200);
+      return `http://localhost${first.url}`;
+    });
+    expect(urls[0]).toBe(
+      `http://localhost/title/movie/693134-dune-part-two/opengraph-image?v=${shareVersion('title_og')}`,
+    );
+    expect(urls[1]).toBe(
+      `http://localhost/share/stub/${SEED_STUB}/opengraph-image?v=${shareVersion('stub_og')}`,
+    );
+    for (const u of urls) {
+      const res = await proxy(new NextRequest(u));
+      expect(res.headers.get('x-middleware-next'), u).toBe('1');
+    }
+    const og = await stubOg.GET(new Request(urls[1]!), params({ id: SEED_STUB }));
+    expect(og.status).toBe(200);
+    // Next's own `?<build hash>` convention URL is never emitted; were it requested, it redirects.
+    expect(shareImageRedirect(new URL(`${title}?1adcf28b8130d06b`))).not.toBeNull();
+  }, 30_000);
+
+  it('accepts the previous bucket (emitted just before a rollover), not older ones', () => {
+    const prevV = shareVersion('stub_og', T - 600_000, env);
+    const oldV = shareVersion('stub_og', T - 1_200_000, env);
+    const og = `${stub}/opengraph-image`;
+    expect(shareImageRedirect(new URL(`${og}?v=${prevV}`), T, env)).toBeNull();
+    expect(shareImageRedirect(new URL(`${og}?v=${oldV}`), T, env)?.search).toBe(
+      `?v=${shareVersion('stub_og', T, env)}`,
+    );
+  });
+
+  it('the og routes themselves also 308 a non-canonical query before any render', async () => {
+    const res = await stubOg.GET(
+      new Request(`${stub}/opengraph-image?cb=1`),
+      params({ id: SEED_STUB }),
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('cache-control')).toBe('public, max-age=60, s-maxage=60');
+    const gone = await stubOg.GET(
+      new Request(`http://localhost${canonicalOgImage('/share/stub/nope', 'stub_og')}`),
+      params({ id: 'nope' }),
+    );
+    expect(gone.status).toBe(404);
   });
 
   it('the story route itself also 308s a non-canonical query before any render', async () => {

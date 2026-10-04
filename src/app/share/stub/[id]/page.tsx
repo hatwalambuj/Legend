@@ -1,7 +1,7 @@
 /**
  * Shared stub landing (ADR-013 C-08): the ticket + "Stub it" CTA. `robots: noindex`, canonical = the
  * title page. Shows only the title, stub number, season, date and the owner's handle/name: never the
- * note or any review text. The og:image comes from ./opengraph-image.tsx. OWNER: Frontend.
+ * note or any review text. og:image = the canonical ./opengraph-image route URL (R1: served with 200, no redirect). OWNER: Frontend.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -14,8 +14,9 @@ import { BRAND_NAME } from '@/lib/brand';
 import { seasonLabel } from '@/lib/format';
 import { paletteOrDefault } from '@/lib/images';
 import { parseTitleKey } from '@/lib/keys';
-import { profileHref, titleHref } from '@/lib/routes';
+import { profileHref, shareStubHref, titleHref } from '@/lib/routes';
 import { dal } from '@/server/dal';
+import { canonicalOgImage } from '@/server/share-cache';
 import styles from './share.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +41,19 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `${title.title} on ${BRAND_NAME}: only titles rated 6.5+ on TMDB.`,
     robots: { index: false, follow: true },
     alternates: { canonical: titleHref(title) },
-    openGraph: { title: name, type: 'website' },
+    openGraph: {
+      title: name,
+      type: 'website',
+      images: [
+        {
+          url: canonicalOgImage(shareStubHref(share.stubId), 'stub_og'),
+          width: 1200,
+          height: 630,
+          type: 'image/png',
+          alt: `A ticket stub on ${BRAND_NAME}`,
+        },
+      ],
+    },
   };
 }
 

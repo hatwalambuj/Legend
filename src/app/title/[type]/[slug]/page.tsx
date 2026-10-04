@@ -15,6 +15,7 @@ import { TitleActions } from '@/components/TitleActions';
 import { TitleSkeleton } from '@/components/TitleSkeleton';
 import { WhereToWatch } from '@/components/WhereToWatch';
 import { WorthIt } from '@/components/WorthIt';
+import { BRAND_NAME } from '@/lib/brand';
 import { paletteOrDefault } from '@/lib/images';
 import { normalizeRegionCode } from '@/lib/regions';
 import { isMediaType, parseTitleSlug, titleHref } from '@/lib/routes';
@@ -22,12 +23,13 @@ import type { TitleDetail, WatchRegionInfo } from '@/lib/types';
 import { formatRuntime } from '@/lib/worth-it';
 import { dal } from '@/server/dal';
 import { regionInfo, watchRegionConfig } from '@/server/region';
+import { canonicalOgImage } from '@/server/share-cache';
 import styles from './title.module.css';
 
 // OWNER: Frontend. Title detail (DESIGN §7.4, §7.4.1, §7.4.2, §7.5).
 // ADR-013 C-03: existence + canonical slug are checked before any Suspense boundary (real 404 / 308);
-// the body streams inside <Suspense fallback={<TitleSkeleton/>}>. og:image comes from the
-// opengraph-image.tsx file convention (C-08), so generateMetadata sets no openGraph.images.
+// the body streams inside <Suspense fallback={<TitleSkeleton/>}>. og:image = the canonical
+// ./opengraph-image route URL (C-08, R1: the exact URL src/proxy.ts serves with 200, no redirect).
 export const dynamic = 'force-dynamic';
 
 type Params = Promise<{ type: string; slug: string }>;
@@ -75,6 +77,15 @@ export async function generateMetadata({
       description: t.worthIt.metaDescription,
       type: t.mediaType === 'movie' ? 'video.movie' : 'video.tv_show',
       url: titleHref(t),
+      images: [
+        {
+          url: canonicalOgImage(titleHref(t), 'title_og'),
+          width: 1200,
+          height: 630,
+          type: 'image/png',
+          alt: `Ticket on ${BRAND_NAME}`,
+        },
+      ],
     },
   };
 }
