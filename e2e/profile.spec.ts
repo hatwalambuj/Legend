@@ -210,3 +210,42 @@ test.describe('D4 export', () => {
     await anon.close();
   });
 });
+
+test.describe('C-Q3 avatar colour (ADR-013 C-12)', () => {
+  test('pick a colour in Settings (click and arrow keys); it persists on reload, in /api/me and on the public profile', async ({
+    page,
+  }, info) => {
+    const acc = await signUpApi(page, 'av');
+    await page.goto('/me/settings');
+    await waitForSession(page, true);
+    const group = page.getByRole('radiogroup', { name: 'Avatar colour' });
+    await expect(group).toBeVisible();
+    const ocean = group.getByRole('radio', { name: 'Ocean' });
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().endsWith('/api/me/profile') && r.request().method() !== 'GET'),
+      ocean.click(),
+    ]);
+    expect(res.ok()).toBe(true);
+    await expect(toast(page).filter({ hasText: 'Avatar colour: Ocean' })).toBeVisible();
+    await expect(ocean).toHaveAttribute('aria-checked', 'true');
+    // Roving radio: → moves to and saves the next swatch (Forest).
+    await ocean.focus();
+    await page.keyboard.press('ArrowRight');
+    const forest = group.getByRole('radio', { name: 'Forest' });
+    await expect(forest).toBeFocused();
+    await expect(forest).toHaveAttribute('aria-checked', 'true');
+    await expect(toast(page).filter({ hasText: 'Avatar colour: Forest' })).toBeVisible();
+    await shot(page, info, 'avatar-picker');
+
+    await page.reload();
+    await expect(
+      page.getByRole('radiogroup', { name: 'Avatar colour' }).getByRole('radio', { name: 'Forest' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    const me = (await (await page.request.get('/api/me')).json()) as {
+      session: { user: { avatarColor: string | null } };
+    };
+    expect(me.session.user.avatarColor).toBe('forest');
+    await page.goto(`/u/${acc.handle}`);
+    await expect(page.locator('main [data-avatar-color="forest"]').first()).toBeVisible();
+  });
+});

@@ -62,3 +62,4 @@ confidence: high
 - earlier (6e1754f): C-03b, C-04, C-09b, C-10b StubSheet/Diary, C-12b, C-13b, C-07 placements.
 - blocked (contract): WalletItem has no stub id/season → wallet-stub Share/Story/S03 not possible; diary row has them.
 - deviations: one src/og/ShareCard.tsx (not Title/Story/StubCard files); review-quote graft unused (no review share route); ogText() strips glyphs outside Latin so next/og never fetches Google fonts; ticket-providers keeps role/label alongside aria-hidden for the pre-ADR W7-AC1 E2E until C-Q1.
+- 2026-10-04 backend: unblocked wallet share — WalletItem.latestStubId/latestSeason (contract v1.6.1, migration 20261004090000, not applied); WalletStub shows S03 + Share stub + owner Story image. Gates green.
