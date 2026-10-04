@@ -42,7 +42,13 @@ function review(id: string): Review {
   };
 }
 
-const target = { key: 'movie:1' as const, mediaType: 'movie' as const, tmdbId: 1, title: 'Anora', year: 2024 };
+const target = {
+  key: 'movie:1' as const,
+  mediaType: 'movie' as const,
+  tmdbId: 1,
+  title: 'Anora',
+  year: 2024,
+};
 const session = {
   user: { id: 'u', email: 'm@x.y', handle: 'maya', displayName: 'Maya', avatarUrl: null },
 };

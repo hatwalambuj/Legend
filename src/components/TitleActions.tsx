@@ -86,7 +86,7 @@ export function TitleActions({
             target={{ kind: 'title', title: share }}
             surface="title"
             label={`Share ${share.title}`}
-            className="btn btn--ghost btn--lg"
+            className={`btn btn--ghost btn--lg ${styles.share}`}
           />
         )}
       </div>

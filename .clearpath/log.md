@@ -56,3 +56,9 @@ confidence: high
 - deviations: import 24 h budget counts imported stubs in SQL (consume_rate_limit can't sum rows); catalog_enrich_due now returns is_listed (drop+create); PublicProfile/SessionUser.avatarColor optional in type; watchHint via `catalog.storedWatch` + in-process row memo (no extra round trip in live lists).
 - pending: C-15a guard waits for FE C-15b. Deploy order: apply migrations before deploying (profile selects avatar_color).
 - verification: lint, typecheck, 651 unit, build, format:check green. No commit.
+
+## 2026-10-04 · Close-out frontend (resumed from 6e1754f)
+- done: C-01b (Ticket reads watchHint, logo aria-hidden, region on SSR lists + Load more), C-02b ProviderFilter chips (links, ?provider= keeps type/sort), C-07 ShareButton test, C-08b src/og/ShareCard.tsx (C1 base + grafts 1/2/3/5) + render.tsx, title opengraph-image, /share/stub/[id] page + og + story route, demo renders docs/02-design/share/final-*.png, C-11b /me/import + ImportFlow, C-15b BRAND_NAME sweep + C-15a guard in tests/lib/guards.test.ts.
+- earlier (6e1754f): C-03b, C-04, C-09b, C-10b StubSheet/Diary, C-12b, C-13b, C-07 placements.
+- blocked (contract): WalletItem has no stub id/season → wallet-stub Share/Story/S03 not possible; diary row has them.
+- deviations: one src/og/ShareCard.tsx (not Title/Story/StubCard files); review-quote graft unused (no review share route); ogText() strips glyphs outside Latin so next/og never fetches Google fonts; ticket-providers keeps role/label alongside aria-hidden for the pre-ADR W7-AC1 E2E until C-Q1.

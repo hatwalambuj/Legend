@@ -16,7 +16,7 @@ import { ShareButton } from '@/components/ShareButton';
 import { WalletGrid } from '@/components/WalletStub';
 import { BRAND_NAME } from '@/lib/brand';
 import { NEUTRAL_PALETTE } from '@/lib/images';
-import { profileHref, titleHref } from '@/lib/routes';
+import { importHref, profileHref, titleHref } from '@/lib/routes';
 import { dal } from '@/server/dal';
 import { today } from '@/server/env';
 import styles from './profile.module.css';
@@ -233,7 +233,24 @@ async function ProfilePanel({
             <DiaryList entries={diary.items} />
           </>
         ) : (
-          <EmptyState title="No stubs yet">The diary fills up one watch at a time.</EmptyState>
+          <OwnerSwitch
+            handle={profile.handle}
+            owner={
+              <EmptyState
+                title="No stubs yet"
+                action={
+                  <Link href={importHref()} className="btn btn--ghost" data-testid="diary-import">
+                    Import from Letterboxd or IMDb
+                  </Link>
+                }
+              >
+                The diary fills up one watch at a time, or bring your history with you.
+              </EmptyState>
+            }
+            visitor={
+              <EmptyState title="No stubs yet">The diary fills up one watch at a time.</EmptyState>
+            }
+          />
         ))}
       {tab === 'reviews' &&
         (reviews.items.length ? (

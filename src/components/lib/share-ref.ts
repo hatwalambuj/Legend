@@ -2,6 +2,15 @@
  * `ref=share` capture (ADR-013 C-07): first-party, per tab (sessionStorage, not a cookie). It only feeds
  * the anonymous `signup_completed` dim. Never throws (storage may be blocked).
  */
+import type { ShareTarget } from '@/lib/share';
+
+/** The few title fields a share link needs (serialisable for client props). Server-callable. */
+export type ShareTitle = Extract<ShareTarget, { kind: 'title' }>['title'];
+
+export function shareTitle(t: ShareTitle): ShareTitle {
+  return { mediaType: t.mediaType, tmdbId: t.tmdbId, slug: t.slug, title: t.title, year: t.year };
+}
+
 export const SHARE_REF_KEY = 'stubbed_ref';
 
 export function captureShareRef(search: string): void {

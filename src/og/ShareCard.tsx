@@ -95,7 +95,19 @@ export function titleTier(name: string, sizes: [number, number, number] = [56, 4
   return { size, text };
 }
 
-const ORD = ['', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH'];
+const ORD = [
+  '',
+  'FIRST',
+  'SECOND',
+  'THIRD',
+  'FOURTH',
+  'FIFTH',
+  'SIXTH',
+  'SEVENTH',
+  'EIGHTH',
+  'NINTH',
+  'TENTH',
+];
 /** Graft 1 line: "THIRD WATCH · @maya" (11+ → "11TH WATCH"). */
 export function watchLine(n: number, handle: string): string {
   const sfx = n % 100 >= 11 && n % 100 <= 13 ? 'TH' : (['TH', 'ST', 'ND', 'RD'][n % 10] ?? 'TH');
@@ -263,7 +275,9 @@ function Score({ tmdb, imdb, size }: { tmdb: number; imdb: number | null; size: 
         </span>
       </div>
       {imdb != null ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: h * 0.3, marginBottom: size * 0.04 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: h * 0.3, marginBottom: size * 0.04 }}
+        >
           <div
             style={{
               display: 'flex',
@@ -279,21 +293,50 @@ function Score({ tmdb, imdb, size }: { tmdb: number; imdb: number | null; size: 
           >
             IMDb
           </div>
-          <span style={{ fontFamily: UI, fontSize: h * 0.75, color: T.ink }}>{formatScore(imdb)}</span>
+          <span style={{ fontFamily: UI, fontSize: h * 0.75, color: T.ink }}>
+            {formatScore(imdb)}
+          </span>
         </div>
       ) : null}
     </div>
   );
 }
 
-function Art({ t, w, h, kicker, titleSize }: { t: CardTitle; w: number; h: number; kicker: number; titleSize: number }) {
+function Art({
+  t,
+  w,
+  h,
+  kicker,
+  titleSize,
+}: {
+  t: CardTitle;
+  w: number;
+  h: number;
+  kicker: number;
+  titleSize: number;
+}) {
   const { vibrant, t1, t2 } = tints(t.palette);
   const tier = titleTier(t.name, [titleSize, titleSize * 0.8, titleSize * 0.66]);
   return (
-    <div style={{ display: 'flex', position: 'relative', width: w, height: h, borderRadius: 14, overflow: 'hidden', background: t2 }}>
+    <div
+      style={{
+        display: 'flex',
+        position: 'relative',
+        width: w,
+        height: h,
+        borderRadius: 14,
+        overflow: 'hidden',
+        background: t2,
+      }}
+    >
       {t.posterDataUri ? (
         // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- Satori image layer
-        <img src={t.posterDataUri} width={w} height={h} style={{ width: w, height: h, objectFit: 'cover', objectPosition: 'top' }} />
+        <img
+          src={t.posterDataUri}
+          width={w}
+          height={h}
+          style={{ width: w, height: h, objectFit: 'cover', objectPosition: 'top' }}
+        />
       ) : (
         // Fallback poster: palette + title type (DESIGN §3.3); it must always render.
         <div
@@ -307,7 +350,12 @@ function Art({ t, w, h, kicker, titleSize }: { t: CardTitle; w: number; h: numbe
             backgroundImage: `radial-gradient(70% 50% at 30% 10%, ${vibrant}59, transparent 70%), linear-gradient(160deg, ${t1}, ${t2})`,
           }}
         >
-          <span style={mono(kicker, 'rgba(255,255,255,.72)', { alignSelf: 'center', marginTop: titleSize * 0.6 })}>
+          <span
+            style={mono(kicker, 'rgba(255,255,255,.72)', {
+              alignSelf: 'center',
+              marginTop: titleSize * 0.6,
+            })}
+          >
             {`N° ${t.serial}`}
           </span>
           <span
@@ -349,18 +397,23 @@ function TypePill({ type, size }: { type: 'movie' | 'tv'; size: number }) {
 }
 
 const printLeft = (t: CardTitle) => t.seasonsLabel ?? `ADMIT ONE  N° ${t.serial}`;
-const metaOf = (t: CardTitle) => [t.year > 0 ? String(t.year) : '', t.type === 'tv' ? 'SHOW' : 'MOVIE'].filter(Boolean);
+const metaOf = (t: CardTitle) =>
+  [t.year > 0 ? String(t.year) : '', t.type === 'tv' ? 'SHOW' : 'MOVIE'].filter(Boolean);
 
 /* ---------- story 1080 × 1920 (stub share) ---------- */
 
-export function StoryCard({ title: t, stub, shortLink }: CardProps & { stub: CardStub }): ReactElement {
+export function StoryCard({
+  title: t,
+  stub,
+  shortLink,
+}: CardProps & { stub: CardStub }): ReactElement {
   const W = 760;
   const M = 80;
   const X = 160;
   const rewatch = stub.number >= 2;
-  // Safe frame: wordmark row at 250, rewatch headline 320–450, ticket bottom at 1480, link ≤ 1580.
+  // Safe frame: wordmark row at 250, rewatch headline 320–450, ticket bottom at 1460, link ≤ 1580.
   const Y = rewatch ? 470 : 330;
-  const H = 1480 - Y;
+  const H = 1460 - Y;
   const BODY = 360;
   const perfY = H - BODY;
   const artH = perfY - 40;
@@ -373,18 +426,59 @@ export function StoryCard({ title: t, stub, shortLink }: CardProps & { stub: Car
   ].filter((l): l is NonNullable<typeof l> => l !== null);
 
   return (
-    <div style={{ display: 'flex', position: 'relative', width: 1080, height: 1920, background: T.bg, backgroundImage: ground(t.palette), fontFamily: UI }}>
-      <div style={{ display: 'flex', position: 'absolute', left: 80, right: 80, top: STORY_SAFE.top, justifyContent: 'space-between', alignItems: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        position: 'relative',
+        width: 1080,
+        height: 1920,
+        background: T.bg,
+        backgroundImage: ground(t.palette),
+        fontFamily: UI,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          position: 'absolute',
+          left: 80,
+          right: 80,
+          top: STORY_SAFE.top,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Wordmark size={40} />
         <span style={mono(20, T.fg2)}>{eyebrow}</span>
       </div>
 
       {rewatch ? (
-        <div style={{ display: 'flex', position: 'absolute', left: 80, right: 80, top: 316, alignItems: 'flex-end', gap: 24 }}>
-          <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 132, lineHeight: 0.9, letterSpacing: -5, color: T.fg }}>
+        <div
+          style={{
+            display: 'flex',
+            position: 'absolute',
+            left: 80,
+            right: 80,
+            top: 316,
+            alignItems: 'flex-end',
+            gap: 24,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: DISPLAY,
+              fontWeight: 700,
+              fontSize: 132,
+              lineHeight: 0.9,
+              letterSpacing: -5,
+              color: T.fg,
+            }}
+          >
             {`${stub.number}×`}
           </span>
-          <span style={mono(24, T.fg, { marginBottom: 14 })}>{watchLine(stub.number, stub.handle)}</span>
+          <span style={mono(24, T.fg, { marginBottom: 14 })}>
+            {watchLine(stub.number, stub.handle)}
+          </span>
         </div>
       ) : null}
 
@@ -395,12 +489,25 @@ export function StoryCard({ title: t, stub, shortLink }: CardProps & { stub: Car
           src={ticketSvg({ W, H, path, fill: l.fill, M })}
           width={W + 2 * M}
           height={H + 2 * M}
-          style={{ position: 'absolute', left: X - M + l.dx, top: Y - M + l.dy, transform: `rotate(${l.rot}deg)` }}
+          style={{
+            position: 'absolute',
+            left: X - M + l.dx,
+            top: Y - M + l.dy,
+            transform: `rotate(${l.rot}deg)`,
+          }}
         />
       ))}
       {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- Satori image layer */}
       <img
-        src={ticketSvg({ W, H, path, fill: T.paper, M, shadow: true, perf: { x1: 40, y1: perfY, x2: W - 40, y2: perfY } })}
+        src={ticketSvg({
+          W,
+          H,
+          path,
+          fill: T.paper,
+          M,
+          shadow: true,
+          perf: { x1: 40, y1: perfY, x2: W - 40, y2: perfY },
+        })}
         width={W + 2 * M}
         height={H + 2 * M}
         style={{ position: 'absolute', left: X - M, top: Y - M }}
@@ -416,7 +523,17 @@ export function StoryCard({ title: t, stub, shortLink }: CardProps & { stub: Car
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', left: X + 40, width: W - 80, top: Y + perfY + 26, height: BODY - 26 - 40 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'absolute',
+          left: X + 40,
+          width: W - 80,
+          top: Y + perfY + 26,
+          height: BODY - 26 - 40,
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={mono(20, T.ink2)}>{printLeft(t)}</span>
           <span style={mono(20, rewatch ? T.stamp : T.ink)}>{`STUB #${stub.number}`}</span>
@@ -437,7 +554,14 @@ export function StoryCard({ title: t, stub, shortLink }: CardProps & { stub: Car
         >
           {tier.text}
         </div>
-        <div style={{ display: 'flex', flexGrow: 1, justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexGrow: 1,
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+          }}
+        >
           <Score tmdb={t.tmdbScore} imdb={t.imdbScore} size={80} />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             {metaOf(t).map((m) => (
@@ -447,16 +571,45 @@ export function StoryCard({ title: t, stub, shortLink }: CardProps & { stub: Car
             ))}
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 20 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            marginTop: 20,
+          }}
+        >
           <span style={{ fontFamily: UI, fontSize: 24, color: T.ink }}>{`@${stub.handle}`}</span>
           <span style={mono(20, T.ink2)}>{watchedLabel(stub.watchedOn)}</span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', position: 'absolute', left: 0, right: 0, top: 1504, justifyContent: 'center', ...mono(18, T.fg2, { letterSpacing: 2 }) }}>
+      <div
+        style={{
+          display: 'flex',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 1514,
+          justifyContent: 'center',
+          ...mono(18, T.fg2, { letterSpacing: 2 }),
+        }}
+      >
         {creditLine(Boolean(t.posterDataUri))}
       </div>
-      <div style={{ display: 'flex', position: 'absolute', left: 0, right: 0, top: 1536, justifyContent: 'center', fontFamily: UI, fontSize: 30, color: T.fg }}>
+      <div
+        style={{
+          display: 'flex',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 1540,
+          justifyContent: 'center',
+          fontFamily: UI,
+          fontSize: 30,
+          color: T.fg,
+        }}
+      >
         {shortLink}
       </div>
     </div>
@@ -477,19 +630,42 @@ export function OgCard({ title: t, stub, shortLink }: CardProps): ReactElement {
   const tier = titleTier(t.name, [64, 56, 46]);
 
   return (
-    <div style={{ display: 'flex', position: 'relative', width: 1200, height: 630, background: T.bg, backgroundImage: ground(t.palette), fontFamily: UI }}>
+    <div
+      style={{
+        display: 'flex',
+        position: 'relative',
+        width: 1200,
+        height: 630,
+        background: T.bg,
+        backgroundImage: ground(t.palette),
+        fontFamily: UI,
+      }}
+    >
       {rewatch ? (
         // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- Satori image layer
         <img
           src={ticketSvg({ W, H, path, fill: T.paper2, M })}
           width={W + 2 * M}
           height={H + 2 * M}
-          style={{ position: 'absolute', left: X - M, top: Y - M + 10, transform: 'rotate(0.8deg)' }}
+          style={{
+            position: 'absolute',
+            left: X - M,
+            top: Y - M + 10,
+            transform: 'rotate(0.8deg)',
+          }}
         />
       ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- Satori image layer */}
       <img
-        src={ticketSvg({ W, H, path, fill: T.paper, M, shadow: true, perf: { x1: perfX, y1: 36, x2: perfX, y2: H - 36 } })}
+        src={ticketSvg({
+          W,
+          H,
+          path,
+          fill: T.paper,
+          M,
+          shadow: true,
+          perf: { x1: perfX, y1: 36, x2: perfX, y2: H - 36 },
+        })}
         width={W + 2 * M}
         height={H + 2 * M}
         style={{ position: 'absolute', left: X - M, top: Y - M }}
@@ -499,7 +675,17 @@ export function OgCard({ title: t, stub, shortLink }: CardProps): ReactElement {
         <Art t={t} w={300} h={460} kicker={12} titleSize={44} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', left: X + 352, width: perfX - 352 - 32, top: Y + 40, height: H - 76 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'absolute',
+          left: X + 352,
+          width: perfX - 352 - 32,
+          top: Y + 40,
+          height: H - 76,
+        }}
+      >
         <span style={mono(18, T.ink2)}>{printLeft(t)}</span>
         <div
           style={{
@@ -517,32 +703,83 @@ export function OgCard({ title: t, stub, shortLink }: CardProps): ReactElement {
         >
           {tier.text}
         </div>
-        <span style={mono(20, T.ink2, { marginTop: 14, letterSpacing: 2 })}>{metaOf(t).join(' · ')}</span>
+        <span style={mono(20, T.ink2, { marginTop: 14, letterSpacing: 2 })}>
+          {metaOf(t).join(' · ')}
+        </span>
         <div style={{ display: 'flex', marginTop: 'auto', alignItems: 'center' }}>
           <Score tmdb={t.tmdbScore} imdb={t.imdbScore} size={72} />
         </div>
         <div style={{ display: 'flex', marginTop: 22, alignItems: 'baseline', gap: 12 }}>
-          {stub ? <span style={{ fontFamily: UI, fontSize: 24, color: T.ink }}>{`@${stub.handle}`}</span> : null}
-          <span style={mono(18, T.ink2)}>{stub ? watchedLabel(stub.watchedOn) : 'RATED 6.5+ ON TMDB'}</span>
+          {stub ? (
+            <span style={{ fontFamily: UI, fontSize: 24, color: T.ink }}>{`@${stub.handle}`}</span>
+          ) : null}
+          <span style={mono(18, T.ink2)}>
+            {stub ? watchedLabel(stub.watchedOn) : 'RATED 6.5+ ON TMDB'}
+          </span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', position: 'absolute', left: X + perfX + 24, width: W - perfX - 24 - 34, top: Y + 36, height: H - 72 }}>
-        {stub ? <Stamp n={stub.number} size={20} /> : <span style={mono(18, T.ink2)}>ADMIT ONE</span>}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'absolute',
+          left: X + perfX + 24,
+          width: W - perfX - 24 - 34,
+          top: Y + 36,
+          height: H - 72,
+        }}
+      >
+        {stub ? (
+          <Stamp n={stub.number} size={20} />
+        ) : (
+          <span style={mono(18, T.ink2)}>ADMIT ONE</span>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <span style={mono(20, T.ink2)}>{stub ? 'STUB' : 'RATED'}</span>
-          <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 96, lineHeight: 1, letterSpacing: -4, color: rewatch ? T.stamp : T.ink }}>
+          <span
+            style={{
+              fontFamily: DISPLAY,
+              fontWeight: 700,
+              fontSize: 96,
+              lineHeight: 1,
+              letterSpacing: -4,
+              color: rewatch ? T.stamp : T.ink,
+            }}
+          >
             {stub ? `#${stub.number}` : '6.5+'}
           </span>
-          <span style={mono(16, T.ink2, { marginTop: 8 })}>{t.seasonsLabel ?? `N° ${t.serial}`}</span>
+          <span style={mono(16, T.ink2, { marginTop: 8 })}>
+            {t.seasonsLabel ?? `N° ${t.serial}`}
+          </span>
         </div>
         <Wordmark size={30} color={T.ink} />
       </div>
 
-      <span style={{ position: 'absolute', left: 60, top: 584, ...mono(16, T.fg2, { letterSpacing: 2 }) }}>
+      <span
+        style={{
+          position: 'absolute',
+          left: 60,
+          top: 584,
+          ...mono(16, T.fg2, { letterSpacing: 2 }),
+        }}
+      >
         {creditLine(Boolean(t.posterDataUri))}
       </span>
-      <span style={{ position: 'absolute', right: 60, top: 580, fontFamily: UI, fontSize: 20, color: T.fg }}>{shortLink}</span>
+      <span
+        style={{
+          position: 'absolute',
+          right: 60,
+          top: 580,
+          fontFamily: UI,
+          fontSize: 20,
+          color: T.fg,
+        }}
+      >
+        {shortLink}
+      </span>
     </div>
   );
 }

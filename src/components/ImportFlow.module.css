@@ -1,0 +1,130 @@
+.flow {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.privacy {
+  margin: 0;
+  color: var(--fg-2);
+}
+.card {
+  padding: 20px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.card h2 {
+  margin: 0 0 10px;
+  font: 750 20px/1.15 var(--font-display);
+  letter-spacing: -0.02em;
+}
+.card h2 + * {
+  margin-top: 0;
+}
+.card p {
+  color: var(--fg-2);
+}
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md, 10px);
+  cursor: pointer;
+}
+.source:has(input:checked) {
+  border-color: var(--fg);
+}
+.beta {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  font: 500 11px/1.4 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.hint {
+  margin: 10px 0 18px;
+  font-size: 14px;
+}
+.file input {
+  min-height: 44px;
+  color: var(--fg);
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md, 10px);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--fg);
+}
+.counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0 0 14px;
+}
+.counts div {
+  padding: 10px 12px;
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-2);
+}
+.counts dt {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.counts dd {
+  margin: 2px 0 0;
+  font: 750 24px/1 var(--font-display);
+}
+.sample {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--fg-2);
+  font-size: 14px;
+}
+.opts {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 0;
+  border: 0;
+}
+.opts legend {
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.flow progress {
+  width: 100%;
+  max-width: 420px;
+  accent-color: var(--accent);
+}

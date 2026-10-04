@@ -5,14 +5,15 @@ import { HeaderNav, HeaderUser } from './HeaderNav';
 import { HeaderSearch } from './HeaderSearch';
 import { LogoMark } from './Icon';
 import styles from './Header.module.css';
+import { BRAND_NAME } from '@/lib/brand';
 
 export function Header({ isDemo, demoResets = false }: { isDemo: boolean; demoResets?: boolean }) {
   return (
     <header className={styles.hdr}>
       <div className={`wrap ${styles.in}`}>
-        <Link href="/" className={styles.logo} aria-label="Stubbed home">
+        <Link href="/" className={styles.logo} aria-label={`${BRAND_NAME} home`}>
           <LogoMark />
-          <span aria-hidden="true">Stubbed</span>
+          <span aria-hidden="true">{BRAND_NAME}</span>
         </Link>
         <HeaderNav />
         <div className={styles.searchSlot}>

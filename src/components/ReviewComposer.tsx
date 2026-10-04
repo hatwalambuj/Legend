@@ -11,6 +11,7 @@ import { useApp, type StubTarget } from '@/hooks/useApp';
 import { Icon } from './Icon';
 import { StarInput } from './StarInput';
 import styles from './Reviews.module.css';
+import { BRAND_NAME } from '@/lib/brand';
 
 const MAX = 5000;
 
@@ -139,7 +140,7 @@ export function ReviewComposer({
           </>
         )}
       </p>
-      <p className={styles.note}>Reviews are saved to Stubbed only.</p>
+      <p className={styles.note}>Reviews are saved to {BRAND_NAME} only.</p>
     </form>
   );
 }

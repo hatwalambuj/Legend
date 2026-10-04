@@ -9,6 +9,7 @@ import { TicketGrid } from '@/components/TicketGrid';
 import { NEUTRAL_PALETTE, paletteOrDefault } from '@/lib/images';
 import type { SearchResult, TypeFilter } from '@/lib/types';
 import { dal } from '@/server/dal';
+import { BRAND_NAME } from '@/lib/brand';
 
 // OWNER: Frontend. Search (DESIGN §7.3): ?q=&type=. "Not in Stubbed" is an empty state, never an error.
 export const dynamic = 'force-dynamic';
@@ -83,7 +84,7 @@ export default async function SearchPage({
           ) : (
             <div style={{ paddingTop: 16 }}>
               <EmptyState
-                title="Not in Stubbed"
+                title={`Not in ${BRAND_NAME}`}
                 testId="not-in-catalog"
                 action={
                   <Link href="/search" className="btn btn--ghost">

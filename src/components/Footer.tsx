@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CONTACT_EMAIL, contactHref } from '@/lib/contact';
 import styles from './Footer.module.css';
+import { BRAND_NAME } from '@/lib/brand';
 
 export function Footer() {
   return (
@@ -15,7 +16,7 @@ export function Footer() {
           <span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
         </div>
         <div className={styles.attr}>
-          <span>IMDb ratings via OMDb. Reviews and ratings you write stay on Stubbed.</span>
+          <span>IMDb ratings via OMDb. Reviews and ratings you write stay on {BRAND_NAME}.</span>
         </div>
         <nav aria-label="Footer" className={styles.links}>
           <Link href="/about">About</Link>

@@ -54,3 +54,18 @@
     white-space: nowrap;
   }
 }
+/* ADR-013 C-07: on phones Share is icon-only so the action row stays one line (DESIGN §7.4.2 fold rule). */
+@media (max-width: 639px) {
+  .share {
+    width: 56px;
+    padding: 0;
+  }
+  .share span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

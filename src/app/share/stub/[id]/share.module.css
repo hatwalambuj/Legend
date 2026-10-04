@@ -1,0 +1,12 @@
+.page {
+  padding-bottom: 64px;
+}
+.ticket {
+  width: min(280px, 100%);
+  margin: 8px 0 24px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}

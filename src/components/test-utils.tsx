@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { vi } from 'vitest';
 import type { TitleDetail, TitleSummary, WorthIt } from '@/lib/types';
 import { AppContext, DEFAULT_MODE, type AppContextValue } from '@/hooks/useApp';
+import { BRAND_NAME } from '@/lib/brand';
 
 export function makeTitle(over: Partial<TitleSummary> = {}): TitleSummary {
   return {
@@ -59,7 +60,7 @@ export function makeWorthIt(over: Partial<WorthIt> = {}): WorthIt {
     verdict: {
       key: 'widely_loved',
       word: 'Widely loved',
-      sourceLine: 'Based on TMDB, IMDb and 5 Stubbed ratings',
+      sourceLine: `Based on TMDB, IMDb and 5 ${BRAND_NAME} ratings`,
       splitNote: null,
       sources: ['tmdb', 'imdb', 'stubbed'],
     },

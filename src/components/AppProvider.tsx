@@ -371,7 +371,7 @@ export function AppProvider({
           toast({
             message: (
               <>
-                Stubbed <b>{target.title}</b>. Remove it from your watchlist?
+                Stub saved for <b>{target.title}</b>. Remove it from your watchlist?
               </>
             ),
             action: { label: 'Remove', onClick: () => void setWatchlist(target, false) },

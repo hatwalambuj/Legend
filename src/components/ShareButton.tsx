@@ -12,17 +12,14 @@ import { storyHref } from '@/lib/routes';
 import { shareData, type ShareData, type ShareTarget } from '@/lib/share';
 import { useApp } from '@/hooks/useApp';
 import { Icon } from './Icon';
+import { shareTitle, type ShareTitle } from './lib/share-ref';
 import { storyFileName } from './lib/display';
 import { Sheet, SheetButtons, SheetSub, SheetTitle } from './Sheet';
 import styles from './ShareButton.module.css';
 
 type Surface = ShareGeneratedEvent['surface'];
-/** The few title fields a share link needs (serialisable for client props). */
-export type ShareTitle = Extract<ShareTarget, { kind: 'title' }>['title'];
-
-export function shareTitle(t: ShareTitle): ShareTitle {
-  return { mediaType: t.mediaType, tmdbId: t.tmdbId, slug: t.slug, title: t.title, year: t.year };
-}
+export type { ShareTitle };
+export { shareTitle };
 
 function siteUrl(): string {
   const env = process.env.NEXT_PUBLIC_SITE_URL;
@@ -147,7 +144,11 @@ export async function shareStory(stubId: string, number: number, title: string):
   };
   try {
     const nav = navigator;
-    if (typeof nav.share === 'function' && typeof nav.canShare === 'function' && typeof File !== 'undefined') {
+    if (
+      typeof nav.share === 'function' &&
+      typeof nav.canShare === 'function' &&
+      typeof File !== 'undefined'
+    ) {
       const res = await fetch(storyHref(stubId), { credentials: 'same-origin' });
       if (!res.ok) throw new Error(String(res.status));
       const file = new File([await res.blob()], storyFileName(number), { type: 'image/png' });

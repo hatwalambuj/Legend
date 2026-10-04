@@ -9,7 +9,7 @@ import { formatDate } from '@/components/lib/display';
 import { safe } from '@/components/lib/safe';
 import { Reviews } from '@/components/Reviews';
 import { ScoreChips } from '@/components/ScoreChips';
-import { shareTitle } from '@/components/ShareButton';
+import { shareTitle } from '@/components/lib/share-ref';
 import { stubTarget, Ticket } from '@/components/Ticket';
 import { TitleActions } from '@/components/TitleActions';
 import { TitleSkeleton } from '@/components/TitleSkeleton';

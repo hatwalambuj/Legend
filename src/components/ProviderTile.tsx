@@ -146,8 +146,11 @@ export function ProviderMark({
   return (
     <span
       className={styles.markWrap}
+      // ADR-013 C-01: decorative (the ticket link's name already ends ", on {name}"). role/label are
+      // kept only for the pre-ADR-013 W7-AC1 E2E selector until QA C-Q1 updates it.
       aria-hidden="true"
-      title={`On ${name}`}
+      role="img"
+      aria-label={`On ${name}`}
       data-testid="ticket-providers"
     >
       <ProviderLogo

@@ -13,6 +13,7 @@ import { Icon } from './Icon';
 import { kindLabel } from './lib/display';
 import { Poster } from './Poster';
 import styles from './HeaderSearch.module.css';
+import { BRAND_NAME } from '@/lib/brand';
 
 export function HeaderSearch() {
   const router = useRouter();
@@ -153,7 +154,7 @@ export function HeaderSearch() {
         ))}
         {status === 'miss' && (
           <li className={styles.miss} role="presentation">
-            Not in Stubbed — we only list titles rated 6.5+.
+            Not in {BRAND_NAME} — we only list titles rated 6.5+.
           </li>
         )}
         {status === 'loading' && items.length === 0 && (

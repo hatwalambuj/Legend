@@ -54,4 +54,23 @@ describe('founder constraints', () => {
       );
     expect(hits).toEqual([]);
   });
+
+  // ADR-013 C-15a (after the FE sweep C-15b): user-visible copy reads BRAND_NAME (src/lib/brand.ts).
+  // Comments and identifiers (mostStubbed, notInStubbed) are fine; tests and test helpers are allowlisted.
+  it('has no "Stubbed" string literal in src/app or src/components (C-15)', () => {
+    const strip = (src: string) =>
+      src
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
+    const hits = [...files(join('src', 'app')), ...files(join('src', 'components'))]
+      .filter((f) => !/\.test\.tsx?$|test-utils\.tsx$/.test(f))
+      .flatMap((f) =>
+        strip(readFileSync(f, 'utf8'))
+          .split('\n')
+          .filter((l) => /\bStubbed\b/.test(l))
+          .map((l) => `${f}: ${l.trim()}`),
+      );
+    expect(hits).toEqual([]);
+  });
 });

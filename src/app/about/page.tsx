@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
+import { BRAND_NAME } from '@/lib/brand';
 import { CONTACT_EMAIL, contactHref } from '@/lib/contact';
 import { NEUTRAL_PALETTE } from '@/lib/images';
 import { JUSTWATCH_ATTRIBUTION } from '@/lib/provider-links';
@@ -11,7 +12,7 @@ import styles from './about.module.css';
 // why we can't post to IMDb, data & privacy summary.
 export const metadata: Metadata = {
   title: 'About & credits',
-  description: 'Why Stubbed exists, where the data comes from, and what we do with yours.',
+  description: `Why ${BRAND_NAME} exists, where the data comes from, and what we do with yours.`,
 };
 
 export default function AboutPage() {
@@ -23,9 +24,9 @@ export default function AboutPage() {
           <div className="eyebrow">About</div>
           <h1>Proof you watched.</h1>
           <p>
-            Stubbed is a diary for movies and shows that only lists titles rated 6.5 or higher on
-            TMDB. Every watch earns a ticket stub; every rewatch adds another. No endless scroll of
-            filler — just the good stuff and your proof that you saw it.
+            {BRAND_NAME} is a diary for movies and shows that only lists titles rated 6.5 or higher
+            on TMDB. Every watch earns a ticket stub; every rewatch adds another. No endless scroll
+            of filler — just the good stuff and your proof that you saw it.
           </p>
         </div>
         <div className={styles.cols}>
@@ -68,8 +69,8 @@ export default function AboutPage() {
               >
                 OMDb
               </a>{' '}
-              and refreshed nightly. Stubbed is not affiliated with IMDb. When a title has no IMDb
-              rating, we simply don&apos;t show one.
+              and refreshed nightly. {BRAND_NAME} is not affiliated with IMDb. When a title has no
+              IMDb rating, we simply don&apos;t show one.
             </p>
             <p>
               &ldquo;Where to watch&rdquo; data is provided by{' '}
@@ -93,8 +94,8 @@ export default function AboutPage() {
             <h2 id="imdb-h">Why we can&apos;t post to IMDb for you</h2>
             <p>
               IMDb has no public way for other apps to write reviews or ratings, and we won&apos;t
-              ask for your IMDb password. So your stubs, ratings and reviews live on Stubbed only —
-              we never post them to IMDb, TMDB or anywhere else.
+              ask for your IMDb password. So your stubs, ratings and reviews live on {BRAND_NAME}{' '}
+              only — we never post them to IMDb, TMDB or anywhere else.
             </p>
             <p>
               You can always take your data with you:{' '}
@@ -149,12 +150,12 @@ export default function AboutPage() {
           <section id="terms" aria-labelledby="terms-h" className={styles.card}>
             <h2 id="terms-h">Terms, in plain words</h2>
             <p>
-              <strong>13+ only:</strong> you must be 13 or older to use Stubbed.
+              <strong>13+ only:</strong> you must be 13 or older to use {BRAND_NAME}.
             </p>
             <p>
-              Stubbed is a free, non-commercial project, and TMDB and OMDb data is used under their
-              non-commercial terms. Be kind: tag spoilers, no harassment, no spam. We may remove
-              reviews or accounts that break this.
+              {BRAND_NAME} is a free, non-commercial project, and TMDB and OMDb data is used under
+              their non-commercial terms. Be kind: tag spoilers, no harassment, no spam. We may
+              remove reviews or accounts that break this.
             </p>
             <p>
               Questions, data requests or a review to report:{' '}
