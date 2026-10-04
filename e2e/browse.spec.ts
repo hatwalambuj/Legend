@@ -141,7 +141,8 @@ test.describe('A1 browse the curated catalogue', () => {
     await expect(dune.getByTestId('imdb-rating')).toContainText('8.5');
     await expect(dune.getByRole('link')).toHaveAttribute(
       'aria-label',
-      'Dune: Part Two, movie, 2024, rated 8.1 on TMDB and 8.5 on IMDb',
+      // ADR-013 C-01: the US watch hint (Max) is appended to the ticket name.
+      'Dune: Part Two, movie, 2024, rated 8.1 on TMDB and 8.5 on IMDb, on Max',
     );
     await expect(dune.getByTestId('ticket-time')).toHaveText('2024 · 2H 46M');
 

@@ -467,6 +467,10 @@ export interface WalletItem {
   title: TitleSummary;
   count: number;
   lastWatchedOn: IsoDate;
+  /** v1.6.1: id of the latest stub in watch order (its `number` = `count`); for Share stub / Story image. */
+  latestStubId: string;
+  /** v1.6.1: that stub's season (TV only, 1..200); null = the whole show or a movie. */
+  latestSeason: number | null;
 }
 
 /** A Stubbed review. Stored only in our database; never posted to IMDb, TMDB or anyone else (ADR-008). */

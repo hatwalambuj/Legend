@@ -1,6 +1,6 @@
 # Stubbed — API contract
 
-Status: **Frozen v1.6** (v1.6 = 2026-10-03, ADR-013 close-out: §1c, §5.3/5.4/5.15 `region` + `watchHint`, §5.7/5.8 `season`, §5.17 `avatarColor`, §5.18 sign-up `ref`, §5.24–§5.27 events/log/imports, §5.28 share/OG routes, 413 `payload_too_large`, real 404/308 on pages; v1.5 = 2026-09-27, ADR-012 "Where to watch": `TitleDetail.watch`, `GET /api/titles/{type}/{id}/watch`, `PUT /api/me/watch-region`, `stubbed_region` cookie, `SessionUser.watchRegion`, `AppMode.watchRegions`, P1 `region`/`provider` on the catalogue; lands after M1 as W-00; v1.4 = 2026-09-27, ADR-010/011: honest `/api/health`, `TitleDetail.degraded`, confirm-email-safe sign-up, `PUT /api/auth/password`, `reauth_required`; ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
+Status: **Frozen v1.6.1** (v1.6.1 = 2026-10-04, additive: `WalletItem.latestStubId` + `latestSeason` (§1c, §6); v1.6 = 2026-10-03, ADR-013 close-out: §1c, §5.3/5.4/5.15 `region` + `watchHint`, §5.7/5.8 `season`, §5.17 `avatarColor`, §5.18 sign-up `ref`, §5.24–§5.27 events/log/imports, §5.28 share/OG routes, 413 `payload_too_large`, real 404/308 on pages; v1.5 = 2026-09-27, ADR-012 "Where to watch": `TitleDetail.watch`, `GET /api/titles/{type}/{id}/watch`, `PUT /api/me/watch-region`, `stubbed_region` cookie, `SessionUser.watchRegion`, `AppMode.watchRegions`, P1 `region`/`provider` on the catalogue; lands after M1 as W-00; v1.4 = 2026-09-27, ADR-010/011: honest `/api/health`, `TitleDetail.degraded`, confirm-email-safe sign-up, `PUT /api/auth/password`, `reauth_required`; ADR-008 no third-party posting + IMDb everywhere; ADR-009 "Worth it?"; v1.2 = reviewer decisions on the phase-4 change requests, see `docs/05-review/REVIEW.md` §3; v1.3 = GAP review MUST FIX #4/#5: `DELETE /api/me`, `AppMode.demoResets`, seeded-only dev links in a public demo, contact config) · Owner: Architect · Date: 2026-09-26
 Source of truth in code (keep in sync; a change needs both):
 - `src/lib/types.ts` (domain types)
 - `src/lib/contracts.ts` (zod request schemas + response types)
@@ -108,6 +108,8 @@ type AvatarColor = 'sunset' | 'ocean' | 'forest' | 'grape' | 'ember' | 'steel' |
 interface WatchHint { providerId: number; name: string; logoPath: string | null; monogram: string; tile: string | null }
 // TitleSummary.watchHint?: WatchHint | null   — absent unless the list call had `region`; null = nothing to stream / stale (>30 d)
 // Stub.season: number | null                    — TV only, 1..200; DiaryEntry/WalletItem inherit it
+// v1.6.1 WalletItem.latestStubId: string; latestSeason: number | null — the title's last stub in watch order
+//        (watched_on, created_at, id); its number = count. Wallet stub: Share stub / owner Story image / "S03"
 // PublicProfile.avatarColor: AvatarColor | null — null = handle-derived colour (also in Review.author)
 interface WatchProviderChip { providerId: number; name: string; logoPath: string | null; monogram: string; count: number }
 interface StubShareCard {                         // never note / review text / spoiler content
@@ -363,7 +365,7 @@ Never render `note`, review text or spoiler content; never `Set-Cookie`. Shared 
 | `getTitleStats(key)` | `TitleStats` | `ratingAvg10` is null below 5 ratings |
 | `listTitleReviews(key, {sort, cursor, limit})` | `Page<Review>` | The user's own review is pinned client-side from `TitleState.myReview` |
 | `getProfile(handle)` | `ProfilePage \| null` | Header, stats, palette for `/u/{handle}` |
-| `listWallet(handle, …)` | `Page<WalletItem>` | One per title, stacked for rewatches |
+| `listWallet(handle, …)` | `Page<WalletItem>` | One per title, stacked for rewatches. v1.6.1: `latestStubId`, `latestSeason` (migration `20261004090000_wallet_latest_stub.sql`) |
 | `listDiary(handle, {type,…})` | `Page<DiaryEntry>` | Public diary tab |
 | `listProfileReviews(handle, …)` | `Page<ReviewWithTitle>` | |
 | `resolveTitle(mediaType, tmdbId)` | `{ slug } \| null` | v1.6: index read only (same fallbacks as `getTitle`, `cache()`-deduped); decides 404/308 before Suspense |

@@ -33,6 +33,7 @@ test.describe('GAP-06 delete account', () => {
     allowConsole,
   }) => {
     allowConsole.push(/status of 401/);
+    allowConsole.push(/status of 404/); // the deleted user's /u/{handle} is a real 404 (C-03)
     const acc = await signUpApi(page, 'del');
     await stubApi(page, 'movie:329865'); // Arrival — owned data that must go too
     await page.goto('/me/settings');
@@ -72,8 +73,9 @@ test.describe('GAP-06 delete account', () => {
       headers: { 'x-forwarded-for': '10.77.1.1' },
     });
     expect(signin.status()).toBe(401);
-    // The public profile is gone (streamed routes answer a noindex soft 404, QA_REPORT BUG-03).
-    await page.goto(`/u/${acc.handle}`);
+    // The public profile is gone: a real 404 status since ADR-013 C-03 (was a soft 404, BUG-03).
+    const gone = await page.goto(`/u/${acc.handle}`);
+    expect(gone?.status()).toBe(404);
     await expect(page.getByTestId('not-found')).toBeVisible();
   });
 

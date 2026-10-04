@@ -295,3 +295,26 @@ test.describe('A8 community average', () => {
     await expectChip(base);
   });
 });
+
+test.describe('C-Q3 R10 review count (ADR-013 C-04)', () => {
+  test('"On Stubbed · N" goes up by one right after a first review is posted (no reload); an edit keeps N', async ({
+    page,
+  }, info) => {
+    const key = perProject(info, 'movie:155', 'movie:244786'); // The Dark Knight / Whiplash
+    await signUpApi(page, 'r10');
+    await gotoTitle(page, key);
+    await waitForSession(page, true);
+    const before = (await titleReviews(page.request, key)).length;
+    await expect(page.getByRole('button', { name: `On Stubbed · ${before}` })).toBeVisible();
+    const c = composer(page);
+    await c.getByRole('radio', { name: '4 stars', exact: true }).click();
+    await c.getByLabel('Review text (optional)').fill('R10 counting check.');
+    await c.getByRole('button', { name: 'Post review' }).click();
+    await expect(page.getByTestId('review-card').first()).toContainText('R10 counting check.');
+    await expect(page.getByRole('button', { name: `On Stubbed · ${before + 1}` })).toBeVisible();
+    // The server agrees after a reload.
+    await page.reload();
+    await expect(page.getByRole('button', { name: `On Stubbed · ${before + 1}` })).toBeVisible();
+    expect((await titleReviews(page.request, key)).length).toBe(before + 1);
+  });
+});

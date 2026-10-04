@@ -197,7 +197,7 @@ async function ProfilePanel({
       )}
       {tab === 'wallet' &&
         (wallet.items.length ? (
-          <WalletGrid items={wallet.items} />
+          <WalletGrid items={wallet.items} handle={profile.handle} />
         ) : (
           <OwnerSwitch
             handle={profile.handle}

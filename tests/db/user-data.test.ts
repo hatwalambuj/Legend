@@ -138,6 +138,26 @@ describe('user_diary / user_wallet keyset pagination', () => {
     );
     expect(page2.rows.map((r) => r.title_key)).toEqual([OFFICE, DUNE]);
   });
+
+  it('wallet rows carry the latest stub in watch order and its season (v1.6.1)', async () => {
+    const res = await db.query<{
+      title_key: string;
+      count: number;
+      latest_stub_id: string;
+      latest_season: number | null;
+    }>(
+      `select title_key, count, latest_stub_id, latest_season from public.user_wallet($1, null, 10)`,
+      [B],
+    );
+    for (const r of res.rows) {
+      const top = await db.query<{ id: string; season: number | null }>(
+        `select id, season from public.stub_details where user_id = $1 and title_key = $2 and number = $3`,
+        [B, r.title_key, r.count],
+      );
+      expect(r.latest_stub_id).toBe(top.rows[0]!.id);
+      expect(r.latest_season).toBe(top.rows[0]!.season);
+    }
+  });
 });
 
 describe('reviews, title states and stats', () => {

@@ -190,6 +190,29 @@ describe('MemoryStubs', () => {
     expect(p2.nextCursor).toBeNull();
     expect((await stubs.wallet(LEO, { limit: 40 })).items).toEqual([]);
   });
+
+  it('wallet: latestStubId/latestSeason come from the last stub in watch order (v1.6.1)', async () => {
+    const diary = await stubs.diary(DEV, { type: 'all', limit: 50 });
+    const w = await stubs.wallet(DEV, { limit: 40 });
+    for (const it of w.items) {
+      const latest = diary.items.find((e) => e.titleKey === it.title.key)!; // diary is newest first
+      expect(it.latestStubId).toBe(latest.id);
+      expect(it.latestSeason).toBe(latest.season ?? null);
+      expect(latest.number).toBe(it.count);
+    }
+    const s = await stubs.create({
+      userId: DEV,
+      titleKey: OFFICE,
+      watchedOn: '2026-09-25',
+      watchedWhere: null,
+      note: '',
+      season: 3,
+    });
+    const office = (await stubs.wallet(DEV, { limit: 40 })).items.find(
+      (x) => x.title.key === OFFICE,
+    )!;
+    expect(office).toMatchObject({ latestStubId: s.id, latestSeason: 3, count: 5 });
+  });
 });
 
 describe('MemoryReviews', () => {

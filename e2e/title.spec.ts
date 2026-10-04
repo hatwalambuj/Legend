@@ -78,20 +78,16 @@ test.describe('A5 title detail', () => {
     page,
     allowConsole,
   }) => {
-    allowConsole.push(/status of 404/); // the browser logs the real 404 document for /nope
-    // Streaming (root loading.tsx) commits 200 before the page runs, so Next turns permanentRedirect()
-    // into an in-stream redirect and notFound() into a noindex soft 404 (QA_REPORT BUG-03).
+    allowConsole.push(/status of 404/); // the browser logs every real 404 document
+    // ADR-013 C-03: existence and slug checks run before <Suspense>, so the status is real (308/404);
+    // exact codes by the request API are in e2e/seo-status.spec.ts.
     await page.goto('/title/movie/693134-wrong-slug');
     await expect(page).toHaveURL(/\/title\/movie\/693134-dune-part-two$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dune: Part Two');
 
     for (const url of ['/title/movie/999999999', '/title/film/603', '/u/nobody_here', '/nope']) {
       const r = await page.goto(url);
-      expect([200, 404], url).toContain(r?.status());
-      if (r?.status() === 200)
-        await expect(
-          page.locator('meta[name="robots"][content*="noindex"]').first(),
-        ).toBeAttached();
+      expect(r?.status(), url).toBe(404);
       await expect(page.getByTestId('not-found')).toBeVisible();
       await expect(page.getByRole('heading', { level: 1 })).toContainText(
         "This ticket doesn't exist",

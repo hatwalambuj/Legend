@@ -376,7 +376,13 @@ export class MemoryStubs implements StubRepository {
     const d = demoStore().get();
     const groups = new Map<
       TitleKey,
-      { titleKey: TitleKey; count: number; lastWatchedOn: string; lastCreatedAt: string }
+      {
+        titleKey: TitleKey;
+        count: number;
+        lastWatchedOn: string;
+        lastCreatedAt: string;
+        latest: DemoStub;
+      }
     >();
     for (const s of d.stubs) {
       if (s.userId !== userId) continue;
@@ -387,11 +393,13 @@ export class MemoryStubs implements StubRepository {
           count: 1,
           lastWatchedOn: s.watchedOn,
           lastCreatedAt: s.createdAt,
+          latest: s,
         });
       else {
         g.count++;
         if (s.watchedOn > g.lastWatchedOn) g.lastWatchedOn = s.watchedOn;
         if (s.createdAt > g.lastCreatedAt) g.lastCreatedAt = s.createdAt;
+        if (watchOrder(s, g.latest) > 0) g.latest = s;
       }
     }
     const page = keysetPage(withTitle([...groups.values()]), {
@@ -406,6 +414,8 @@ export class MemoryStubs implements StubRepository {
         title: g.title,
         count: g.count,
         lastWatchedOn: g.lastWatchedOn,
+        latestStubId: g.latest.id,
+        latestSeason: g.latest.season ?? null,
       })),
       nextCursor: page.nextCursor,
     };

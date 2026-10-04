@@ -552,6 +552,8 @@ type WalletRow = {
   last_watched_on: string;
   last_created_at: string;
   title: CatalogRow;
+  latest_stub_id: string;
+  latest_season: number | null;
 };
 
 export class SupabaseStubs implements StubRepository {
@@ -693,6 +695,8 @@ export class SupabaseStubs implements StubRepository {
         title: rowToSummary(r.title),
         count: Number(r.count),
         lastWatchedOn: String(r.last_watched_on).slice(0, 10),
+        latestStubId: r.latest_stub_id,
+        latestSeason: r.latest_season ?? null,
       }),
       (r) =>
         encodeKeyset('wallet', [

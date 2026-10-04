@@ -13,6 +13,7 @@ import { BANNED_QUERY_KEY, PROVIDER_LINK_HOSTS } from '../src/lib/provider-links
 import {
   detailStubButton,
   expect,
+  expectNoHorizontalScroll,
   gotoTitle,
   isMobile,
   shot,
@@ -536,23 +537,77 @@ test.describe('Placement, stub mark, a11y', () => {
     await shot(page, info, 'wtw-fold');
   });
 
-  test('W7-AC1 ticket stub provider mark is decorative and not a link (when W-30 hint ships)', async ({
+  test('W7-AC1 ticket stub provider mark is decorative, never a link; the ticket name ends ", on {Service}"', async ({
     page,
+    context,
+    baseURL,
   }) => {
-    await page.goto('/browse');
-    const marks = page.getByTestId('ticket-providers');
-    const n = await marks.count();
-    test.skip(
-      n === 0,
-      'No ticket-providers mark rendered: list API has no watchHint yet (W-30/W-31, P1)',
-    );
-    for (const m of await marks.all()) {
-      await expect(m).toHaveAttribute('role', 'img');
-      await expect(m).toHaveAttribute('aria-label', /^On .+/);
-      expect(await m.evaluate((el) => el.tagName !== 'A' && !el.querySelector('a, [href]'))).toBe(
+    // ADR-013 C-01: the mark is aria-hidden; the service is spoken once, at the end of the ticket link name.
+    const expectMark = async (key: string, service: string) => {
+      const t = page.getByTestId(`ticket-${key}`).first();
+      const mark = t.getByTestId('ticket-providers');
+      await expect(mark).toHaveAttribute('aria-hidden', 'true');
+      expect(await mark.evaluate((el) => !el.closest('a') && !el.querySelector('a, [href]'))).toBe(
         true,
       );
+      await expect(t.getByRole('link')).toHaveAttribute('aria-label', new RegExp(`, on ${service}$`));
+    };
+    await page.goto('/browse'); // default region US (watch.json: Dune → Max)
+    await expectMark(DUNE, 'Max');
+    expect(await page.getByTestId('ticket-providers').count()).toBeGreaterThan(0);
+    // Fleabag has no US stream/free offer: no mark, and the name has no ", on …" suffix.
+    const flea = page.getByTestId(`ticket-${FLEABAG}`).first();
+    if (await flea.count()) {
+      await expect(flea.getByTestId('ticket-providers')).toHaveCount(0);
+      await expect(flea.getByRole('link')).not.toHaveAttribute('aria-label', /, on /);
     }
+    // A GB region (cookie) changes the hint: Dune → NOW.
+    await context.addCookies([{ name: 'stubbed_region', value: 'GB', url: baseURL! }]);
+    await page.goto('/browse');
+    await expectMark(DUNE, 'NOW');
+  });
+
+  test('W-32 "On {Service}" chips: links that filter the grid, keep type/sort in the URL, keep the 6.5 rule', async ({
+    page,
+  }, info) => {
+    const api = (await (await page.request.get('/api/watch/providers?region=US')).json()) as {
+      providers: { providerId: number; name: string; count: number }[];
+    };
+    expect(api.providers.length).toBeGreaterThan(0);
+    expect(api.providers.length).toBeLessThanOrEqual(6);
+    await page.goto('/browse?type=movie&sort=rating_desc');
+    const nav = page.getByRole('navigation', { name: 'Filter by streaming service' });
+    await expect(nav).toBeVisible();
+    await expect(nav.getByTestId('provider-chip-all')).toHaveAttribute('aria-current', 'true');
+    // Every chip is a real link named "On {Service}" with count ≥ 1 (zero-count chips never render).
+    for (const p of api.providers) {
+      expect(p.count).toBeGreaterThanOrEqual(1);
+      await expect(nav.getByTestId(`provider-chip-${p.providerId}`)).toHaveText(`On ${p.name}`);
+    }
+    expect(await nav.getByRole('link').count()).toBe(api.providers.length + 1);
+
+    const netflix = nav.getByTestId('provider-chip-8');
+    await expect(netflix).toHaveAttribute('href', '/browse?type=movie&sort=rating_desc&provider=8');
+    await netflix.click();
+    await expect(page).toHaveURL(/\/browse\?type=movie&sort=rating_desc&provider=8$/);
+    await expect(nav.getByTestId('provider-chip-8')).toHaveAttribute('aria-current', 'true');
+    const want = (await (
+      await page.request.get('/api/catalog?region=US&provider=8&type=movie&sort=rating_desc&limit=50')
+    ).json()) as { items: { key: string; voteAverage: number }[] };
+    const grid = page.locator('article[data-testid^="ticket-"]');
+    await expect(grid).toHaveCount(want.items.length);
+    expect(await grid.evaluateAll((els) => els.map((e) => e.getAttribute('data-ticket')))).toEqual(
+      want.items.map((i) => i.key),
+    );
+    for (const i of want.items) expect(i.voteAverage).toBeGreaterThanOrEqual(6.5);
+    await expectNoHorizontalScroll(page);
+    await shot(page, info, 'provider-chips');
+
+    // The URL is shareable: a cold load of the same URL renders the same filter (SSR, no JS needed).
+    await page.goto('/browse?type=movie&sort=rating_desc&provider=8');
+    await expect(grid).toHaveCount(want.items.length);
+    await nav.getByTestId('provider-chip-all').click();
+    await expect(page).toHaveURL(/\/browse\?type=movie&sort=rating_desc$/);
   });
 
   test('W5-AC4 axe: no serious/critical issues on the block (available, expanded, empty)', async ({
