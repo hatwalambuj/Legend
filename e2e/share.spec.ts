@@ -5,7 +5,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import type { APIResponse, Page } from '@playwright/test';
+import type { APIRequestContext, APIResponse, Page } from '@playwright/test';
 import {
   expect,
   gotoTitle,
@@ -140,14 +140,30 @@ test.describe('C-Q4 Share button', () => {
   });
 });
 
+/** og:image from page metadata → app-relative path + canonical `?v=` query (CR-CO-1). */
+const ogPath = (content: string | null) => {
+  const u = new URL(content!);
+  return u.pathname + u.search;
+};
+
+/** A non-canonical image request is a 308 to the canonical `?v=` URL (src/server/share-cache.ts). */
+async function canonical(req: APIRequestContext, p: string) {
+  const r = await req.get(p, { maxRedirects: 0 });
+  expect(r.status(), `${p} → 308`).toBe(308);
+  const loc = new URL(r.headers()['location']!, 'http://x');
+  expect(loc.pathname, p).toBe(new URL(p, 'http://x').pathname);
+  expect(loc.searchParams.get('v'), `${p}: canonical ?v=`).toBeTruthy();
+  return loc.pathname + loc.search;
+}
+
 test.describe('C-Q4 share images and landing', () => {
-  test('title og:image → 1200×630 PNG, no Set-Cookie; unknown title image → 404', async ({
+  test('title og:image (canonical ?v= from metadata) → 1200×630 PNG, no Set-Cookie; bare URL → 308; unknown title → 404', async ({
     page,
     request,
   }) => {
     await gotoTitle(page, 'movie:693134');
-    const og = await page.locator('meta[property="og:image"]').getAttribute('content');
-    expect(new URL(og!).pathname).toBe('/title/movie/693134-dune-part-two/opengraph-image');
+    const og = ogPath(await page.locator('meta[property="og:image"]').getAttribute('content'));
+    expect(og).toMatch(/^\/title\/movie\/693134-dune-part-two\/opengraph-image\?v=/);
     await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
       'content',
       '1200',
@@ -156,12 +172,8 @@ test.describe('C-Q4 share images and landing', () => {
       'content',
       '630',
     );
-    await expectPng(
-      await request.get('/title/movie/693134-dune-part-two/opengraph-image'),
-      1200,
-      630,
-      'title og',
-    );
+    await expectPng(await request.get(og, { maxRedirects: 0 }), 1200, 630, 'title og');
+    expect(await canonical(request, '/title/movie/693134-dune-part-two/opengraph-image')).toBe(og);
     expect((await request.get('/title/movie/999999999-x/opengraph-image')).status()).toBe(404);
   });
 
@@ -187,10 +199,13 @@ test.describe('C-Q4 share images and landing', () => {
     expect(html).not.toContain('QA-REVIEW-BODY-42');
     expect(html).toMatch(/<meta name="robots" content="[^"]*noindex/);
     expect(html).toMatch(/<link rel="canonical" href="[^"]*\/title\/tv\//);
-    expect(html).toContain(`${base}/opengraph-image`);
-    await expectPng(await anon.get(`${base}/opengraph-image`), 1200, 630, 'stub og');
-    await expectPng(await anon.get(`${base}/story`), 1080, 1920, 'story');
-    const dl = await anon.get(`${base}/story?download=1`);
+    const ogMeta = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1] ?? null;
+    const og = ogPath(ogMeta?.replace(/&amp;/g, '&') ?? null);
+    expect(og.startsWith(`${base}/opengraph-image?v=`), og).toBe(true);
+    await expectPng(await anon.get(og, { maxRedirects: 0 }), 1200, 630, 'stub og');
+    const story = await canonical(anon, `${base}/story`);
+    await expectPng(await anon.get(story, { maxRedirects: 0 }), 1080, 1920, 'story');
+    const dl = await anon.get(`${base}/story?download=1`); // follows the 308 to the canonical URL
     await expectPng(dl, 1080, 1920, 'story download');
     expect(dl.headers()['content-disposition']).toMatch(/^attachment; filename="[^"]+\.png"$/);
 
@@ -206,14 +221,14 @@ test.describe('C-Q4 share images and landing', () => {
     if (before && after)
       expect(after.slice(before.length), 'outbound from image routes').toEqual([]);
 
-    // Delete the stub (owner) → landing and images are 404.
+    // Delete the stub (owner) → the landing and the canonical image URLs are 404.
     await page.context().clearCookies();
     await page.request.post('/api/auth/signin', {
       data: { email: acc.email, password: acc.password },
       headers: { 'x-forwarded-for': '10.88.1.2' },
     });
     expect((await page.request.delete(`/api/stubs/${stub.id}`)).status()).toBe(200);
-    for (const p of [base, `${base}/opengraph-image`, `${base}/story`])
+    for (const p of [base, og, story])
       expect((await anon.get(p, { maxRedirects: 0 })).status(), p).toBe(404);
     expect((await anon.get('/share/stub/00000000-0000-4000-8000-000000000000')).status()).toBe(404);
     await anon.dispose();
