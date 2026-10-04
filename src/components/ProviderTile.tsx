@@ -146,8 +146,8 @@ export function ProviderMark({
   return (
     <span
       className={styles.markWrap}
-      role="img"
-      aria-label={`On ${name}`}
+      aria-hidden="true"
+      title={`On ${name}`}
       data-testid="ticket-providers"
     >
       <ProviderLogo

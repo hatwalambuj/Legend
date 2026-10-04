@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { AdaptiveBackground } from '@/components/AdaptiveBackground';
 import { BrowseSection } from '@/components/BrowseSection';
 import { parseBrowse, SORT_ASIDE, type SearchParams } from '@/components/lib/params';
+import { safe } from '@/components/lib/safe';
 import { NEUTRAL_PALETTE, paletteOrDefault } from '@/lib/images';
 import type { Page, TitleSummary } from '@/lib/types';
 import { dal } from '@/server/dal';
@@ -21,14 +22,26 @@ export default async function BrowsePage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { type, sort, cursor } = parseBrowse(await searchParams);
-  const { page, failed } = await dal.listCatalog({ type, sort, cursor, limit: 20 }).then(
-    (page) => ({ page, failed: false }),
-    (e: unknown) => {
-      console.error('[browse] listCatalog failed', e);
-      return { page: EMPTY, failed: true };
-    },
+  const { type, sort, cursor, provider: asked } = parseBrowse(await searchParams);
+  // ADR-013 C-01: the request's watch region → stub logos (`watchHint`); never fails the page.
+  const region = await dal.getWatchRegion().then(
+    (r) => r.region,
+    () => undefined,
   );
+  // ADR-013 C-02: "On {Service}" chips; a provider filter only applies with a region.
+  const provider = region ? asked : null;
+  const [chips, { page, failed }] = await Promise.all([
+    region ? safe(dal.listWatchProviders(region), [], 'listWatchProviders') : [],
+    dal
+      .listCatalog({ type, sort, cursor, limit: 20, region, ...(provider ? { provider } : {}) })
+      .then(
+        (page) => ({ page, failed: false }),
+        (e: unknown) => {
+          console.error('[browse] listCatalog failed', e);
+          return { page: EMPTY, failed: true };
+        },
+      ),
+  ]);
   const first = page.items[0];
   const palette = first
     ? paletteOrDefault(
@@ -52,6 +65,9 @@ export default async function BrowsePage({
           page={page}
           headingId="browse-h"
           failed={failed}
+          region={region}
+          provider={provider}
+          chips={chips}
         />
       </div>
     </>

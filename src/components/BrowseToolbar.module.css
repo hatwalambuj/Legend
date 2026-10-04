@@ -76,3 +76,6 @@
     display: none;
   }
 }
+.chips {
+  flex: 1 1 100%;
+}

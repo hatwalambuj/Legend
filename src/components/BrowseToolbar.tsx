@@ -75,6 +75,8 @@ export function BrowseToolbar({
   total,
   headingId,
   showSearch = true,
+  provider = null,
+  children,
 }: {
   base: string;
   type: TypeFilter;
@@ -82,11 +84,15 @@ export function BrowseToolbar({
   total: number | undefined;
   headingId: string;
   showSearch?: boolean;
+  /** ADR-013 C-02: the active "On {Service}" filter, kept when type/sort change. */
+  provider?: number | null;
+  /** ADR-013 C-02: the provider chips row (server-rendered). */
+  children?: React.ReactNode;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const nav = (o: { type: TypeFilter; sort: SortKey }) =>
-    start(() => router.push(listHref(base, o), { scroll: false }));
+    start(() => router.push(listHref(base, { ...o, provider }), { scroll: false }));
 
   return (
     <div className={styles.toolbar} aria-label="Sort and filter" role="region" aria-busy={pending}>
@@ -118,6 +124,7 @@ export function BrowseToolbar({
           <span className={styles.hint}> · Ties broken by vote count</span>
         )}
       </span>
+      {children && <div className={styles.chips}>{children}</div>}
     </div>
   );
 }

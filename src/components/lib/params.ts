@@ -15,14 +15,18 @@ export function parseBrowse(sp: SearchParams): {
   type: TypeFilter;
   sort: SortKey;
   cursor: string | null;
+  provider: number | null;
 } {
   const t = first(sp.type) as TypeFilter | undefined;
   const s = first(sp.sort) as SortKey | undefined;
   const c = first(sp.cursor);
+  const pv = first(sp.provider);
+  const provider = pv && /^[1-9]\d{0,8}$/.test(pv) ? Number(pv) : null;
   return {
     type: t && TYPES.includes(t) ? t : DEFAULT_TYPE,
     sort: s && SORTS.includes(s) ? s : DEFAULT_SORT,
     cursor: c && c.length <= 512 ? c : null,
+    provider,
   };
 }
 
@@ -40,10 +44,15 @@ export const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: 'tv', label: 'Shows' },
 ];
 
-export function listHref(base: string, o: { type: TypeFilter; sort: SortKey }): string {
+/** `?type=&sort=&provider=` for a list base; the cursor is always dropped (ADR-013 C-02). */
+export function listHref(
+  base: string,
+  o: { type: TypeFilter; sort: SortKey; provider?: number | null },
+): string {
   const p = new URLSearchParams();
   if (o.type !== DEFAULT_TYPE) p.set('type', o.type);
   if (o.sort !== DEFAULT_SORT) p.set('sort', o.sort);
+  if (o.provider) p.set('provider', String(o.provider));
   const qs = p.toString();
   return qs ? `${base}?${qs}` : base;
 }

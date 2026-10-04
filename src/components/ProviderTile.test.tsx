@@ -51,10 +51,28 @@ describe('Ticket stub provider hint (DESIGN §3.3, W7-AC1)', () => {
       <Ticket title={makeTitle()} hint={{ providerId: 8, name: 'Netflix', logoPath: null }} />,
     );
     const mark = screen.getByTestId('ticket-providers');
-    expect(mark.getAttribute('role')).toBe('img');
-    expect(mark.getAttribute('aria-label')).toBe('On Netflix');
+    // ADR-013 C-01: decorative (the ticket link's name carries ", on Netflix"), never a link.
+    expect(mark.getAttribute('aria-hidden')).toBe('true');
+    expect(mark.querySelector('a')).toBeNull();
     expect(mark.closest('a')).toBeNull();
     expect(screen.queryByText('ADMIT ONE')).toBeNull();
+    expect(
+      screen.getByRole('link', {
+        name: 'Dune: Part Two, movie, 2024, rated 8.2 on TMDB and 8.5 on IMDb, on Netflix',
+      }),
+    ).toBeTruthy();
+  });
+
+  it('reads title.watchHint from the list API and names the provider once (ADR-013 C-01)', () => {
+    const watchHint = {
+      providerId: 8,
+      name: 'Netflix',
+      logoPath: null,
+      monogram: 'N',
+      tile: '#b20710',
+    };
+    renderWithApp(<Ticket title={{ ...makeTitle(), watchHint }} />);
+    expect(screen.getByTestId('ticket-providers').textContent).toBe('N');
     expect(
       screen.getByRole('link', {
         name: 'Dune: Part Two, movie, 2024, rated 8.2 on TMDB and 8.5 on IMDb, on Netflix',

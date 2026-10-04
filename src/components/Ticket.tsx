@@ -28,10 +28,12 @@ export interface TicketHint {
   providerId: number;
   name: string;
   logoPath: string | null;
+  monogram?: string;
+  tile?: string | null;
 }
 
 function titleHint(t: TitleSummary): TicketHint | null {
-  const h = (t as TitleSummary & { watchHint?: TicketHint | null }).watchHint;
+  const h = t.watchHint;
   return h && typeof h.name === 'string' && h.name ? h : null;
 }
 
@@ -73,7 +75,16 @@ export function Ticket({
   const imdb = scores.find((s) => s.source === 'imdb');
   const hero = variant === 'hero';
   const prov = hero ? null : hint === undefined ? titleHint(t) : hint;
-  const mono = prov ? providerMonogram(prov.providerId, prov.name) : null;
+  const mono = prov
+    ? prov.monogram
+      ? { monogram: prov.monogram, tile: prov.tile ?? null }
+      : providerMonogram(prov.providerId, prov.name)
+    : null;
+  // ticketAccessibleName() appends ", on {name}" for a hint (format.ts); the logo itself is aria-hidden.
+  const linkName = ticketAccessibleName({
+    ...t,
+    watchHint: prov ? { monogram: '', tile: null, ...prov } : null,
+  });
   const poster = (
     <Poster
       title={t.title}
@@ -92,11 +103,7 @@ export function Ticket({
         {hero ? (
           <div className={styles.body}>{poster}</div>
         ) : (
-          <Link
-            className={styles.body}
-            href={titleHref(t)}
-            aria-label={`${ticketAccessibleName(t)}${prov ? `, on ${prov.name}` : ''}`}
-          >
+          <Link className={styles.body} href={titleHref(t)} aria-label={linkName}>
             {poster}
           </Link>
         )}

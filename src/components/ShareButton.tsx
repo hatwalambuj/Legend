@@ -12,6 +12,7 @@ import { storyHref } from '@/lib/routes';
 import { shareData, type ShareData, type ShareTarget } from '@/lib/share';
 import { useApp } from '@/hooks/useApp';
 import { Icon } from './Icon';
+import { storyFileName } from './lib/display';
 import { Sheet, SheetButtons, SheetSub, SheetTitle } from './Sheet';
 import styles from './ShareButton.module.css';
 
@@ -129,11 +130,7 @@ export function ShareButton({
   );
 }
 
-/** The story PNG file name: "{brand}-stub-{n}.png" (matches the route's download name). */
-export function storyFileName(n: number): string {
-  const brand = BRAND_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'stub';
-  return `${brand}-stub-${n}.png`;
-}
+export { storyFileName };
 
 /**
  * Owner-only "Story image" (C-08): share the 1080×1920 PNG as a file when the browser can, else

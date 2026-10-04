@@ -31,8 +31,14 @@ export default async function SearchPage({
   const q = (first(sp.q) ?? '').slice(0, 100);
   const t = first(sp.type);
   const type: TypeFilter = t === 'movie' || t === 'tv' ? t : 'all';
+  const region = q.trim()
+    ? await dal.getWatchRegion().then(
+        (r) => r.region,
+        () => undefined,
+      )
+    : undefined;
   const { res, failed }: { res: SearchResult | null; failed: boolean } = q.trim()
-    ? await dal.searchCatalog(q, type, 40).then(
+    ? await dal.searchCatalog(q, type, 40, { region }).then(
         (r) => ({ res: r, failed: false }),
         (e: unknown) => {
           console.error('[search] failed', e);

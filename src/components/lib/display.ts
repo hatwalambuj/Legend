@@ -2,6 +2,7 @@
  * Small, pure display helpers used by several components (dates, serials, initials, avatars).
  * Deterministic on server and client (UTC formatting) so SSR and hydration always agree.
  */
+import { BRAND_NAME } from '@/lib/brand';
 import type { MediaType, TitleSummary, WatchedWhere } from '@/lib/types';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-US', {
@@ -105,4 +106,13 @@ export function starsLabel(rating10: number): string {
 
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
+}
+
+/** The story PNG file name "{brand}-stub-{n}.png" (ADR-013 C-08; the route and the share action agree). */
+export function storyFileName(n: number): string {
+  const brand =
+    BRAND_NAME.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'stub';
+  return `${brand}-stub-${n}.png`;
 }

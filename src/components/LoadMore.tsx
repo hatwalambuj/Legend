@@ -14,9 +14,14 @@ export function LoadMore({
   sort,
   cursor: initialCursor,
   fallbackHref,
+  region,
+  provider,
 }: {
   type: TypeFilter;
   sort: SortKey;
+  /** ADR-013 C-01/C-02: the region the server page used (echoed), resent so "Load more" keeps hints. */
+  region?: string;
+  provider?: number | null;
   cursor: string | null;
   fallbackHref: string | null;
 }) {
@@ -31,7 +36,14 @@ export function LoadMore({
     setBusy(true);
     setError(false);
     try {
-      const page = await api.catalog({ type, sort, cursor, limit: 20 });
+      const page = await api.catalog({
+        type,
+        sort,
+        cursor,
+        limit: 20,
+        ...(region ? { region } : {}),
+        ...(region && provider ? { provider } : {}),
+      });
       setItems((xs) => {
         const seen = new Set(xs.map((x) => x.key));
         return [...xs, ...page.items.filter((x) => !seen.has(x.key))];

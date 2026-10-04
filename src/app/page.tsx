@@ -15,9 +15,14 @@ const EMPTY: Page<TitleSummary> = { items: [], nextCursor: null, total: 0 };
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { type, sort } = parseBrowse(await searchParams);
+  // ADR-013 C-01: the request's watch region → stub logos (`watchHint`); never fails the page.
+  const region = await dal.getWatchRegion().then(
+    (r) => r.region,
+    () => undefined,
+  );
   const [trending, { page, failed }] = await Promise.all([
-    safe(dal.listTrending('all', 10), [], 'listTrending'),
-    dal.listCatalog({ type, sort, limit: 20 }).then(
+    safe(dal.listTrending('all', 10, { region }), [], 'listTrending'),
+    dal.listCatalog({ type, sort, limit: 20, region }).then(
       (page) => ({ page, failed: false }),
       (e: unknown) => {
         console.error('[home] listCatalog failed', e);
@@ -69,6 +74,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             page={page}
             headingId="browse-h"
             failed={failed}
+            region={region}
           />
         </section>
       </div>
