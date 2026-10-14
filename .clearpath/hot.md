@@ -2,29 +2,27 @@
 type: meta
 status: active
 created: 2026-09-27
-updated: 2026-09-28
-verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
+updated: 2026-10-14
+verified_against: 24fcfd3dd0071d844d86b4a677bb0c00b4873685
 source: session
 confidence: high
 ---
 # Hot Cache  (≤600 words · expires 7 days / 20 commits after `updated`)
 
 ## Current Goal
-CLOSE-OUT (founder 2026-10-03): close every engineering item; leave only founder inputs ([[../docs/09-closeout/FOUNDER_INPUTS.md]] F1–F10). Board: docs/09-closeout/CLOSEOUT_BOARD.md (C-01…C-18).
+Close-out DONE (2026-10-14): every engineering item closed; only founder inputs remain (docs/09-closeout/FOUNDER_INPUTS.md F1–F12, runbook LAUNCH.md).
 
 ## Active Context
-- M1 launch hardening DONE and reviewed (SHIP). Stub-count race fixed ([[issues/stub-count-race.md]]).
-- Where to watch DONE ([[issues/where-to-watch.md]]): TMDB/JustWatch providers, region (URL/cookie/setting), allowlisted links; review SHIP; 212 E2E + 535 unit green at 06e1627.
-- Orchestrator holds standing approval for in-repo decisions ([[meta/rules.md]]).
-- Constraints: $0 infra, no AI, no third-party posting.
+- Final gate at 24fcfd3: lint/typecheck/718 unit/build/format green; E2E 262 passed, 6 skipped.
+- Reviews SHIP: security (backend + frontend/routes), architecture (AR-C1..C5 closed), code (CR-CO-1 fixed).
+- Share ticket from arena (C1 base + grafts): docs/02-design/share/SYNTHESIS.md.
+- Orchestrator holds standing approval for in-repo decisions ([[meta/rules.md]]). Constraints: $0, no AI, no third-party posting/tracking.
 
 ## Recent Changes
-- QA-WTW-1 region kept on slug redirect; QA-WTW-2 AA contrast for Prime Video/Paramount+ tiles.
-- WTW-1 32 KB watch cap; WTW-2 privacy copy for region cookie.
+- C-01…C-15 built; launch kit (launch:check, db:apply, smoke:live, check:provider-links + workflows); LAUNCH.md, RELEASE_NOTES.md.
 
 ## Open Questions
-- Repo public or private? (AR-6 scheduled workflows.)
-- Launch commercially later? (Vercel Hobby, TMDB, OMDb, JustWatch data are non-commercial.)
+- Founder: F1–F12 (logo, keys, migrations, SMTP, Vercel, live smoke, phone link check, trademark, contact email, repo visibility, TV Time sample, JWT keys).
 
 ## Next Best Step
-Wave 1 running: architect ADR-013 (C-01..C-13,C-15), devops launch kit (C-14), arena ×3 share ticket (C-08). Then BE ∥ FE → security ∥ code ∥ arch review → QA full → PM acceptance + tech-writer docs. /gstak skill not available in this environment.
+Founder follows docs/09-closeout/LAUNCH.md. Every release: npm run db:apply --yes, then deploy.

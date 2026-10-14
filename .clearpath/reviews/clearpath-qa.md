@@ -2,11 +2,11 @@
 type: review
 status: active
 created: 2026-09-27
-updated: 2026-09-28
-verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
+updated: 2026-10-14
+verified_against: 24fcfd3dd0071d844d86b4a677bb0c00b4873685
 source: docs/08-clearpath/QA_VERIFICATION.md
 confidence: high
 ---
 # clearpath-qa
 
-SHIP demo; flake root cause = reused e2e server (fixed); AppProvider race fixed; Where to watch E2E 42 tests; full suite 212 passed. Full report: `docs/08-clearpath/QA_VERIFICATION.md`.
+Close-out C-18: 718 unit + 262 E2E passed (6 skipped), demo build SHIP; live checks are founder items F6/F7. Full report: `docs/08-clearpath/QA_VERIFICATION.md`.

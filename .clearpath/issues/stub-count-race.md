@@ -3,7 +3,7 @@ type: issue
 status: active
 created: 2026-09-27
 updated: 2026-09-28
-verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
+verified_against: 24fcfd3dd0071d844d86b4a677bb0c00b4873685
 source: docs/08-clearpath/QA_VERIFICATION.md §6a
 confidence: high
 ---

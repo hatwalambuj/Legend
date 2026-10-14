@@ -3,7 +3,7 @@ type: meta
 status: active
 created: 2026-09-27
 updated: 2026-09-27
-verified_against: 06e1627082bc240fb33c0d5e17c90fdeb0226f03
+verified_against: 24fcfd3dd0071d844d86b4a677bb0c00b4873685
 source: session
 confidence: high
 ---
@@ -65,3 +65,7 @@ confidence: high
 - 2026-10-04 backend: unblocked wallet share — WalletItem.latestStubId/latestSeason (contract v1.6.1, migration 20261004090000, not applied); WalletStub shows S03 + Share stub + owner Story image. Gates green.
 
 - 2026-10-04 devops: AR-C1 closed (launch:check --live/--migrations compares _stubbed_migrations vs supabase/migrations, smoke-live.yml pre-step, README "migrate, then deploy"); AR-C5 closed (brand warn + F8, smoke 404/308/chips/OG+story PNG size; scripts/lib/png.ts). Gate green except 2 tests/ files formatted by parallel agent.
+
+## 2026-10-14 · Close-out complete
+- all C-01…C-18 closed; reviews SHIP; final gate green (718 unit, 262 E2E). HEAD 24fcfd3dd0071d844d86b4a677bb0c00b4873685.
+- remaining: founder inputs F1–F12 only.
