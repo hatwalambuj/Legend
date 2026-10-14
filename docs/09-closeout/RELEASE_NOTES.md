@@ -40,7 +40,7 @@ Stubbed is a collectible diary for movies and TV. It is built and tested in demo
 
 ## What was built in this close-out (C-01 to C-18)
 
-Source: [CLOSEOUT_BOARD.md](CLOSEOUT_BOARD.md) and [ADR-013](../04-architecture/ADR-013-closeout.md). The board's "Status" column was not updated in the file; the done state below comes from the commit log (`git log`) and the review files.
+Source: [CLOSEOUT_BOARD.md](CLOSEOUT_BOARD.md) and [ADR-013](../04-architecture/ADR-013-closeout.md). The board now shows every item done (2026-10-14).
 
 | ID | What | Evidence |
 |---|---|---|
@@ -60,8 +60,8 @@ Source: [CLOSEOUT_BOARD.md](CLOSEOUT_BOARD.md) and [ADR-013](../04-architecture/
 | C-14 | Launch kit: `launch:check`, `db:apply`, `smoke:live`, `check:provider-links` and their workflows; "migrate, then deploy" gate | `d5b809c`, `b3c4c15`; `scripts/`, `.github/workflows/` |
 | C-15 | Brand name is one setting (`NEXT_PUBLIC_BRAND_NAME`) in case the trademark search fails | `a52e09d`; guard test `tests/lib/guards.test.ts` |
 | C-16 | Docs: [LAUNCH.md](LAUNCH.md), these notes, README refresh | this change |
-| C-17 | Security, code and architecture review of the close-out | [SECURITY_REVIEW.md](SECURITY_REVIEW.md): SHIP, SR-1 and SR-2 fixed. [ARCH_REVIEW_CLOSEOUT.md](ARCH_REVIEW_CLOSEOUT.md): SHIP; AR-C1 and AR-C5 closed in `b3c4c15`, AR-C2 to AR-C4 in `3c23771` (the review file itself still says "open") |
-| C-18 | Full gate, full E2E, PM acceptance | **Not recorded yet** in any file I could see. QA E2E was still in progress at commit `3e510e3` |
+| C-17 | Security, code and architecture review of the close-out | [SECURITY_REVIEW.md](SECURITY_REVIEW.md): SHIP, SR-1 and SR-2 fixed. [ARCH_REVIEW_CLOSEOUT.md](ARCH_REVIEW_CLOSEOUT.md): SHIP; AR-C1 and AR-C5 closed in `b3c4c15`, AR-C2 to AR-C4 in `3c23771` |
+| C-18 | Full gate, full E2E, PM acceptance | Gate green at `e36a696`: lint, typecheck, 718 unit tests, build, format; E2E 262 passed, 6 skipped, 0 failed ([QA_VERIFICATION.md](../08-clearpath/QA_VERIFICATION.md) "Close-out (C-18)"). PM: SHIP ([PM_ACCEPTANCE.md](PM_ACCEPTANCE.md)) |
 
 ## Known limits
 
@@ -85,7 +85,7 @@ Only numbers written in files in this repo are given here. Nothing below is a fr
 | 2026-09-28 | Where to watch E2E, full suite run | 210 passed, 10 skipped (7.5 min) | `docs/08-clearpath/QA_VERIFICATION.md` §8 |
 | 2026-10-03 | Close-out backend | 651 unit tests, lint, typecheck, build, format green | `.clearpath/log.md` (line 58) |
 | 2026-10-04 | Security review gate (with frontend work in progress) | Unit: 665 of 667 on the first run; the 2 failures were an in-progress frontend test and passed on re-run. Lint, typecheck, build pass. Format check failed on 3 frontend files at that time | `docs/09-closeout/SECURITY_REVIEW.md` |
-| Close-out | Full E2E with the new specs (`analytics`, `brand`, `imports`, `season`, `seo-status`, `share`) | **Unverified**: the spec files exist in `e2e/`; no final result is written down yet (C-18) | — |
+| 2026-10-14 | Final close-out gate (C-18) | Lint, typecheck, 718 unit (83 files), build, format green; E2E 262 passed, 6 skipped, 0 failed | `QA_VERIFICATION.md` "Close-out (C-18)" |
 | Any time | Live services (real Supabase, TMDB, OMDb), real phones, Lighthouse | **Blocked** here: no keys, no network, no devices. Covered by LAUNCH.md Steps 16 to 19 | `QA_VERIFICATION.md` §5, §8 |
 
 — clearpath: mode=build · evidence=labeled · verify=n/a

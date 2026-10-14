@@ -221,7 +221,7 @@ Rate limits: 10/min per IP (in-memory hashed key, like C-09) and 300/min per pro
 
 ## C-14 · Launch kit: reference only
 Built by **devops-release** in parallel (`launch:check`, `db:apply`, `smoke:live` + workflow, `check:provider-links`). Contract with this ADR:
-`db:apply` applies the 6 migrations above in filename order. `launch:check` validates `NEXT_PUBLIC_BRAND_NAME` (warns while it is the default, F8) and `SUPABASE_SERVICE_ROLE_KEY` (C-09/C-11: analytics write and nothing else new).
+`db:apply` applies all migrations in filename order (10 close-out files: 20261003090000…20261004092000, see Amendment 1). `launch:check` validates `NEXT_PUBLIC_BRAND_NAME` (warns while it is the default, F8) and `SUPABASE_SERVICE_ROLE_KEY` (C-09/C-11: analytics write and nothing else new).
 `smoke:live` should hit `/title/movie/0-x` (expects 404), a wrong slug (expects 308), `/api/watch/providers?region=US` and a title `opengraph-image` (PNG).
 
 ## C-15 · Brand name as config (F8 workaround)
@@ -251,3 +251,10 @@ It is inlined at build time, so a rename means a rebuild (documented).
 - OG uses only Geist Regular → add the Bricolage TTF when network is available.
 - Share images are cached ≤ 10 min after deletion → if a takedown request arrives, add `revalidatePath` on stub delete.
 - Imports skip unknown titles → if "not in Stubbed" is > 20 % for imports, build ADR-002 §3 lazy unlisted insert (TMDB `find`, budgeted).
+
+
+## Amendment 1 (orchestrator, 2026-10-14) — from ARCH_REVIEW_CLOSEOUT §8
+1. **Migrations:** the close-out ships 10 files, not 6: `20261003090000_watch_filter` … `20261003095000_imports` plus `20261003096000_events_dim_cap` (SR-1), `20261004090000_wallet_latest_stub` (wallet share, contract v1.6.1), `20261004091000_events_source_caps` (AR-C4), `20261004092000_enrich_skip_gone` (AR-C3).
+2. **Migrate, then deploy (AR-C1):** every release runs `npm run db:apply -- --yes` before the deploy; `npm run launch:check -- --migrations` is the pre-deploy gate and fails naming pending files. Code reads `avatar_color` without a fallback, so deploying first breaks sessions.
+3. **Error visibility (AR-C2):** Vercel Hobby keeps runtime logs about 1 hour with no log drains; C-13 therefore also writes PII-free `client_error` / `server_error` counts to `events` (own daily cap per source, AR-C4); `scripts/metrics.ts` prints the last 7 days.
+4. **OG/story caching (CR-CO-1):** images are route handlers; pages emit the canonical `?v=` URL (`canonicalOgImage`), other queries 308 to it; title images `immutable` 1 year, stub images 600 s.

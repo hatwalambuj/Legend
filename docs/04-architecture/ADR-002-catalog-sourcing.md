@@ -47,3 +47,8 @@ The PRD requires a curated catalogue (TMDB `vote_average ≥ 6.5` plus vote floo
 - Sorting, search and pagination are pure SQL (`catalog_page`, `catalog_search`). They are unit-tested against the JS reference implementation on real Postgres (PGlite) in `tests/db/migrations.test.ts`.
 - The first ingest downloads about 15k `w92` posters (about 75 MB) for palettes. That load goes to the image CDN, not the API.
 - User data is always ours (stubs, reviews, watchlist). That is not an option but a requirement, and it is covered in ADR-004.
+
+
+## Amendment (2026-10-14, ADR-013 C-06 / AR-C3)
+- **Referenced rows:** titles no longer listed but still referenced by a user's stub, review or watchlist keep being refreshed from TMDB at least every 120 days, so cached data stays inside TMDB's 6-month cache rule (`20261003092000_enrich_core_refresh`).
+- **Gone rows:** a title TMDB no longer returns is marked `source_status = 'gone'` and excluded from `catalog_enrich_due` (`20261004092000_enrich_skip_gone`); it returns automatically if a later catalogue import marks it active again. User data pointing at it is kept.

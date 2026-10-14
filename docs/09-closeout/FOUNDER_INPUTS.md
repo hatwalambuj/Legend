@@ -17,3 +17,5 @@ Each item has a workaround the team builds now, so the founder's step becomes on
 | F10 | Repo public/private; commercial plans | Your decision | Defaults: works either way; keep-alive commits not needed if private; non-commercial notice on About | Answer when ready |
 | F11 | (Optional) a real TV Time export file | Only you have an account export | Parser matches header aliases; UI labels TV Time import "beta" until a sample is checked | Send/attach one export when convenient |
 | F12 | (Optional) turn on asymmetric JWT signing keys in Supabase Auth | Dashboard setting | Code uses `getClaims()` which verifies locally when asymmetric keys are on, and falls back to a server check otherwise | Toggle in Supabase → Auth → Signing keys |
+| F13 | Turn on the free uptime monitor (LAUNCH.md Step 20) | Account in your name | `/api/health` returns 503 / "degraded" when DB is down or sync is stale | Add the monitor URL |
+| F14 | Set `BACKUP_PASSPHRASE` and confirm the first nightly backup (LAUNCH.md Step 15) | Secret only you hold | `backup.yml` encrypts the dump; restore steps in README | Add the secret, check one run |
