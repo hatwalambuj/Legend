@@ -2,7 +2,7 @@
 type: decision
 status: active
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-10-14
 verified_against: 24fcfd3dd0071d844d86b4a677bb0c00b4873685
 source: docs/04-architecture/ADR-002-catalog-sourcing.md
 confidence: high
@@ -14,3 +14,4 @@ Hybrid data: nightly curated catalog_index (~10-15k rows) + live TMDB detail cac
 Source: `docs/04-architecture/ADR-002-catalog-sourcing.md`
 
 Amended by ADR-011 (guard abort scope, dry-run, recheck cap).
+Amended 2026-10-14: referenced rows refreshed ≤120 days; gone rows excluded from enrich (ADR-002 amendment).
