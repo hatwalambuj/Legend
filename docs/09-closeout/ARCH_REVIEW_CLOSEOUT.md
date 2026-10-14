@@ -72,3 +72,6 @@ Sources: [Vercel runtime logs](https://vercel.com/docs/logs/runtime), [Vercel li
 — clearpath: mode=review · evidence=labeled · verify=SHIP
    memory=unchanged · unverified=OG render CPU on Hobby, /me/import bundle size, CDN query-string cache key behaviour
 ```
+
+## Status (orchestrator, 2026-10-14)
+AR-C1, AR-C5 closed by devops (launch:check --migrations/--live, brand check, live probes). AR-C2, AR-C3, AR-C4 and the OG cache-bust risk closed by backend (migrations 20261004091000, 20261004092000; share-cache). CR-CO-1 closed by code review.

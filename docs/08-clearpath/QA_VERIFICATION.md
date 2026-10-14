@@ -229,3 +229,26 @@ W-21 is Blocked. W7-AC1 is Unverified in E2E until W-30 ships.
 — clearpath: mode=review · evidence=labeled · verify=SHIP
    memory=unchanged · unverified=W-21 real devices (Blocked), W7-AC1 E2E (no watchHint yet), W8-AC3 LCP, QA-WTW-1/2 patches (proposed, not applied)
 ```
+
+## Close-out (C-18) — final verification, orchestrator run at 223a437
+
+QA's close-out run was cut off by a usage limit after writing the C-Q1…C-Q7 specs (committed); the orchestrator ran the final gate.
+
+| Check | Result (Observed, command output) |
+|---|---|
+| `npm run lint` | pass |
+| `npm run typecheck` | pass |
+| `npm test` | 83 files, 718 tests passed |
+| `npm run build` | pass |
+| `npm run format:check` | pass |
+| `npm run test:e2e` (desktop 1440 + mobile 375, fresh server) | 262 passed, 6 skipped (viewport-specific), 0 failed, 0 flaky |
+
+E2E specs (17 files) now cover: stub provider logo, provider chips, real 404 / 308, review count, Share + copy-link fallback,
+share/OG image routes (PNG size, no Set-Cookie, no external fetch, canonical `?v=` URL), season picker + diary/wallet season,
+imports (Letterboxd / IMDb CSV, TV Time beta, oversize rejected), avatar colour, error reporting, brand config, analytics.
+
+Blocked here (need live keys/devices, see docs/09-closeout/FOUNDER_INPUTS.md): live smoke (`npm run smoke:live`), real posters,
+TMDB `watch/providers` key, provider links on phones, Lighthouse.
+
+— clearpath: mode=review · evidence=labeled · verify=SHIP (demo build)
+   memory=unchanged · unverified=live services (F2–F7)
