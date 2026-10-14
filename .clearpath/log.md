@@ -69,3 +69,4 @@ confidence: high
 ## 2026-10-14 · Close-out complete
 - all C-01…C-18 closed; reviews SHIP; final gate green (718 unit, 262 E2E). HEAD 24fcfd3dd0071d844d86b4a677bb0c00b4873685.
 - remaining: founder inputs F1–F12 only.
+- 2026-10-14 · PM acceptance SHIP; E-1/E-2 docs closed; founder F13/F14 added. Engineering: none open. HEAD 3f60756.
