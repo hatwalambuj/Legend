@@ -7,7 +7,32 @@
 import type { Page, Request } from '@playwright/test';
 import { expect, gotoTitle, test } from './support/fixtures';
 
+/** Records every sendBeacon/fetch body sent to /api/events and /api/log (beacon bodies are Blobs). */
+async function recordBeacons(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __beacons: { url: string; body: string }[] };
+    w.__beacons = [];
+    const orig = navigator.sendBeacon.bind(navigator);
+    navigator.sendBeacon = (url: string | URL, data?: BodyInit | null) => {
+      const push = (body: string) => w.__beacons.push({ url: String(url), body });
+      if (data instanceof Blob) void data.text().then(push);
+      else push(typeof data === 'string' ? data : '');
+      return orig(url, data);
+    };
+  });
+}
+
+const beacons = async (page: Page, path: string) =>
+  (
+    await page.evaluate(
+      () => (window as unknown as { __beacons: { url: string; body: string }[] }).__beacons,
+    )
+  )
+    .filter((b) => new URL(b.url, 'http://x').pathname === path)
+    .map((b) => JSON.parse(b.body) as Record<string, unknown>);
+
 async function stubShare(page: Page, gpc: boolean) {
+  await recordBeacons(page);
   await page.addInitScript((g) => {
     Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
     Object.defineProperty(navigator, 'share', { value: async () => {}, configurable: true });
@@ -32,9 +57,10 @@ test.describe('C-Q5 analytics and error reports', () => {
     await page.getByRole('button', { name: 'Share Dune: Part Two' }).click();
     // The queue flushes after ≤ 5 s or on pagehide.
     await expect.poll(() => events.length, { timeout: 9_000 }).toBeGreaterThan(0);
-    const bodies = events.map(
-      (r) => JSON.parse(r.postData() ?? '{}') as { events: { name: string; dim: string }[] },
-    );
+    await expect.poll(async () => (await beacons(page, '/api/events')).length).toBeGreaterThan(0);
+    const bodies = (await beacons(page, '/api/events')) as {
+      events: { name: string; dim: string }[];
+    }[];
     const all = bodies.flatMap((b) => b.events);
     expect(all.some((e) => e.name === 'share_generated')).toBe(true);
     for (const e of all)
@@ -65,6 +91,7 @@ test.describe('C-Q5 analytics and error reports', () => {
     allowConsole,
   }) => {
     allowConsole.push(/qa-e2e-(unhandled|rejection)/);
+    await recordBeacons(page);
     const logs = collect(page, '/api/log');
     const done: number[] = [];
     page.on('response', (r) => {
@@ -78,7 +105,10 @@ test.describe('C-Q5 analytics and error reports', () => {
       void Promise.reject(new Error('qa-e2e-rejection'));
     });
     await expect.poll(() => logs.length).toBeGreaterThanOrEqual(2);
-    const sent = logs.map((r) => JSON.parse(r.postData() ?? '{}') as Record<string, string>);
+    await expect
+      .poll(async () => (await beacons(page, '/api/log')).length)
+      .toBeGreaterThanOrEqual(2);
+    const sent = (await beacons(page, '/api/log')) as Record<string, string>[];
     expect(sent.find((b) => b.kind === 'unhandled')?.message).toContain('qa-e2e-unhandled');
     expect(sent.find((b) => b.kind === 'rejection')?.message).toContain('qa-e2e-rejection');
     for (const b of sent) expect(b.path).toBe('/about');

@@ -80,7 +80,8 @@ test.describe('C-Q6 import watch history', () => {
     await page.getByTestId('import-source-imdb').check();
     await upload(page, 'imdb-ratings.csv');
     await expect(page.getByTestId('import-preview')).toBeVisible();
-    await expect(page.getByTestId('import-preview')).toContainText('3 rows');
+    // The TV-episode row is dropped by the parser (Unreadable), so the preview counts 2 rows.
+    await expect(page.getByTestId('import-preview')).toContainText('IMDb ratings: 2 rows.');
     await expect(count(page, 'matched')).toHaveText('2');
     const skipped =
       Number(await count(page, 'notin').innerText()) +

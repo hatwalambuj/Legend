@@ -17,7 +17,8 @@ test.describe('C-Q2 real HTTP status for pages', () => {
     ]) {
       const r = await request.get(url, { maxRedirects: 0 });
       expect(r.status(), url).toBe(404);
-      expect(await r.text(), url).toContain('data-testid="not-found"');
+      // The not-found UI ships in the document (HTML or its RSC payload).
+      expect(await r.text(), url).toContain("This ticket doesn't exist");
     }
   });
 

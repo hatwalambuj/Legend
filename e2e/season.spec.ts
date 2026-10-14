@@ -77,10 +77,7 @@ test.describe('C-Q3 season stubs', () => {
       .first();
     await expect(item).toBeVisible();
     const share = item.getByTestId('share-button');
-    test.fixme(
-      (await share.count()) === 0,
-      'Wallet Share/season not in this build yet: backend is adding WalletItem.latestStubId/latestSeason (WalletStub.tsx, v1.6.1).',
-    );
+    // Landed with WalletItem.latestStubId/latestSeason (v1.6.1, WalletStub.tsx); was planned as test.fixme.
     await expect(item.getByTestId('wallet-season')).toHaveText('S03');
     await expect(item.getByTestId('wallet-stub')).toHaveAttribute(
       'aria-label',

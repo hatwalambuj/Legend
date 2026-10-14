@@ -585,7 +585,9 @@ test.describe('Placement, stub mark, a11y', () => {
     // Every chip is a real link named "On {Service}" with count ≥ 1 (zero-count chips never render).
     for (const p of api.providers) {
       expect(p.count).toBeGreaterThanOrEqual(1);
-      await expect(nav.getByTestId(`provider-chip-${p.providerId}`)).toHaveText(`On ${p.name}`);
+      await expect(nav.getByTestId(`provider-chip-${p.providerId}`)).toHaveAccessibleName(
+        `On ${p.name}`,
+      );
     }
     expect(await nav.getByRole('link').count()).toBe(api.providers.length + 1);
 
