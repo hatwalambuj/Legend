@@ -3,7 +3,7 @@ type: decision
 status: active
 created: 2026-09-27
 updated: 2026-10-14
-verified_against: 24fcfd3dd0071d844d86b4a677bb0c00b4873685
+verified_against: e1c6257d0f4164ade62b5fd1b5bf13c4cc13f064
 source: docs/04-architecture/ADR-002-catalog-sourcing.md
 confidence: high
 ---
